@@ -297,21 +297,52 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || event.sensor.type != Sensor.TYPE_ROTATION_VECTOR) return
 
-        // --- CHECK SPEED ---
-        // If speed is HIGH, ignore this sensor (we are using GPS in startLocationUpdates instead)
+        // 1. SPEED CHECK: If driving fast (> 15mph), ignore the compass (GPS handles it)
         val currentSpeed = currentLocation?.speed ?: 0f
         if (currentSpeed > SPEED_THRESHOLD_MPS) {
             return
         }
 
+        // 2. GET ROTATION MATRIX
         SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-        SensorManager.getOrientation(rotationMatrix, orientationAngles)
+
+        // 3. FIX FOR SCREEN ROTATION (Portrait vs Landscape)
+        // This fixes the "Compass is less accurate" issue when holding the phone sideways
+        val axisAdjustedMatrix = FloatArray(9)
+        val displayRotation = windowManager.defaultDisplay.rotation
+        var axisX = SensorManager.AXIS_X
+        var axisY = SensorManager.AXIS_Y
+
+        when (displayRotation) {
+            android.view.Surface.ROTATION_90 -> {
+                axisX = SensorManager.AXIS_Y
+                axisY = SensorManager.AXIS_MINUS_X
+            }
+            android.view.Surface.ROTATION_180 -> {
+                axisX = SensorManager.AXIS_MINUS_X
+                axisY = SensorManager.AXIS_MINUS_Y
+            }
+            android.view.Surface.ROTATION_270 -> {
+                axisX = SensorManager.AXIS_MINUS_Y
+                axisY = SensorManager.AXIS_X
+            }
+        }
+
+        if (SensorManager.remapCoordinateSystem(rotationMatrix, axisX, axisY, axisAdjustedMatrix)) {
+            SensorManager.getOrientation(axisAdjustedMatrix, orientationAngles)
+        } else {
+            // Fallback if remap fails
+            SensorManager.getOrientation(rotationMatrix, orientationAngles)
+        }
+
         val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
 
-        // If speed is LOW, update using Magnetometer
+        // 4. UPDATE ARROW
         updateArrowWithHeading(azimuth)
 
-        // --- NEW ACCURACY LOGIC ---
+        // 5. UPDATE ACCURACY STATUS
+        // If the sensor reports HIGH, we trust it (Green).
+        // If it reports LOW or UNRELIABLE, we warn the user (Red).
         val statusText: String
         val statusColor: Int
 
@@ -322,11 +353,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
             SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
                 statusText = "Compass: Fair"
-                statusColor = Color.parseColor("#FFD700") // Gold/Yellow
+                statusColor = Color.parseColor("#FFD700") // Yellow
+            }
+            SensorManager.SENSOR_STATUS_ACCURACY_LOW -> {
+                statusText = "Compass: Weak"
+                statusColor = Color.RED
             }
             else -> {
-                // Covers LOW, UNRELIABLE, etc.
-                statusText = "Compass: Poor"
+                statusText = "Compass: Poor" // Unreliable
                 statusColor = Color.RED
             }
         }
