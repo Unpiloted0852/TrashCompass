@@ -311,16 +311,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // If speed is LOW, update using Magnetometer
         updateArrowWithHeading(azimuth)
 
-        // Show compass accuracy colors only when using compass
+        // --- NEW ACCURACY LOGIC ---
         val statusText: String
         val statusColor: Int
 
-        if (event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
-            statusText = "Compass: Low"
-            statusColor = Color.RED
-        } else {
-            statusText = "Compass: Good"
-            statusColor = Color.parseColor("#32CD32")
+        when (event.accuracy) {
+            SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
+                statusText = "Compass: Good"
+                statusColor = Color.parseColor("#32CD32") // Green
+            }
+            SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
+                statusText = "Compass: Fair"
+                statusColor = Color.parseColor("#FFD700") // Gold/Yellow
+            }
+            else -> {
+                // Covers LOW, UNRELIABLE, etc.
+                statusText = "Compass: Poor"
+                statusColor = Color.RED
+            }
         }
 
         tvAccuracy.text = statusText
