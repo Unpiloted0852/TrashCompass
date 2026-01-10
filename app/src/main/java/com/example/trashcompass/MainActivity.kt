@@ -1,11 +1,10 @@
 package com.example.trashcompass
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList // <--- FIXED
-import android.graphics.Color // <--- FIXED
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -64,8 +63,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val REFETCH_DISTANCE_THRESHOLD = 150f
     private var initialSearchDone = false
 
+    // SPEED THRESHOLD: 15 MPH is approx 6.7 Meters per Second
+    private val SPEED_THRESHOLD_MPS = 6.7f
+
     private var useMetric = true
-    private var currentAccuracyLevel = -1
     private var currentAmenityName = "Trash Can"
     private var isSearching = false
     private var isErrorState = false
@@ -186,6 +187,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     p0.lastLocation?.let { loc ->
                         currentLocation = loc
 
+                        // --- CAR MODE LOGIC ---
+                        // If we are moving faster than 15mph (6.7 m/s) AND we have a bearing, use GPS bearing
+                        val speed = loc.speed // in meters/second
+                        if (speed > SPEED_THRESHOLD_MPS && loc.hasBearing()) {
+                            // Moving fast: Use GPS Bearing (ignore magnets)
+                            updateArrowWithHeading(loc.bearing)
+                            tvAccuracy.text = "GPS Heading"
+                            tvAccuracy.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#32CD32"))
+                        }
+                        // ----------------------
+
                         // 1. Initial Load - FAST
                         if (!initialSearchDone && !isSearching) {
                             initialSearchDone = true
@@ -285,23 +297,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || event.sensor.type != Sensor.TYPE_ROTATION_VECTOR) return
 
+        // --- CHECK SPEED ---
+        // If speed is HIGH, ignore this sensor (we are using GPS in startLocationUpdates instead)
+        val currentSpeed = currentLocation?.speed ?: 0f
+        if (currentSpeed > SPEED_THRESHOLD_MPS) {
+            return
+        }
+
         SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
         SensorManager.getOrientation(rotationMatrix, orientationAngles)
         val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
 
-        if (currentLocation != null && destinationAmenity != null) {
-            val bearing = currentLocation!!.bearingTo(destinationAmenity!!.location)
-            val normalizedBearing = (bearing + 360) % 360
-            val targetRot = (normalizedBearing - azimuth + 360) % 360
+        // If speed is LOW, update using Magnetometer
+        updateArrowWithHeading(azimuth)
 
-            var diff = targetRot - currentArrowRotation
-            while (diff < -180) diff += 360
-            while (diff > 180) diff -= 360
-            currentArrowRotation += diff * 0.15f // Smoothing
-            ivArrow.rotation = currentArrowRotation
-        }
-
-        // This is where Color and ColorStateList are used
+        // Show compass accuracy colors only when using compass
         val statusText: String
         val statusColor: Int
 
@@ -315,6 +325,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvAccuracy.text = statusText
         tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
+    }
+
+    // --- NEW HELPER FUNCTION FOR ROTATION ---
+    private fun updateArrowWithHeading(userHeading: Float) {
+        if (currentLocation != null && destinationAmenity != null) {
+            val bearingToTarget = currentLocation!!.bearingTo(destinationAmenity!!.location)
+            val normalizedBearing = (bearingToTarget + 360) % 360
+            val targetRot = (normalizedBearing - userHeading + 360) % 360
+
+            var diff = targetRot - currentArrowRotation
+            while (diff < -180) diff += 360
+            while (diff > 180) diff -= 360
+            currentArrowRotation += diff * 0.15f // Smoothing
+            ivArrow.rotation = currentArrowRotation
+        }
     }
 
     private fun showCalibrationDialog() {
