@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Subtle Grey Color for all paths -->
+    <group>
+        <!-- Outer Ring -->
+        <path
+            android:strokeColor="#444444"
+            android:strokeWidth="1"
+            android:pathData="M50,2 A48,48 0 1,0 50,98 A48,48 0 1,0 50,2" />
+
+        <!-- North Marker (Triangle) -->
+        <path
+            android:fillColor="#555555"
+            android:pathData="M50,10 L55,25 L45,25 Z" />
+
+        <!-- East/South/West Markers (Small Triangles) -->
+        <path
+            android:fillColor="#444444"
+            android:pathData="M90,50 L75,45 L75,55 Z" /> <!-- East -->
+        <path
+            android:fillColor="#444444"
+            android:pathData="M50,90 L45,75 L55,75 Z" /> <!-- South -->
+        <path
+            android:fillColor="#444444"
+            android:pathData="M10,50 L25,55 L25,45 Z" /> <!-- West -->
+
+        <!-- Diagonal Ticks -->
+        <path
+            android:strokeColor="#333333"
+            android:strokeWidth="2"
+            android:strokeLineCap="square"
+            android:pathData="M22,22 L30,30 M78,22 L70,30 M78,78 L70,70 M22,78 L30,70" />
+
+        <!-- Letters (Simplified as paths for sharp rendering) -->
+        <!-- N -->
+        <path android:strokeColor="#555555" android:strokeWidth="1.5" android:pathData="M48,18 L48,12 L52,18 L52,12"/>
+    </group>
+</vector>
