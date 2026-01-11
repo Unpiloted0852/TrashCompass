@@ -30,6 +30,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.sqrt
 
 // Data class
 data class Amenity(
@@ -47,12 +48,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var ivArrow: ImageView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
-    private lateinit var tvLegal: TextView // New Legal Footer
+    private lateinit var tvLegal: TextView
+    private lateinit var tvInterference: TextView // New Warning Label
 
     // Sensors
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var sensorManager: SensorManager
     private var rotationVectorSensor: Sensor? = null
+    private var magneticSensor: Sensor? = null // New Sensor for interference
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
     private var currentArrowRotation = 0f
@@ -108,10 +111,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val padding = (20 * resources.displayMetrics.density).toInt()
         tvMetadata.setPadding(padding, 0, padding, 0)
 
-        // --- LEGAL FOOTER INJECTION ---
-        // Since we can't edit XML easily, we programmatically add the footer here.
+        // --- ADD UI ELEMENTS PROGRAMMATICALLY ---
         addLegalFooter()
-        // ------------------------------
+        addInterferenceWarning()
+        // ----------------------------------------
 
         tvDistance.text = "Waiting for GPS..."
 
@@ -182,9 +185,33 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+        magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) // Init Mag Sensor
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         checkPermissions()
+    }
+
+    // --- INTERFERENCE UI ---
+    private fun addInterferenceWarning() {
+        val rootLayout = findViewById<ViewGroup>(android.R.id.content)
+        tvInterference = TextView(this)
+        tvInterference.text = "🧲 High Magnetic Interference Detected"
+        tvInterference.textSize = 14f
+        tvInterference.setTextColor(Color.WHITE)
+        tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000")) // Semi-transparent Red
+        tvInterference.gravity = Gravity.CENTER
+        tvInterference.setPadding(20, 10, 20, 10)
+        tvInterference.visibility = View.GONE // Hidden by default
+
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.gravity = Gravity.TOP
+        params.topMargin = (80 * resources.displayMetrics.density).toInt() // Below title
+
+        tvInterference.layoutParams = params
+        rootLayout.addView(tvInterference)
     }
 
     // --- LEGAL FOOTER LOGIC ---
@@ -228,7 +255,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             .setPositiveButton("OK", null)
             .show()
     }
-    // --------------------------
 
     private fun checkPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -253,14 +279,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     p0.lastLocation?.let { loc ->
                         currentLocation = loc
 
-                        // --- CAR MODE LOGIC ---
-                        // If we are moving faster than 15mph (6.7 m/s) AND we have a bearing, use GPS bearing
-                        val speed = loc.speed // in meters/second
+                        val speed = loc.speed
+                        // IF DRIVING (>15 MPH):
                         if (speed > SPEED_THRESHOLD_MPS && loc.hasBearing()) {
-                            // Moving fast: Use GPS Bearing (ignore magnets)
+                            // Use GPS Bearing
                             updateArrowWithHeading(loc.bearing)
                             tvAccuracy.text = "GPS Heading"
                             tvAccuracy.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#32CD32"))
+                            // Hide interference warning when driving (GPS fixes it)
+                            tvInterference.visibility = View.GONE
                         }
                         // ----------------------
 
@@ -321,7 +348,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val infoList = ArrayList<String>()
 
         // 1. Name & Context
-        // If we found a business with a toilet (toilets=yes), say "Inside..."
         if (tags.has("name")) {
             val name = tags.getString("name")
             if (currentAmenityName == "Public Toilet" && tags.optString("toilets") == "yes") {
@@ -345,14 +371,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
 
         // 3. Fees
-        // Check for explicit price tags first
         var price = tags.optString("charge")
         if (price.isEmpty()) price = tags.optString("toilets:charge")
 
         if (price.isNotEmpty()) {
             infoList.add("Fee: $price")
         } else {
-            // Check generic fee status
             var fee = tags.optString("toilets:fee")
             if (fee.isEmpty()) fee = tags.optString("fee")
 
@@ -378,16 +402,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
             }
             "Defibrillator (AED)" -> {
-                // Location Notes
                 var loc = tags.optString("defibrillator:location")
                 if (loc.isEmpty()) loc = tags.optString("location")
-
                 if (loc.isNotEmpty()) infoList.add("Location: $loc")
-
-                // General Descriptions
                 if (tags.has("description")) infoList.add("Note: " + tags.getString("description"))
-
-                // Indoor Check
                 if (tags.optString("indoor") == "yes") infoList.add("(Indoors)")
             }
         }
@@ -405,7 +423,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // --- SENSOR LOGIC ---
     override fun onResume() {
         super.onResume()
+        // Register BOTH sensors
         rotationVectorSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
+        magneticSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
     }
     override fun onPause() {
         super.onPause()
@@ -413,79 +433,95 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event == null || event.sensor.type != Sensor.TYPE_ROTATION_VECTOR) return
+        if (event == null) return
 
-        // 1. SPEED CHECK: If driving fast (> 15mph), ignore the compass (GPS handles it)
-        val currentSpeed = currentLocation?.speed ?: 0f
-        if (currentSpeed > SPEED_THRESHOLD_MPS) {
-            return
-        }
+        // 1. HANDLE MAGNETIC INTERFERENCE DETECTION
+        if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
+            val magX = event.values[0]
+            val magY = event.values[1]
+            val magZ = event.values[2]
+            // Calculate total strength (micro-Tesla)
+            val magnitude = sqrt(magX * magX + magY * magY + magZ * magZ)
 
-        // 2. GET ROTATION MATRIX
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-
-        // 3. FIX FOR SCREEN ROTATION (Portrait vs Landscape)
-        // This fixes the "Compass is less accurate" issue when holding the phone sideways
-        val axisAdjustedMatrix = FloatArray(9)
-        val displayRotation = windowManager.defaultDisplay.rotation
-        var axisX = SensorManager.AXIS_X
-        var axisY = SensorManager.AXIS_Y
-
-        when (displayRotation) {
-            android.view.Surface.ROTATION_90 -> {
-                axisX = SensorManager.AXIS_Y
-                axisY = SensorManager.AXIS_MINUS_X
-            }
-            android.view.Surface.ROTATION_180 -> {
-                axisX = SensorManager.AXIS_MINUS_X
-                axisY = SensorManager.AXIS_MINUS_Y
-            }
-            android.view.Surface.ROTATION_270 -> {
-                axisX = SensorManager.AXIS_MINUS_Y
-                axisY = SensorManager.AXIS_X
+            // Only warn if we are NOT using GPS (Speed check)
+            val currentSpeed = currentLocation?.speed ?: 0f
+            if (currentSpeed <= SPEED_THRESHOLD_MPS) {
+                // Earth is usually 25-65. >70 is typically metal/interference. <20 is shielding.
+                if (magnitude > 75 || magnitude < 20) {
+                    tvInterference.visibility = View.VISIBLE
+                } else {
+                    tvInterference.visibility = View.GONE
+                }
             }
         }
 
-        if (SensorManager.remapCoordinateSystem(rotationMatrix, axisX, axisY, axisAdjustedMatrix)) {
-            SensorManager.getOrientation(axisAdjustedMatrix, orientationAngles)
-        } else {
-            // Fallback if remap fails
-            SensorManager.getOrientation(rotationMatrix, orientationAngles)
+        // 2. HANDLE COMPASS ROTATION
+        if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
+            // SPEED CHECK: If driving fast (> 15mph), ignore the compass
+            val currentSpeed = currentLocation?.speed ?: 0f
+            if (currentSpeed > SPEED_THRESHOLD_MPS) {
+                return
+            }
+
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+
+            val axisAdjustedMatrix = FloatArray(9)
+            val displayRotation = windowManager.defaultDisplay.rotation
+            var axisX = SensorManager.AXIS_X
+            var axisY = SensorManager.AXIS_Y
+
+            when (displayRotation) {
+                android.view.Surface.ROTATION_90 -> {
+                    axisX = SensorManager.AXIS_Y
+                    axisY = SensorManager.AXIS_MINUS_X
+                }
+                android.view.Surface.ROTATION_180 -> {
+                    axisX = SensorManager.AXIS_MINUS_X
+                    axisY = SensorManager.AXIS_MINUS_Y
+                }
+                android.view.Surface.ROTATION_270 -> {
+                    axisX = SensorManager.AXIS_MINUS_Y
+                    axisY = SensorManager.AXIS_X
+                }
+            }
+
+            if (SensorManager.remapCoordinateSystem(rotationMatrix, axisX, axisY, axisAdjustedMatrix)) {
+                SensorManager.getOrientation(axisAdjustedMatrix, orientationAngles)
+            } else {
+                SensorManager.getOrientation(rotationMatrix, orientationAngles)
+            }
+
+            val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
+            updateArrowWithHeading(azimuth)
+
+            // Accuracy Status
+            val statusText: String
+            val statusColor: Int
+
+            when (event.accuracy) {
+                SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
+                    statusText = "Compass: Good"
+                    statusColor = Color.parseColor("#32CD32")
+                }
+                SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
+                    statusText = "Compass: Fair"
+                    statusColor = Color.parseColor("#FFD700")
+                }
+                SensorManager.SENSOR_STATUS_ACCURACY_LOW -> {
+                    statusText = "Compass: Weak"
+                    statusColor = Color.RED
+                }
+                else -> {
+                    statusText = "Compass: Poor"
+                    statusColor = Color.RED
+                }
+            }
+
+            tvAccuracy.text = statusText
+            tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
         }
-
-        val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
-
-        // 4. UPDATE ARROW
-        updateArrowWithHeading(azimuth)
-
-        // 5. UPDATE ACCURACY STATUS
-        val statusText: String
-        val statusColor: Int
-
-        when (event.accuracy) {
-            SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
-                statusText = "Compass: Good"
-                statusColor = Color.parseColor("#32CD32") // Green
-            }
-            SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
-                statusText = "Compass: Fair"
-                statusColor = Color.parseColor("#FFD700") // Yellow
-            }
-            SensorManager.SENSOR_STATUS_ACCURACY_LOW -> {
-                statusText = "Compass: Weak"
-                statusColor = Color.RED
-            }
-            else -> {
-                statusText = "Compass: Poor" // Unreliable
-                statusColor = Color.RED
-            }
-        }
-
-        tvAccuracy.text = statusText
-        tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
     }
 
-    // --- NEW HELPER FUNCTION FOR ROTATION ---
     private fun updateArrowWithHeading(userHeading: Float) {
         if (currentLocation != null && destinationAmenity != null) {
             val bearingToTarget = currentLocation!!.bearingTo(destinationAmenity!!.location)
