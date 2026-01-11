@@ -1,0 +1,40 @@
+name: Upload to Internet Archive
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  upload-to-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Release Asset
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: ${{ github.repository }}
+          tag: ${{ github.event.release.tag_name }}
+          fileName: "*.apk" # Adjust if your file isn't just *.apk
+          out-file-path: "downloaded_assets"
+
+      - name: Upload to Archive.org
+        uses: Nick2bad4u/internet-archive-upload@v1
+        with:
+          # REQUIRED: Your IA Keys from Secrets
+          access-key: ${{ secrets.IA_ACCESS_KEY }}
+          secret-key: ${{ secrets.IA_SECRET_KEY }}
+          
+          # REQUIRED: The permanent ID of your page on Archive.org
+          # If this ID doesn't exist, it will be created.
+          # If it DOES exist, the file will be added to it.
+          identifier: "trash-compass-android-app" 
+          
+          # The file you just downloaded
+          files: "downloaded_assets/"
+          
+          # Metadata (Optional but recommended)
+          title: "TrashCompass Android App"
+          date: ${{ github.event.release.published_at }}
+          description: "Auto-uploaded build from GitHub Release ${{ github.event.release.tag_name }}"
