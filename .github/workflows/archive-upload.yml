@@ -29,12 +29,12 @@ jobs:
           # REQUIRED: The permanent ID of your page on Archive.org
           # If this ID doesn't exist, it will be created.
           # If it DOES exist, the file will be added to it.
-          identifier: "your-app-unique-name-12345" 
+          identifier: "trash-compass-android-app" 
           
           # The file you just downloaded
           files: "downloaded_assets/"
           
           # Metadata (Optional but recommended)
-          title: "My App Nightly Builds"
+          title: "TrashCompass Android App"
           date: ${{ github.event.release.published_at }}
           description: "Auto-uploaded build from GitHub Release ${{ github.event.release.tag_name }}"
