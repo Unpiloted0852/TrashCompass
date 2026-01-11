@@ -12,8 +12,11 @@ import android.hardware.SensorManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -44,6 +47,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var ivArrow: ImageView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
+    private lateinit var tvLegal: TextView // New Legal Footer
 
     // Sensors
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -98,6 +102,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivArrow = findViewById(R.id.ivArrow)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
+
+        // --- VISUAL FIX: Center text and add padding ---
+        tvMetadata.gravity = Gravity.CENTER
+        val padding = (20 * resources.displayMetrics.density).toInt()
+        tvMetadata.setPadding(padding, 0, padding, 0)
+
+        // --- LEGAL FOOTER INJECTION ---
+        // Since we can't edit XML easily, we programmatically add the footer here.
+        addLegalFooter()
+        // ------------------------------
 
         tvDistance.text = "Waiting for GPS..."
 
@@ -172,6 +186,49 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         checkPermissions()
     }
+
+    // --- LEGAL FOOTER LOGIC ---
+    private fun addLegalFooter() {
+        val rootLayout = findViewById<ViewGroup>(android.R.id.content)
+        tvLegal = TextView(this)
+        tvLegal.text = "© OpenStreetMap contributors. Data may be incomplete. Tap for info."
+        tvLegal.textSize = 10f
+        tvLegal.setTextColor(Color.parseColor("#808080")) // Grey
+        tvLegal.gravity = Gravity.CENTER
+        tvLegal.setPadding(0, 0, 0, 20) // Bottom padding
+
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.gravity = Gravity.BOTTOM
+
+        tvLegal.layoutParams = params
+        tvLegal.setOnClickListener { showLegalDialog() }
+
+        rootLayout.addView(tvLegal)
+    }
+
+    private fun showLegalDialog() {
+        val message = """
+            DATA DISCLAIMER:
+            
+            This app uses data from OpenStreetMap (OSM), a community-driven project. Data may be inaccurate, outdated, or incomplete.
+            
+            SAFETY WARNING:
+            Never rely solely on this app for emergency navigation or medical decisions. AED locations may be incorrect or inaccessible. In an emergency, always call emergency services immediately.
+            
+            LICENSE:
+            Data is available under the Open Database License (ODbL).
+        """.trimIndent()
+
+        AlertDialog.Builder(this)
+            .setTitle("Legal & Safety")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+    // --------------------------
 
     private fun checkPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
