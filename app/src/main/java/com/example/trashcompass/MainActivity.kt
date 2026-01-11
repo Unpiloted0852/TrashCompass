@@ -259,15 +259,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         builder.setPositiveButton("Search") { _, _ ->
             val query = input.text.toString().trim()
             if (query.isNotEmpty()) {
-                // If user typed something exact from our list, use it.
-                // If they typed random text, we try to use it as the name, but standard mapping won't apply.
-                // For simplicity/robustness, we treat the input as the "Name"
                 setNewSearchTarget(query)
             }
         }
         builder.setNegativeButton("Cancel", null)
 
-        // Auto-show keyboard
         val dialog = builder.create()
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         dialog.show()
@@ -666,8 +662,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             tvMapButton.visibility = View.GONE
             tvMetadata.visibility = View.GONE
             if (foundAmenities.isEmpty() && initialSearchDone) {
+                // --- NEW: SPECIFIC NOT FOUND MESSAGE ---
                 tvDistance.textSize = 24f
-                tvDistance.text = "None found within 1km"
+                tvDistance.text = "No '$currentAmenityName' found"
                 tvHint.text = "(Tap to retry)"
             }
         }
@@ -687,6 +684,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         // --- HARDCODED SPECIAL CASES ---
         return when (type) {
+            "Trash Can" -> """[out:json];(node["amenity"="waste_basket"]$bbox;node["amenity"="waste_disposal"]$bbox;node["bin"="yes"]$bbox;way["amenity"="waste_basket"]$bbox;way["bin"="yes"]$bbox;);out center;"""
             "Defibrillator (AED)" -> """[out:json];(node["emergency"="defibrillator"]$bbox;way["emergency"="defibrillator"]$bbox;);out center;"""
             "Public Toilet" -> """
                 [out:json];
@@ -703,7 +701,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             "ATM" -> """[out:json];node["amenity"="atm"]$bbox;out center;"""
             "Post Box" -> """[out:json];node["amenity"="post_box"]$bbox;out center;"""
             "Bench" -> """[out:json];node["amenity"="bench"]$bbox;out center;"""
-            else -> """[out:json];(node["amenity"="waste_basket"]$bbox;node["amenity"="waste_disposal"]$bbox;node["bin"="yes"]$bbox;way["amenity"="waste_basket"]$bbox;way["bin"="yes"]$bbox;);out center;"""
+
+            else -> {
+                // --- NEW FALLBACK: SEARCH BY NAME ---
+                // If it's not a known category, search for places with this specific NAME.
+                // Case insensitive.
+                val sanitized = type.replace("\"", "")
+                """[out:json];(node["name"~"$sanitized",i]$bbox;way["name"~"$sanitized",i]$bbox;);out center;"""
+            }
         }
     }
 
