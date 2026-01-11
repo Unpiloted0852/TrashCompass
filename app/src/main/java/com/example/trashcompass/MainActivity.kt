@@ -85,7 +85,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var lastFriendlyError = ""
 
     // --- DICTIONARY FOR "ADVANCED" SEARCH ---
-    // Maps "Human Name" -> "OSM Key=Value"
     private val searchDictionary = mapOf(
         "Pharmacy" to "amenity=pharmacy",
         "Hospital" to "amenity=hospital",
@@ -109,6 +108,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         "Park" to "leisure=park",
         "Playground" to "leisure=playground",
         "Dog Park" to "leisure=dog_park",
+        "Picnic Table" to "leisure=picnic_table", // Explicitly added
         "Picnic Site" to "tourism=picnic_site",
         "Hotel" to "tourism=hotel",
         "Motel" to "tourism=motel",
@@ -126,6 +126,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         "Hardware Store" to "shop=hardware",
         "Bicycle Shop" to "shop=bicycle",
         "Car Repair" to "shop=car_repair"
+    )
+
+    // Hardcoded list of default options
+    private val hardcodedOptions = listOf(
+        "Trash Can", "Public Toilet", "Defibrillator (AED)",
+        "Water Fountain", "Recycling Bin", "ATM", "Post Box", "Bench"
     )
 
     // SPEED TUNING: 6 second timeout
@@ -199,17 +205,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val popup = PopupMenu(this, view)
 
             // Standard Options
-            val opts = listOf(
-                "Trash Can",
-                "Public Toilet",
-                "Defibrillator (AED)",
-                "Water Fountain",
-                "Recycling Bin",
-                "ATM",
-                "Post Box",
-                "Bench"
-            )
-            opts.forEach { popup.menu.add(it) }
+            hardcodedOptions.forEach { popup.menu.add(it) }
 
             // ADVANCED OPTION
             popup.menu.add("🔍 Search Custom...")
@@ -662,9 +658,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             tvMapButton.visibility = View.GONE
             tvMetadata.visibility = View.GONE
             if (foundAmenities.isEmpty() && initialSearchDone) {
-                // --- NEW: SPECIFIC NOT FOUND MESSAGE ---
                 tvDistance.textSize = 24f
-                tvDistance.text = "No '$currentAmenityName' found"
+
+                // --- SMART ERROR MESSAGE ---
+                // If it's a known standard option, say "No X found within 1km"
+                // If it's a custom weird name, say "No 'X' found"
+                if (hardcodedOptions.contains(currentAmenityName) || searchDictionary.containsKey(currentAmenityName)) {
+                    tvDistance.text = "None found within 1km"
+                } else {
+                    tvDistance.text = "No '$currentAmenityName' found"
+                }
+
                 tvHint.text = "(Tap to retry)"
             }
         }
@@ -674,9 +678,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon)
 
         // --- DICTIONARY CHECK ---
-        // If the type is in our dictionary, use the mapped OSM tag
         if (searchDictionary.containsKey(type)) {
-            val tag = searchDictionary[type]!! // e.g., "amenity=pharmacy"
+            val tag = searchDictionary[type]!!
             val key = tag.substringBefore("=")
             val value = tag.substringAfter("=")
             return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
@@ -703,11 +706,28 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             "Bench" -> """[out:json];node["amenity"="bench"]$bbox;out center;"""
 
             else -> {
-                // --- NEW FALLBACK: SEARCH BY NAME ---
-                // If it's not a known category, search for places with this specific NAME.
-                // Case insensitive.
-                val sanitized = type.replace("\"", "")
-                """[out:json];(node["name"~"$sanitized",i]$bbox;way["name"~"$sanitized",i]$bbox;);out center;"""
+                // --- NEW FALLBACK: SMART TAG & NAME SEARCH ---
+                val rawInput = type
+                val snakeCase = type.lowercase().replace(" ", "_")
+
+                """
+                [out:json];
+                (
+                    node["name"~"$rawInput",i]$bbox;
+                    way["name"~"$rawInput",i]$bbox;
+                    node["amenity"="$snakeCase"]$bbox;
+                    way["amenity"="$snakeCase"]$bbox;
+                    node["leisure"="$snakeCase"]$bbox;
+                    way["leisure"="$snakeCase"]$bbox;
+                    node["tourism"="$snakeCase"]$bbox;
+                    way["tourism"="$snakeCase"]$bbox;
+                    node["shop"="$snakeCase"]$bbox;
+                    way["shop"="$snakeCase"]$bbox;
+                    node["man_made"="$snakeCase"]$bbox;
+                    way["man_made"="$snakeCase"]$bbox;
+                );
+                out center;
+                """.trimIndent()
             }
         }
     }
