@@ -132,7 +132,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
-            val opts = listOf("Trash Can", "Public Toilet", "Water Fountain", "Recycling Bin", "ATM", "Post Box", "Bench")
+            val opts = listOf(
+                "Trash Can",
+                "Public Toilet",
+                "Defibrillator (AED)",
+                "Water Fountain",
+                "Recycling Bin",
+                "ATM",
+                "Post Box",
+                "Bench"
+            )
             opts.forEach { popup.menu.add(it) }
 
             popup.setOnMenuItemClickListener { item ->
@@ -295,7 +304,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             } else if (fee == "yes") {
                 infoList.add("Fee Required")
             } else if (fee.isNotEmpty()) {
-                // fee tag often contains the price directly like "0.50 EUR"
                 infoList.add("Fee: $fee")
             }
         }
@@ -311,6 +319,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     if (dw == "yes") infoList.add("Water: Drinkable")
                     else if (dw == "no") infoList.add("Water: Not Drinkable")
                 }
+            }
+            "Defibrillator (AED)" -> {
+                // Location Notes
+                var loc = tags.optString("defibrillator:location")
+                if (loc.isEmpty()) loc = tags.optString("location")
+
+                if (loc.isNotEmpty()) infoList.add("Location: $loc")
+
+                // General Descriptions
+                if (tags.has("description")) infoList.add("Note: " + tags.getString("description"))
+
+                // Indoor Check
+                if (tags.optString("indoor") == "yes") infoList.add("(Indoors)")
             }
         }
 
@@ -487,6 +508,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
         val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon)
         return when (type) {
+            "Defibrillator (AED)" -> """[out:json];(node["emergency"="defibrillator"]$bbox;way["emergency"="defibrillator"]$bbox;);out center;"""
             "Public Toilet" -> """
                 [out:json];
                 (
