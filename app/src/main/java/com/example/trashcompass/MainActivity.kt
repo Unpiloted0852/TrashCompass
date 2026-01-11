@@ -12,12 +12,16 @@ import android.hardware.SensorManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -49,13 +53,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
     private lateinit var tvLegal: TextView
-    private lateinit var tvInterference: TextView // New Warning Label
+    private lateinit var tvInterference: TextView
 
     // Sensors
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var sensorManager: SensorManager
     private var rotationVectorSensor: Sensor? = null
-    private var magneticSensor: Sensor? = null // New Sensor for interference
+    private var magneticSensor: Sensor? = null
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
     private var currentArrowRotation = 0f
@@ -79,6 +83,50 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var isErrorState = false
     private var searchJob: Job? = null
     private var lastFriendlyError = ""
+
+    // --- DICTIONARY FOR "ADVANCED" SEARCH ---
+    // Maps "Human Name" -> "OSM Key=Value"
+    private val searchDictionary = mapOf(
+        "Pharmacy" to "amenity=pharmacy",
+        "Hospital" to "amenity=hospital",
+        "Police" to "amenity=police",
+        "Fire Station" to "amenity=fire_station",
+        "Gas Station" to "amenity=fuel",
+        "EV Charging" to "amenity=charging_station",
+        "Parking" to "amenity=parking",
+        "Bus Stop" to "highway=bus_stop",
+        "Taxi Stand" to "amenity=taxi",
+        "Supermarket" to "shop=supermarket",
+        "Convenience Store" to "shop=convenience",
+        "Bakery" to "shop=bakery",
+        "Cafe" to "amenity=cafe",
+        "Restaurant" to "amenity=restaurant",
+        "Fast Food" to "amenity=fast_food",
+        "Bar" to "amenity=bar",
+        "Pub" to "amenity=pub",
+        "Library" to "amenity=library",
+        "Cinema" to "amenity=cinema",
+        "Park" to "leisure=park",
+        "Playground" to "leisure=playground",
+        "Dog Park" to "leisure=dog_park",
+        "Picnic Site" to "tourism=picnic_site",
+        "Hotel" to "tourism=hotel",
+        "Motel" to "tourism=motel",
+        "Camp Site" to "tourism=camp_site",
+        "Hostel" to "tourism=hostel",
+        "Museum" to "tourism=museum",
+        "Zoo" to "tourism=zoo",
+        "Vending Machine" to "amenity=vending_machine",
+        "Ice Cream" to "amenity=ice_cream",
+        "Dentist" to "amenity=dentist",
+        "Veterinarian" to "amenity=veterinary",
+        "Bank" to "amenity=bank",
+        "Clothes Shop" to "shop=clothes",
+        "Electronics Store" to "shop=electronics",
+        "Hardware Store" to "shop=hardware",
+        "Bicycle Shop" to "shop=bicycle",
+        "Car Repair" to "shop=car_repair"
+    )
 
     // SPEED TUNING: 6 second timeout
     private val httpClient = OkHttpClient.Builder()
@@ -149,6 +197,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
+
+            // Standard Options
             val opts = listOf(
                 "Trash Can",
                 "Public Toilet",
@@ -161,22 +211,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             )
             opts.forEach { popup.menu.add(it) }
 
+            // ADVANCED OPTION
+            popup.menu.add("🔍 Search Custom...")
+
             popup.setOnMenuItemClickListener { item ->
-                currentAmenityName = item.title.toString()
-                tvTitle.text = "Nearest $currentAmenityName"
-
-                // Reset State
-                foundAmenities.clear()
-                destinationAmenity = null
-                lastFetchLocation = null
-                initialSearchDone = false
-
-                tvDistance.text = "Searching..."
-                tvMetadata.visibility = View.GONE
-                tvMapButton.visibility = View.GONE
-
-                if (currentLocation != null) {
-                    fetchAmenitiesFast(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
+                if (item.title == "🔍 Search Custom...") {
+                    showCustomSearchDialog()
+                } else {
+                    setNewSearchTarget(item.title.toString())
                 }
                 true
             }
@@ -185,10 +227,69 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-        magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) // Init Mag Sensor
+        magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         checkPermissions()
+    }
+
+    // --- SEARCH LOGIC ---
+    private fun showCustomSearchDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("What are you looking for?")
+
+        // Create Layout programmatically
+        val container = LinearLayout(this)
+        container.orientation = LinearLayout.VERTICAL
+        val padding = (20 * resources.displayMetrics.density).toInt()
+        container.setPadding(padding, padding, padding, padding)
+
+        val input = AutoCompleteTextView(this)
+        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        input.hint = "Type here (e.g. Pharmacy, Gas...)"
+
+        // Connect Dictionary to AutoComplete
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, searchDictionary.keys.toList())
+        input.setAdapter(adapter)
+        input.threshold = 1 // Start suggesting after 1 character
+
+        container.addView(input)
+        builder.setView(container)
+
+        builder.setPositiveButton("Search") { _, _ ->
+            val query = input.text.toString().trim()
+            if (query.isNotEmpty()) {
+                // If user typed something exact from our list, use it.
+                // If they typed random text, we try to use it as the name, but standard mapping won't apply.
+                // For simplicity/robustness, we treat the input as the "Name"
+                setNewSearchTarget(query)
+            }
+        }
+        builder.setNegativeButton("Cancel", null)
+
+        // Auto-show keyboard
+        val dialog = builder.create()
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        dialog.show()
+    }
+
+    private fun setNewSearchTarget(targetName: String) {
+        currentAmenityName = targetName
+        tvTitle.text = "Nearest $currentAmenityName"
+
+        // Reset State
+        foundAmenities.clear()
+        destinationAmenity = null
+        lastFetchLocation = null
+        initialSearchDone = false
+
+        tvDistance.text = "Searching..."
+        tvMetadata.visibility = View.GONE
+        tvMapButton.visibility = View.GONE
+
+        if (currentLocation != null) {
+            fetchAmenitiesFast(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
+        }
     }
 
     // --- INTERFERENCE UI ---
@@ -201,14 +302,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000")) // Semi-transparent Red
         tvInterference.gravity = Gravity.CENTER
         tvInterference.setPadding(20, 10, 20, 10)
-        tvInterference.visibility = View.GONE // Hidden by default
+        tvInterference.visibility = View.GONE
 
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
         )
         params.gravity = Gravity.TOP
-        params.topMargin = (80 * resources.displayMetrics.density).toInt() // Below title
+        params.topMargin = (80 * resources.displayMetrics.density).toInt()
 
         tvInterference.layoutParams = params
         rootLayout.addView(tvInterference)
@@ -220,9 +321,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvLegal = TextView(this)
         tvLegal.text = "© OpenStreetMap contributors. Data may be incomplete. Tap for info."
         tvLegal.textSize = 10f
-        tvLegal.setTextColor(Color.parseColor("#808080")) // Grey
+        tvLegal.setTextColor(Color.parseColor("#808080"))
         tvLegal.gravity = Gravity.CENTER
-        tvLegal.setPadding(0, 0, 0, 20) // Bottom padding
+        tvLegal.setPadding(0, 0, 0, 20)
 
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -239,11 +340,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun showLegalDialog() {
         val message = """
             DATA DISCLAIMER:
-            
-            This app uses data from OpenStreetMap (OSM), a community-driven project. Data may be inaccurate, outdated, or incomplete.
+            This app uses data from OpenStreetMap (OSM). Data may be inaccurate, outdated, or incomplete.
             
             SAFETY WARNING:
-            Never rely solely on this app for emergency navigation or medical decisions. AED locations may be incorrect or inaccessible. In an emergency, always call emergency services immediately.
+            Never rely solely on this app for emergency navigation. AED locations may be incorrect.
             
             LICENSE:
             Data is available under the Open Database License (ODbL).
@@ -280,26 +380,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         currentLocation = loc
 
                         val speed = loc.speed
-                        // IF DRIVING (>15 MPH):
                         if (speed > SPEED_THRESHOLD_MPS && loc.hasBearing()) {
-                            // Use GPS Bearing
                             updateArrowWithHeading(loc.bearing)
                             tvAccuracy.text = "GPS Heading"
                             tvAccuracy.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#32CD32"))
-                            // Hide interference warning when driving (GPS fixes it)
                             tvInterference.visibility = View.GONE
                         }
-                        // ----------------------
 
-                        // 1. Initial Load - FAST
                         if (!initialSearchDone && !isSearching) {
                             initialSearchDone = true
                             lastFetchLocation = loc
-                            // No delay. Fire immediately.
                             fetchAmenitiesFast(loc.latitude, loc.longitude, currentAmenityName, isSilent = false)
-                        }
-                        // 2. Refetch
-                        else if (lastFetchLocation != null && !isSearching) {
+                        } else if (lastFetchLocation != null && !isSearching) {
                             if (loc.distanceTo(lastFetchLocation!!) > REFETCH_DISTANCE_THRESHOLD) {
                                 lastFetchLocation = loc
                                 fetchAmenitiesFast(loc.latitude, loc.longitude, currentAmenityName, isSilent = true)
@@ -423,7 +515,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // --- SENSOR LOGIC ---
     override fun onResume() {
         super.onResume()
-        // Register BOTH sensors
         rotationVectorSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
         magneticSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
     }
@@ -435,18 +526,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null) return
 
-        // 1. HANDLE MAGNETIC INTERFERENCE DETECTION
         if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             val magX = event.values[0]
             val magY = event.values[1]
             val magZ = event.values[2]
-            // Calculate total strength (micro-Tesla)
             val magnitude = sqrt(magX * magX + magY * magY + magZ * magZ)
 
-            // Only warn if we are NOT using GPS (Speed check)
             val currentSpeed = currentLocation?.speed ?: 0f
             if (currentSpeed <= SPEED_THRESHOLD_MPS) {
-                // Earth is usually 25-65. >70 is typically metal/interference. <20 is shielding.
                 if (magnitude > 75 || magnitude < 20) {
                     tvInterference.visibility = View.VISIBLE
                 } else {
@@ -455,16 +542,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        // 2. HANDLE COMPASS ROTATION
         if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
-            // SPEED CHECK: If driving fast (> 15mph), ignore the compass
             val currentSpeed = currentLocation?.speed ?: 0f
-            if (currentSpeed > SPEED_THRESHOLD_MPS) {
-                return
-            }
+            if (currentSpeed > SPEED_THRESHOLD_MPS) return
 
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-
             val axisAdjustedMatrix = FloatArray(9)
             val displayRotation = windowManager.defaultDisplay.rotation
             var axisX = SensorManager.AXIS_X
@@ -494,10 +576,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
             updateArrowWithHeading(azimuth)
 
-            // Accuracy Status
             val statusText: String
             val statusColor: Int
-
             when (event.accuracy) {
                 SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
                     statusText = "Compass: Good"
@@ -507,16 +587,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     statusText = "Compass: Fair"
                     statusColor = Color.parseColor("#FFD700")
                 }
-                SensorManager.SENSOR_STATUS_ACCURACY_LOW -> {
-                    statusText = "Compass: Weak"
-                    statusColor = Color.RED
-                }
                 else -> {
                     statusText = "Compass: Poor"
                     statusColor = Color.RED
                 }
             }
-
             tvAccuracy.text = statusText
             tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
         }
@@ -531,7 +606,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             var diff = targetRot - currentArrowRotation
             while (diff < -180) diff += 360
             while (diff > 180) diff -= 360
-            currentArrowRotation += diff * 0.15f // Smoothing
+            currentArrowRotation += diff * 0.15f
             ivArrow.rotation = currentArrowRotation
         }
     }
@@ -554,7 +629,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 tvDistance.text = "Searching$dots"
                 dots += "."
                 if (dots.length > 3) dots = ""
-                delay(250) // Faster animation
+                delay(250)
             }
         }
     }
@@ -600,6 +675,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
         val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon)
+
+        // --- DICTIONARY CHECK ---
+        // If the type is in our dictionary, use the mapped OSM tag
+        if (searchDictionary.containsKey(type)) {
+            val tag = searchDictionary[type]!! // e.g., "amenity=pharmacy"
+            val key = tag.substringBefore("=")
+            val value = tag.substringAfter("=")
+            return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
+        }
+
+        // --- HARDCODED SPECIAL CASES ---
         return when (type) {
             "Defibrillator (AED)" -> """[out:json];(node["emergency"="defibrillator"]$bbox;way["emergency"="defibrillator"]$bbox;);out center;"""
             "Public Toilet" -> """
@@ -624,7 +710,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // --- HIGH SPEED FETCH ---
     private fun fetchAmenitiesFast(lat: Double, lon: Double, amenityType: String, isSilent: Boolean) {
         if (!isSilent) {
-            isSearching = true // Mark searching immediately
+            isSearching = true
             startSearchingAnimation()
             isErrorState = false
         }
@@ -633,7 +719,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             var attempts = 0
             var success = false
 
-            // Loop through servers until one works
             while (attempts < servers.size && !success) {
                 try {
                     val query = getQueryString(amenityType, lat, lon)
