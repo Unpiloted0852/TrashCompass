@@ -252,30 +252,70 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
 
         val tags = item.tags
-        var info = ""
+        val infoList = ArrayList<String>()
 
+        // 1. Name & Context
+        // If we found a business with a toilet (toilets=yes), say "Inside..."
+        if (tags.has("name")) {
+            val name = tags.getString("name")
+            if (currentAmenityName == "Public Toilet" && tags.optString("toilets") == "yes") {
+                infoList.add("Inside $name")
+            } else {
+                infoList.add(name)
+            }
+        }
+
+        // 2. Access
+        var access = tags.optString("toilets:access")
+        if (access.isEmpty()) access = tags.optString("access")
+
+        if (access.isNotEmpty()) {
+            when (access) {
+                "customers" -> infoList.add("⚠ Customers Only")
+                "permissive", "yes" -> infoList.add("Public Access")
+                "private", "no" -> infoList.add("⚠ Private")
+                else -> infoList.add("Access: $access")
+            }
+        }
+
+        // 3. Fees
+        // Check for explicit price tags first
+        var price = tags.optString("charge")
+        if (price.isEmpty()) price = tags.optString("toilets:charge")
+
+        if (price.isNotEmpty()) {
+            infoList.add("Fee: $price")
+        } else {
+            // Check generic fee status
+            var fee = tags.optString("toilets:fee")
+            if (fee.isEmpty()) fee = tags.optString("fee")
+
+            if (fee == "no") {
+                infoList.add("Free")
+            } else if (fee == "yes") {
+                infoList.add("Fee Required")
+            } else if (fee.isNotEmpty()) {
+                // fee tag often contains the price directly like "0.50 EUR"
+                infoList.add("Fee: $fee")
+            }
+        }
+
+        // 4. Specific details
         when (currentAmenityName) {
             "Recycling Bin" -> {
-                if (tags.has("recycling_type")) info = "Type: " + tags.getString("recycling_type").replace("_", " ").capitalize()
-            }
-            "Public Toilet" -> {
-                if (tags.has("fee")) {
-                    info = if (tags.getString("fee") == "no") "Entry: Free" else "Entry: Fee Required"
-                }
+                if (tags.has("recycling_type")) infoList.add("Type: " + tags.getString("recycling_type").replace("_", " ").capitalize())
             }
             "Water Fountain" -> {
                 if (tags.has("drinking_water")) {
-                    info = if (tags.getString("drinking_water") == "yes") "Water: Drinkable" else "Water: Not Drinkable"
+                    val dw = tags.getString("drinking_water")
+                    if (dw == "yes") infoList.add("Water: Drinkable")
+                    else if (dw == "no") infoList.add("Water: Not Drinkable")
                 }
             }
         }
 
-        if (info.isEmpty() && tags.has("access")) {
-            info = "Access: " + tags.getString("access")
-        }
-
-        if (info.isNotEmpty()) {
-            tvMetadata.text = info
+        if (infoList.isNotEmpty()) {
+            tvMetadata.text = infoList.joinToString("\n")
             tvMetadata.visibility = View.VISIBLE
         } else {
             tvMetadata.visibility = View.GONE
@@ -341,8 +381,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         updateArrowWithHeading(azimuth)
 
         // 5. UPDATE ACCURACY STATUS
-        // If the sensor reports HIGH, we trust it (Green).
-        // If it reports LOW or UNRELIABLE, we warn the user (Red).
         val statusText: String
         val statusColor: Int
 
@@ -449,7 +487,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
         val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon)
         return when (type) {
-            "Public Toilet" -> """[out:json];(node["amenity"="toilets"]$bbox;way["amenity"="toilets"]$bbox;);out center;"""
+            "Public Toilet" -> """
+                [out:json];
+                (
+                    node["amenity"="toilets"]$bbox;
+                    way["amenity"="toilets"]$bbox;
+                    node["toilets"="yes"]$bbox;
+                    way["toilets"="yes"]$bbox;
+                );
+                out center;
+            """.trimIndent()
             "Water Fountain" -> """[out:json];(node["amenity"="drinking_water"]$bbox;way["amenity"="drinking_water"]$bbox;);out center;"""
             "Recycling Bin" -> """[out:json];(node["amenity"="recycling"]$bbox;node["recycling_type"="container"]$bbox;);out center;"""
             "ATM" -> """[out:json];node["amenity"="atm"]$bbox;out center;"""
