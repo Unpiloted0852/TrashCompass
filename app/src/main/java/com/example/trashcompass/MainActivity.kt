@@ -24,6 +24,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -84,63 +85,43 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var searchJob: Job? = null
     private var lastFriendlyError = ""
 
-    // --- DICTIONARY FOR "ADVANCED" SEARCH ---
+    // Stores the complex filter string determined by the Smart Search
+    private var currentAiFilter = ""
+
+    // --- 1. THE FAST BRAIN (Local Dictionary) ---
+    // Kept small for speed.
     private val searchDictionary = mapOf(
         "Pharmacy" to "amenity=pharmacy",
         "Hospital" to "amenity=hospital",
         "Police" to "amenity=police",
         "Fire Station" to "amenity=fire_station",
+        "Hydrant" to "emergency=fire_hydrant",
         "Gas Station" to "amenity=fuel",
         "EV Charging" to "amenity=charging_station",
         "Parking" to "amenity=parking",
-        "Bus Stop" to "highway=bus_stop",
-        "Taxi Stand" to "amenity=taxi",
         "Supermarket" to "shop=supermarket",
         "Convenience Store" to "shop=convenience",
         "Bakery" to "shop=bakery",
         "Cafe" to "amenity=cafe",
         "Restaurant" to "amenity=restaurant",
         "Fast Food" to "amenity=fast_food",
-        "Bar" to "amenity=bar",
         "Pub" to "amenity=pub",
-        "Library" to "amenity=library",
-        "Cinema" to "amenity=cinema",
         "Park" to "leisure=park",
         "Playground" to "leisure=playground",
-        "Dog Park" to "leisure=dog_park",
-        "Picnic Table" to "leisure=picnic_table", // Explicitly added
-        "Picnic Site" to "tourism=picnic_site",
-        "Hotel" to "tourism=hotel",
-        "Motel" to "tourism=motel",
-        "Camp Site" to "tourism=camp_site",
-        "Hostel" to "tourism=hostel",
-        "Museum" to "tourism=museum",
-        "Zoo" to "tourism=zoo",
-        "Vending Machine" to "amenity=vending_machine",
-        "Ice Cream" to "amenity=ice_cream",
-        "Dentist" to "amenity=dentist",
-        "Veterinarian" to "amenity=veterinary",
-        "Bank" to "amenity=bank",
-        "Clothes Shop" to "shop=clothes",
-        "Electronics Store" to "shop=electronics",
-        "Hardware Store" to "shop=hardware",
-        "Bicycle Shop" to "shop=bicycle",
-        "Car Repair" to "shop=car_repair"
+        "Hotel" to "tourism=hotel"
     )
 
-    // Hardcoded list of default options
     private val hardcodedOptions = listOf(
         "Trash Can", "Public Toilet", "Defibrillator (AED)",
         "Water Fountain", "Recycling Bin", "ATM", "Post Box", "Bench"
     )
 
-    // SPEED TUNING: 6 second timeout
+    // HTTP Client
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(6, TimeUnit.SECONDS)
-        .readTimeout(6, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS) // Increased for smarter AI response time
+        .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    // Server Priority List
     private val servers = listOf(
         "https://overpass.kumi.systems/api/interpreter",
         "https://lz4.overpass-api.de/api/interpreter",
@@ -160,15 +141,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
 
-        // --- VISUAL FIX: Center text and add padding ---
+        // UI Setup
         tvMetadata.gravity = Gravity.CENTER
         val padding = (20 * resources.displayMetrics.density).toInt()
         tvMetadata.setPadding(padding, 0, padding, 0)
 
-        // --- ADD UI ELEMENTS PROGRAMMATICALLY ---
         addLegalFooter()
         addInterferenceWarning()
-        // ----------------------------------------
 
         tvDistance.text = "Waiting for GPS..."
 
@@ -187,7 +166,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val mainAction = {
             if (isErrorState || (foundAmenities.isEmpty() && initialSearchDone && !isSearching)) {
-                // Retry
+                // RETRY LOGIC
+                tvDistance.text = "Retrying..."
+                tvHint.text = "Please wait..."
                 if (currentLocation != null) {
                     fetchAmenitiesFast(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
                 }
@@ -203,17 +184,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
-
-            // Standard Options
             hardcodedOptions.forEach { popup.menu.add(it) }
-
-            // ADVANCED OPTION
-            popup.menu.add("🔍 Search Custom...")
+            popup.menu.add("🔍 Custom Search")
 
             popup.setOnMenuItemClickListener { item ->
-                if (item.title == "🔍 Search Custom...") {
+                if (item.title == "🔍 Custom Search") {
                     showCustomSearchDialog()
                 } else {
+                    currentAiFilter = "" // Reset Smart Search logic
                     setNewSearchTarget(item.title.toString())
                 }
                 true
@@ -229,12 +207,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         checkPermissions()
     }
 
-    // --- SEARCH LOGIC ---
     private fun showCustomSearchDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("What are you looking for?")
+        builder.setTitle("Smart Search")
 
-        // Create Layout programmatically
         val container = LinearLayout(this)
         container.orientation = LinearLayout.VERTICAL
         val padding = (20 * resources.displayMetrics.density).toInt()
@@ -242,12 +218,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        input.hint = "Type here (e.g. Pharmacy, Gas...)"
+        input.hint = "e.g. USPS Mailbox, Bus stop with shelter..."
 
-        // Connect Dictionary to AutoComplete
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, searchDictionary.keys.toList())
         input.setAdapter(adapter)
-        input.threshold = 1 // Start suggesting after 1 character
 
         container.addView(input)
         builder.setView(container)
@@ -255,6 +229,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         builder.setPositiveButton("Search") { _, _ ->
             val query = input.text.toString().trim()
             if (query.isNotEmpty()) {
+                currentAiFilter = "" // Reset
                 setNewSearchTarget(query)
             }
         }
@@ -269,7 +244,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         currentAmenityName = targetName
         tvTitle.text = "Nearest $currentAmenityName"
 
-        // Reset State
         foundAmenities.clear()
         destinationAmenity = null
         lastFetchLocation = null
@@ -284,30 +258,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // --- INTERFERENCE UI ---
     private fun addInterferenceWarning() {
         val rootLayout = findViewById<ViewGroup>(android.R.id.content)
         tvInterference = TextView(this)
         tvInterference.text = "🧲 High Magnetic Interference Detected"
         tvInterference.textSize = 14f
         tvInterference.setTextColor(Color.WHITE)
-        tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000")) // Semi-transparent Red
+        tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000"))
         tvInterference.gravity = Gravity.CENTER
         tvInterference.setPadding(20, 10, 20, 10)
         tvInterference.visibility = View.GONE
 
-        val params = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
+        val params = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
         params.gravity = Gravity.TOP
         params.topMargin = (80 * resources.displayMetrics.density).toInt()
-
         tvInterference.layoutParams = params
         rootLayout.addView(tvInterference)
     }
 
-    // --- LEGAL FOOTER LOGIC ---
     private fun addLegalFooter() {
         val rootLayout = findViewById<ViewGroup>(android.R.id.content)
         tvLegal = TextView(this)
@@ -315,35 +283,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvLegal.textSize = 10f
         tvLegal.setTextColor(Color.parseColor("#808080"))
         tvLegal.gravity = Gravity.CENTER
-        tvLegal.setPadding(0, 0, 0, 20)
 
-        val params = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
+        // Goldilocks padding: 12dp
+        val bottomPad = (12 * resources.displayMetrics.density).toInt()
+        tvLegal.setPadding(0, 0, 0, bottomPad)
+
+        val params = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
         params.gravity = Gravity.BOTTOM
-
         tvLegal.layoutParams = params
         tvLegal.setOnClickListener { showLegalDialog() }
-
         rootLayout.addView(tvLegal)
     }
 
     private fun showLegalDialog() {
-        val message = """
-            DATA DISCLAIMER:
-            This app uses data from OpenStreetMap (OSM). Data may be inaccurate, outdated, or incomplete.
-            
-            SAFETY WARNING:
-            Never rely solely on this app for emergency navigation. AED locations may be incorrect.
-            
-            LICENSE:
-            Data is available under the Open Database License (ODbL).
-        """.trimIndent()
-
         AlertDialog.Builder(this)
             .setTitle("Legal & Safety")
-            .setMessage(message)
+            .setMessage("Data from OpenStreetMap (OSM). Use at your own risk. Not for emergency navigation.")
             .setPositiveButton("OK", null)
             .show()
     }
@@ -379,21 +334,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             tvInterference.visibility = View.GONE
                         }
 
+                        // 1. Initial Load
                         if (!initialSearchDone && !isSearching) {
                             initialSearchDone = true
                             lastFetchLocation = loc
                             fetchAmenitiesFast(loc.latitude, loc.longitude, currentAmenityName, isSilent = false)
-                        } else if (lastFetchLocation != null && !isSearching) {
+                        }
+                        // 2. Refetch
+                        else if (lastFetchLocation != null && !isSearching) {
                             if (loc.distanceTo(lastFetchLocation!!) > REFETCH_DISTANCE_THRESHOLD) {
                                 lastFetchLocation = loc
                                 fetchAmenitiesFast(loc.latitude, loc.longitude, currentAmenityName, isSilent = true)
                             }
                         }
 
+                        // 3. Recalculate
                         if (foundAmenities.isNotEmpty()) {
                             recalculateNearest()
                         }
-
                         if (!isSearching) updateUI()
                     }
                 }
@@ -414,7 +372,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 bestTarget = item
             }
         }
-
         if (bestTarget != destinationAmenity) {
             destinationAmenity = bestTarget
             parseMetadata(bestTarget)
@@ -422,77 +379,65 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    // --- METADATA PARSING ---
     private fun parseMetadata(item: Amenity?) {
         if (item?.tags == null) {
             tvMetadata.visibility = View.GONE
             return
         }
-
         val tags = item.tags
         val infoList = ArrayList<String>()
 
-        // 1. Name & Context
         if (tags.has("name")) {
             val name = tags.getString("name")
-            if (currentAmenityName == "Public Toilet" && tags.optString("toilets") == "yes") {
-                infoList.add("Inside $name")
-            } else {
-                infoList.add(name)
-            }
+            val isToilet = currentAmenityName == "Public Toilet" || tags.optString("amenity") == "toilets" || tags.optString("toilets") == "yes"
+            if (isToilet && tags.optString("toilets") == "yes") infoList.add("Inside $name")
+            else infoList.add(name)
         }
 
-        // 2. Access
+        // Show Operator
+        if (tags.has("operator")) infoList.add(tags.getString("operator"))
+
         var access = tags.optString("toilets:access")
         if (access.isEmpty()) access = tags.optString("access")
+        if (access == "customers") infoList.add("⚠ Customers Only")
+        else if (access.isNotEmpty()) infoList.add("Access: $access")
 
-        if (access.isNotEmpty()) {
-            when (access) {
-                "customers" -> infoList.add("⚠ Customers Only")
-                "permissive", "yes" -> infoList.add("Public Access")
-                "private", "no" -> infoList.add("⚠ Private")
-                else -> infoList.add("Access: $access")
-            }
-        }
-
-        // 3. Fees
+        // Fees
         var price = tags.optString("charge")
         if (price.isEmpty()) price = tags.optString("toilets:charge")
-
-        if (price.isNotEmpty()) {
-            infoList.add("Fee: $price")
-        } else {
+        if (price.isNotEmpty()) infoList.add("Fee: $price")
+        else {
             var fee = tags.optString("toilets:fee")
             if (fee.isEmpty()) fee = tags.optString("fee")
+            if (fee == "no") infoList.add("Free")
+            else if (fee == "yes") infoList.add("Fee Required")
+        }
 
-            if (fee == "no") {
-                infoList.add("Free")
-            } else if (fee == "yes") {
-                infoList.add("Fee Required")
-            } else if (fee.isNotEmpty()) {
-                infoList.add("Fee: $fee")
+        if (tags.optString("amenity") == "recycling" || tags.has("recycling_type")) {
+            if (tags.has("recycling_type")) infoList.add("Type: " + tags.getString("recycling_type").replace("_", " ").capitalize())
+        }
+
+        if (tags.optString("amenity") == "drinking_water") {
+            if (tags.has("drinking_water")) {
+                val dw = tags.getString("drinking_water")
+                if (dw == "yes") infoList.add("Water: Drinkable")
+                else if (dw == "no") infoList.add("Water: Not Drinkable")
             }
         }
 
-        // 4. Specific details
-        when (currentAmenityName) {
-            "Recycling Bin" -> {
-                if (tags.has("recycling_type")) infoList.add("Type: " + tags.getString("recycling_type").replace("_", " ").capitalize())
-            }
-            "Water Fountain" -> {
-                if (tags.has("drinking_water")) {
-                    val dw = tags.getString("drinking_water")
-                    if (dw == "yes") infoList.add("Water: Drinkable")
-                    else if (dw == "no") infoList.add("Water: Not Drinkable")
-                }
-            }
-            "Defibrillator (AED)" -> {
-                var loc = tags.optString("defibrillator:location")
-                if (loc.isEmpty()) loc = tags.optString("location")
-                if (loc.isNotEmpty()) infoList.add("Location: $loc")
-                if (tags.has("description")) infoList.add("Note: " + tags.getString("description"))
-                if (tags.optString("indoor") == "yes") infoList.add("(Indoors)")
-            }
+        if (tags.optString("emergency") == "defibrillator") {
+            var loc = tags.optString("defibrillator:location")
+            if (loc.isEmpty()) loc = tags.optString("location")
+            if (loc.isNotEmpty()) infoList.add("Location: $loc")
+            if (tags.optString("indoor") == "yes") infoList.add("(Indoors)")
         }
+
+        // Helpful notes
+        if (tags.has("description")) infoList.add("Note: " + tags.getString("description"))
+        if (tags.has("note")) infoList.add("Note: " + tags.getString("note"))
+        if (tags.has("shelter")) { if(tags.getString("shelter") == "yes") infoList.add("Has Shelter") }
+        if (tags.has("bin")) { if(tags.getString("bin") == "yes") infoList.add("Has Bin") }
 
         if (infoList.isNotEmpty()) {
             tvMetadata.text = infoList.joinToString("\n")
@@ -504,7 +449,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun String.capitalize() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
-    // --- SENSOR LOGIC ---
     override fun onResume() {
         super.onResume()
         rotationVectorSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
@@ -517,74 +461,30 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null) return
-
         if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-            val magX = event.values[0]
-            val magY = event.values[1]
-            val magZ = event.values[2]
-            val magnitude = sqrt(magX * magX + magY * magY + magZ * magZ)
-
-            val currentSpeed = currentLocation?.speed ?: 0f
-            if (currentSpeed <= SPEED_THRESHOLD_MPS) {
-                if (magnitude > 75 || magnitude < 20) {
-                    tvInterference.visibility = View.VISIBLE
-                } else {
-                    tvInterference.visibility = View.GONE
-                }
+            val magnitude = sqrt(event.values[0] * event.values[0] + event.values[1] * event.values[1] + event.values[2] * event.values[2])
+            if ((currentLocation?.speed ?: 0f) <= SPEED_THRESHOLD_MPS) {
+                if (magnitude > 75 || magnitude < 20) tvInterference.visibility = View.VISIBLE else tvInterference.visibility = View.GONE
             }
         }
-
         if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
-            val currentSpeed = currentLocation?.speed ?: 0f
-            if (currentSpeed > SPEED_THRESHOLD_MPS) return
-
+            if ((currentLocation?.speed ?: 0f) > SPEED_THRESHOLD_MPS) return
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-            val axisAdjustedMatrix = FloatArray(9)
-            val displayRotation = windowManager.defaultDisplay.rotation
-            var axisX = SensorManager.AXIS_X
-            var axisY = SensorManager.AXIS_Y
-
-            when (displayRotation) {
-                android.view.Surface.ROTATION_90 -> {
-                    axisX = SensorManager.AXIS_Y
-                    axisY = SensorManager.AXIS_MINUS_X
-                }
-                android.view.Surface.ROTATION_180 -> {
-                    axisX = SensorManager.AXIS_MINUS_X
-                    axisY = SensorManager.AXIS_MINUS_Y
-                }
-                android.view.Surface.ROTATION_270 -> {
-                    axisX = SensorManager.AXIS_MINUS_Y
-                    axisY = SensorManager.AXIS_X
-                }
+            val axisAdjusted = FloatArray(9)
+            val rot = windowManager.defaultDisplay.rotation
+            var ax = SensorManager.AXIS_X; var ay = SensorManager.AXIS_Y
+            when(rot) {
+                1 -> { ax = SensorManager.AXIS_Y; ay = SensorManager.AXIS_MINUS_X }
+                2 -> { ax = SensorManager.AXIS_MINUS_X; ay = SensorManager.AXIS_MINUS_Y }
+                3 -> { ax = SensorManager.AXIS_MINUS_Y; ay = SensorManager.AXIS_X }
             }
-
-            if (SensorManager.remapCoordinateSystem(rotationMatrix, axisX, axisY, axisAdjustedMatrix)) {
-                SensorManager.getOrientation(axisAdjustedMatrix, orientationAngles)
-            } else {
-                SensorManager.getOrientation(rotationMatrix, orientationAngles)
-            }
-
+            SensorManager.remapCoordinateSystem(rotationMatrix, ax, ay, axisAdjusted)
+            SensorManager.getOrientation(axisAdjusted, orientationAngles)
             val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
             updateArrowWithHeading(azimuth)
 
-            val statusText: String
-            val statusColor: Int
-            when (event.accuracy) {
-                SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
-                    statusText = "Compass: Good"
-                    statusColor = Color.parseColor("#32CD32")
-                }
-                SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
-                    statusText = "Compass: Fair"
-                    statusColor = Color.parseColor("#FFD700")
-                }
-                else -> {
-                    statusText = "Compass: Poor"
-                    statusColor = Color.RED
-                }
-            }
-            tvAccuracy.text = statusText
+            val statusColor = if (event.accuracy >= 3) Color.parseColor("#32CD32") else if (event.accuracy == 2) Color.parseColor("#FFD700") else Color.RED
+            tvAccuracy.text = if (event.accuracy >= 3) "Compass: Good" else "Compass: Weak"
             tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
         }
     }
@@ -598,27 +498,43 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             var diff = targetRot - currentArrowRotation
             while (diff < -180) diff += 360
             while (diff > 180) diff -= 360
-            currentArrowRotation += diff * 0.15f
+
+            // --- FIX START ---
+            // Check if we are moving fast enough to be using GPS mode
+            val speed = currentLocation?.speed ?: 0f
+
+            // If driving (>15mph), snap INSTANTLY (1.0f).
+            // If walking (Compass), keep smoothing (0.15f) to reduce jitter.
+            val smoothingFactor = if (speed > SPEED_THRESHOLD_MPS) 1.0f else 0.15f
+
+            currentArrowRotation += diff * smoothingFactor
+            // --- FIX END ---
+
             ivArrow.rotation = currentArrowRotation
         }
     }
 
     private fun showCalibrationDialog() {
-        AlertDialog.Builder(this).setTitle("Compass Status").setMessage("Wave phone in Figure-8.").setPositiveButton("OK", null).show()
+        AlertDialog.Builder(this)
+            .setTitle("Compass Status")
+            .setMessage("Wave phone in Figure-8 to calibrate.")
+            .setPositiveButton("OK", null)
+            .show()
     }
+
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     // --- ANIMATION ---
-    private fun startSearchingAnimation() {
+    private fun startSearchingAnimation(isAi: Boolean) {
         if (isSearching) return
         isSearching = true
-        tvHint.text = "Please wait..."
         searchJob?.cancel()
         searchJob = CoroutineScope(Dispatchers.Main).launch {
-            tvDistance.textSize = 30f
+            tvDistance.textSize = 24f
             var dots = ""
             while (isActive) {
-                tvDistance.text = "Searching$dots"
+                if (isAi) tvDistance.text = "Analyzing$dots"
+                else tvDistance.text = "Searching$dots"
                 dots += "."
                 if (dots.length > 3) dots = ""
                 delay(250)
@@ -634,186 +550,202 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun updateUI() {
         if (isSearching) return
-
         if (isErrorState) {
             tvDistance.textSize = 24f
             tvDistance.text = lastFriendlyError
             tvHint.text = "(Tap to retry)"
             return
         }
-
         if (currentLocation != null && destinationAmenity != null) {
             tvDistance.textSize = 45f
             val dist = currentLocation!!.distanceTo(destinationAmenity!!.location)
-            if (useMetric) {
-                if (dist >= 1000) tvDistance.text = String.format("%.1f km", dist / 1000)
-                else tvDistance.text = "${dist.toInt()} m"
-            } else {
-                val feet = dist * 3.28084
-                if (feet >= 1000) tvDistance.text = String.format("%.2f mi", feet / 5280)
-                else tvDistance.text = "${feet.toInt()} ft"
-            }
+            if (useMetric) tvDistance.text = "${dist.toInt()} m" else tvDistance.text = "${(dist * 3.28084).toInt()} ft"
             tvMapButton.visibility = View.VISIBLE
         } else {
             tvMapButton.visibility = View.GONE
             tvMetadata.visibility = View.GONE
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
-
-                // --- SMART ERROR MESSAGE ---
-                // If it's a known standard option, say "No X found within 1km"
-                // If it's a custom weird name, say "No 'X' found"
-                if (hardcodedOptions.contains(currentAmenityName) || searchDictionary.containsKey(currentAmenityName)) {
-                    tvDistance.text = "None found within 1km"
-                } else {
-                    tvDistance.text = "No '$currentAmenityName' found"
-                }
-
+                tvDistance.text = "No '$currentAmenityName' found"
                 tvHint.text = "(Tap to retry)"
             }
         }
     }
 
-    private fun getQueryString(type: String, lat: Double, lon: Double): String {
-        val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon)
+    // --- 2. THE SLOW BRAIN (CLOUD AI) ---
+    // UPDATED: Now requests 'openai' model from Pollinations for smarter results
+    private fun resolveTagWithAI(userQuery: String): String? {
+        try {
+            val prompt = """
+                You are an OpenStreetMap expert. Convert the user search "$userQuery" into a raw OverpassQL filter string.
+                
+                CRITICAL ONTOLOGY RULES:
+                1. SPORTS/RECREATION (Pools, Parks, Pitches, Gyms) -> use "leisure".
+                2. STORES/RETAIL (Supermarkets, Clothes, Bakeries) -> use "shop".
+                3. SERVICES/FACILITIES (Banks, Toilets, Cafes, Pharmacies) -> use "amenity".
+                4. TOURISM (Hotels, Museums, Zoos) -> use "tourism".
+                5. EMERGENCY (Hydrants, Defibrillators) -> use "emergency".
+                6. DISPENSERS (Poop bags, Tickets) -> use "vending" or "amenity=vending_machine".
+                7. BRANDS/NAMES (Starbucks, USPS) -> use ["name"~"Regex",i] or ["brand"~"Regex",i].
 
-        // --- DICTIONARY CHECK ---
-        if (searchDictionary.containsKey(type)) {
-            val tag = searchDictionary[type]!!
-            val key = tag.substringBefore("=")
-            val value = tag.substringAfter("=")
-            return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
-        }
+                EXAMPLES:
+                Input: "Dog poop bags"
+                Output: { "filter": "[\"vending\"=\"excrement_bags\"]" }
 
-        // --- HARDCODED SPECIAL CASES ---
+                Input: "USPS mail"
+                Output: { "filter": "[\"amenity\"=\"post_box\"][\"operator\"~\"USPS\",i]" }
+
+                Return ONLY JSON: { "filter": "..." }
+            """.trimIndent()
+
+            val encodedPrompt = java.net.URLEncoder.encode(prompt, "UTF-8")
+
+            // UPDATED URL: Requesting 'openai' model explicitly for better logic
+            val url = "https://text.pollinations.ai/$encodedPrompt?model=openai"
+
+            val request = Request.Builder().url(url).build()
+            val response = httpClient.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseText = response.body?.string() ?: return null
+                val startIndex = responseText.indexOf("{")
+                val endIndex = responseText.lastIndexOf("}")
+
+                if (startIndex != -1 && endIndex != -1) {
+                    val cleanJson = responseText.substring(startIndex, endIndex + 1)
+                    val json = JSONObject(cleanJson)
+                    if (json.has("filter")) {
+                        return json.getString("filter")
+                    }
+                }
+            }
+        } catch (e: Exception) { e.printStackTrace() }
+        return null
+    }
+
+    // --- QUERY LOGIC ---
+    private fun getQueryString(type: String, customFilter: String?, lat: Double, lon: Double): String {
+        val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon) // 1km radius
+
         return when (type) {
             "Trash Can" -> """[out:json];(node["amenity"="waste_basket"]$bbox;node["amenity"="waste_disposal"]$bbox;node["bin"="yes"]$bbox;way["amenity"="waste_basket"]$bbox;way["bin"="yes"]$bbox;);out center;"""
             "Defibrillator (AED)" -> """[out:json];(node["emergency"="defibrillator"]$bbox;way["emergency"="defibrillator"]$bbox;);out center;"""
-            "Public Toilet" -> """
-                [out:json];
-                (
-                    node["amenity"="toilets"]$bbox;
-                    way["amenity"="toilets"]$bbox;
-                    node["toilets"="yes"]$bbox;
-                    way["toilets"="yes"]$bbox;
-                );
-                out center;
-            """.trimIndent()
+            "Public Toilet" -> """[out:json];(node["amenity"="toilets"]$bbox;way["amenity"="toilets"]$bbox;node["toilets"="yes"]$bbox;way["toilets"="yes"]$bbox;);out center;"""
             "Water Fountain" -> """[out:json];(node["amenity"="drinking_water"]$bbox;way["amenity"="drinking_water"]$bbox;);out center;"""
             "Recycling Bin" -> """[out:json];(node["amenity"="recycling"]$bbox;node["recycling_type"="container"]$bbox;);out center;"""
             "ATM" -> """[out:json];node["amenity"="atm"]$bbox;out center;"""
             "Post Box" -> """[out:json];node["amenity"="post_box"]$bbox;out center;"""
             "Bench" -> """[out:json];node["amenity"="bench"]$bbox;out center;"""
-
             else -> {
-                // --- NEW FALLBACK: SMART TAG & NAME SEARCH ---
-                val rawInput = type
-                val snakeCase = type.lowercase().replace(" ", "_")
-
-                """
-                [out:json];
-                (
-                    node["name"~"$rawInput",i]$bbox;
-                    way["name"~"$rawInput",i]$bbox;
-                    node["amenity"="$snakeCase"]$bbox;
-                    way["amenity"="$snakeCase"]$bbox;
-                    node["leisure"="$snakeCase"]$bbox;
-                    way["leisure"="$snakeCase"]$bbox;
-                    node["tourism"="$snakeCase"]$bbox;
-                    way["tourism"="$snakeCase"]$bbox;
-                    node["shop"="$snakeCase"]$bbox;
-                    way["shop"="$snakeCase"]$bbox;
-                    node["man_made"="$snakeCase"]$bbox;
-                    way["man_made"="$snakeCase"]$bbox;
-                );
-                out center;
-                """.trimIndent()
+                // HANDLE CUSTOM FILTERS
+                if (customFilter != null && customFilter.isNotEmpty()) {
+                    """[out:json];(node$customFilter$bbox;way$customFilter$bbox;);out center;"""
+                } else { "" }
             }
         }
     }
 
-    // --- HIGH SPEED FETCH ---
+    // --- MAIN FETCH LOGIC ---
     private fun fetchAmenitiesFast(lat: Double, lon: Double, amenityType: String, isSilent: Boolean) {
         if (!isSilent) {
             isSearching = true
-            startSearchingAnimation()
+            val needsAi = !hardcodedOptions.contains(amenityType) && !searchDictionary.containsKey(amenityType)
+            startSearchingAnimation(isAi = needsAi)
             isErrorState = false
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            var attempts = 0
-            var success = false
+            try {
+                var searchFilter: String? = null
+                var aiSuccess = true
 
-            while (attempts < servers.size && !success) {
-                try {
-                    val query = getQueryString(amenityType, lat, lon)
-                    val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-
-                    val currentServer = servers[attempts]
-                    val url = "$currentServer?data=$encodedQuery"
-
-                    val request = Request.Builder()
-                        .url(url)
-                        .header("User-Agent", "TrashCompass/2.0")
-                        .build()
-
-                    val response = httpClient.newCall(request).execute()
-
-                    if (response.isSuccessful) {
-                        val jsonString = response.body?.string()
-                        val tempFoundList = ArrayList<Amenity>()
-
-                        if (jsonString != null) {
-                            val jsonObj = JSONObject(jsonString)
-                            if (jsonObj.has("elements")) {
-                                val elements = jsonObj.getJSONArray("elements")
-                                for (i in 0 until elements.length()) {
-                                    val item = elements.getJSONObject(i)
-                                    var itemLat = 0.0
-                                    var itemLon = 0.0
-                                    val tags = if (item.has("tags")) item.getJSONObject("tags") else null
-
-                                    if (item.has("lat")) {
-                                        itemLat = item.getDouble("lat")
-                                        itemLon = item.getDouble("lon")
-                                    } else if (item.has("center")) {
-                                        val center = item.getJSONObject("center")
-                                        itemLat = center.getDouble("lat")
-                                        itemLon = center.getDouble("lon")
-                                    } else {
-                                        continue
-                                    }
-                                    val locObj = Location("osm")
-                                    locObj.latitude = itemLat
-                                    locObj.longitude = itemLon
-                                    tempFoundList.add(Amenity(locObj, tags))
-                                }
-                            }
-                        }
-
-                        success = true
-                        withContext(Dispatchers.Main) {
-                            if (!isSilent) stopSearchingAnimation()
-                            foundAmenities = tempFoundList
-                            if (foundAmenities.isEmpty()) destinationAmenity = null
-                            else recalculateNearest()
-                            updateUI()
-                        }
-                    } else {
-                        throw Exception("HTTP:${response.code}")
-                    }
-
-                } catch (e: Exception) {
-                    attempts++
+                // STEP 1: RESOLVE WHAT TO LOOK FOR
+                if (hardcodedOptions.contains(amenityType)) {
+                    // Use hardcoded complex queries logic in getQueryString
                 }
-            }
+                else if (currentAiFilter.isNotEmpty()) {
+                    searchFilter = currentAiFilter
+                }
+                else if (searchDictionary.containsKey(amenityType)) {
+                    val tag = searchDictionary[amenityType]!!
+                    val key = tag.substringBefore("=")
+                    val value = tag.substringAfter("=")
+                    searchFilter = "[\"$key\"=\"$value\"]"
+                } else {
+                    val aiResult = resolveTagWithAI(amenityType)
+                    if (aiResult != null) {
+                        searchFilter = aiResult
+                        currentAiFilter = aiResult
+                    } else {
+                        aiSuccess = false
+                    }
+                }
 
-            if (!success && !isSilent) {
+                // STEP 2: QUERY OVERPASS
+                if (aiSuccess) {
+                    var attempts = 0
+                    var success = false
+
+                    while (attempts < servers.size && !success) {
+                        try {
+                            val query = getQueryString(amenityType, searchFilter, lat, lon)
+
+                            if (query.isNotEmpty()) {
+                                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                                val url = "${servers[attempts]}?data=$encodedQuery"
+
+                                val request = Request.Builder().url(url).header("User-Agent", "TrashCompass/2.0").build()
+                                val response = httpClient.newCall(request).execute()
+
+                                if (response.isSuccessful) {
+                                    val jsonString = response.body?.string()
+                                    val tempFoundList = ArrayList<Amenity>()
+                                    if (jsonString != null) {
+                                        val jsonObj = JSONObject(jsonString)
+                                        if (jsonObj.has("elements")) {
+                                            val elements = jsonObj.getJSONArray("elements")
+                                            for (i in 0 until elements.length()) {
+                                                val item = elements.getJSONObject(i)
+                                                var itemLat = 0.0; var itemLon = 0.0
+                                                val tags = if (item.has("tags")) item.getJSONObject("tags") else null
+                                                if (item.has("lat")) { itemLat = item.getDouble("lat"); itemLon = item.getDouble("lon") }
+                                                else if (item.has("center")) { val c = item.getJSONObject("center"); itemLat = c.getDouble("lat"); itemLon = c.getDouble("lon") }
+                                                else continue
+
+                                                val locObj = Location("osm"); locObj.latitude = itemLat; locObj.longitude = itemLon
+                                                tempFoundList.add(Amenity(locObj, tags))
+                                            }
+                                        }
+                                    }
+                                    success = true
+                                    withContext(Dispatchers.Main) {
+                                        if (!isSilent) stopSearchingAnimation()
+                                        foundAmenities = tempFoundList
+                                        if (foundAmenities.isEmpty()) destinationAmenity = null
+                                        else recalculateNearest()
+                                        updateUI()
+                                    }
+                                } else { throw Exception("HTTP") }
+                            }
+                        } catch (e: Exception) { attempts++ }
+                    }
+                    if (!success && !isSilent) {
+                        withContext(Dispatchers.Main) {
+                            stopSearchingAnimation()
+                            isErrorState = true; lastFriendlyError = "Connection Failed"; updateUI()
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        stopSearchingAnimation()
+                        isErrorState = true; lastFriendlyError = "Search Failed"; updateUI()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
                 withContext(Dispatchers.Main) {
                     stopSearchingAnimation()
-                    isErrorState = true
-                    lastFriendlyError = "Connection Failed"
-                    updateUI()
+                    isErrorState = true; lastFriendlyError = "Error"; updateUI()
                 }
             }
         }
