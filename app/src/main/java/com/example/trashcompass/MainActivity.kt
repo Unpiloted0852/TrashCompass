@@ -166,14 +166,20 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
 
-        // --- VISUAL ADJUSTMENT: Raise elements by ~2mm ---
-        val shiftUp = TypedValue.applyDimension(
+        // --- VISUAL ADJUSTMENT: Raise elements by ~2mm using MARGINS ---
+        // This prevents clipping ("slicing") that happens with translationY
+        val shiftUpPx = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_MM, 2f, resources.displayMetrics
-        )
-        tvDistance.translationY = -shiftUp
-        tvMetadata.translationY = -shiftUp
-        tvHint.translationY = -shiftUp
-        tvMapButton.translationY = -shiftUp
+        ).toInt()
+
+        try {
+            val params = tvDistance.layoutParams as ViewGroup.MarginLayoutParams
+            params.topMargin -= shiftUpPx
+            tvDistance.layoutParams = params
+        } catch (e: Exception) {
+            // Fallback if layout params aren't margin compatible (rare)
+            e.printStackTrace()
+        }
         // -------------------------------------------------
 
         // --- VISUAL FIX: Center text and add padding ---
