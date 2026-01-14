@@ -170,18 +170,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvLegal = findViewById(R.id.tvLegal)
         tvLegal.setOnClickListener { showLegalDialog() }
 
-        // --- VISUAL ADJUSTMENT: Raise elements by ~2mm using MARGINS ---
-        val shiftUpPx = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_MM, 2f, resources.displayMetrics
-        ).toInt()
-
-        try {
-            val params = tvDistance.layoutParams as ViewGroup.MarginLayoutParams
-            params.topMargin -= shiftUpPx
-            tvDistance.layoutParams = params
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
 
         // --- VISUAL FIX: Center text and add padding ---
         tvMetadata.gravity = Gravity.CENTER
