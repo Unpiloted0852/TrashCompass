@@ -166,8 +166,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
 
+        // --- NEW: Find legal text from XML instead of adding it programmatically ---
+        tvLegal = findViewById(R.id.tvLegal)
+        tvLegal.setOnClickListener { showLegalDialog() }
+
         // --- VISUAL ADJUSTMENT: Raise elements by ~2mm using MARGINS ---
-        // This prevents clipping ("slicing") that happens with translationY
         val shiftUpPx = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_MM, 2f, resources.displayMetrics
         ).toInt()
@@ -177,20 +180,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             params.topMargin -= shiftUpPx
             tvDistance.layoutParams = params
         } catch (e: Exception) {
-            // Fallback if layout params aren't margin compatible (rare)
             e.printStackTrace()
         }
-        // -------------------------------------------------
 
         // --- VISUAL FIX: Center text and add padding ---
         tvMetadata.gravity = Gravity.CENTER
         val padding = (20 * resources.displayMetrics.density).toInt()
         tvMetadata.setPadding(padding, 0, padding, 0)
 
-        // --- ADD UI ELEMENTS PROGRAMMATICALLY ---
-        addLegalFooter()
+        // Note: addLegalFooter() removed to prevent duplicate/overlap
+
         addInterferenceWarning()
-        // ----------------------------------------
 
         tvDistance.text = "Waiting for GPS..."
 
@@ -327,35 +327,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvInterference.layoutParams = params
         rootLayout.addView(tvInterference)
-    }
-
-    // --- LEGAL FOOTER LOGIC ---
-    private fun addLegalFooter() {
-        val rootLayout = findViewById<ViewGroup>(android.R.id.content)
-        tvLegal = TextView(this)
-        tvLegal.text = "© OpenStreetMap contributors. Data may be incomplete. Tap for info."
-        tvLegal.textSize = 10f
-        tvLegal.setTextColor(Color.parseColor("#808080"))
-        tvLegal.gravity = Gravity.CENTER
-        tvLegal.setPadding(0, 0, 0, 20)
-
-        val params = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
-        params.gravity = Gravity.BOTTOM
-
-        // --- VISUAL ADJUSTMENT: Lift footer by 2mm ---
-        val shiftUp = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_MM, 2f, resources.displayMetrics
-        ).toInt()
-        params.bottomMargin = shiftUp
-        // ---------------------------------------------
-
-        tvLegal.layoutParams = params
-        tvLegal.setOnClickListener { showLegalDialog() }
-
-        rootLayout.addView(tvLegal)
     }
 
     private fun showLegalDialog() {
@@ -560,6 +531,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null) return
 
+        // --- 1. HANDLE MAGNETIC FIELD (Interference + Calibration Status) ---
         if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             val magX = event.values[0]
             val magY = event.values[1]
@@ -573,11 +545,39 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 } else {
                     tvInterference.visibility = View.GONE
                 }
+
+                // --- COMPASS STATUS LOGIC (Based on Magnetometer Accuracy) ---
+                val statusText: String
+                val statusColor: Int
+
+                when (event.accuracy) {
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
+                        statusText = "Compass: Good"
+                        statusColor = Color.parseColor("#32CD32") // Lime Green
+                    }
+                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
+                        statusText = "Compass: Fair"
+                        statusColor = Color.parseColor("#FFD700") // Gold
+                    }
+                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> {
+                        statusText = "Compass: Poor"
+                        statusColor = Color.parseColor("#FFA500") // Orange
+                    }
+                    else -> { // SENSOR_STATUS_UNRELIABLE (0)
+                        statusText = "Compass: Needs Calib"
+                        statusColor = Color.RED
+                    }
+                }
+
+                tvAccuracy.text = statusText
+                tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
             }
         }
 
+        // --- 2. HANDLE ROTATION VECTOR (Heading / Arrow Rotation) ---
         if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
             val currentSpeed = currentLocation?.speed ?: 0f
+            // If driving fast, ignore compass heading (GPS handles it in onLocationResult)
             if (currentSpeed > SPEED_THRESHOLD_MPS) return
 
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
@@ -609,25 +609,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
             val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
             updateArrowWithHeading(azimuth)
-
-            val statusText: String
-            val statusColor: Int
-            when (event.accuracy) {
-                SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
-                    statusText = "Compass: Good"
-                    statusColor = Color.parseColor("#32CD32")
-                }
-                SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
-                    statusText = "Compass: Fair"
-                    statusColor = Color.parseColor("#FFD700")
-                }
-                else -> {
-                    statusText = "Compass: Poor"
-                    statusColor = Color.RED
-                }
-            }
-            tvAccuracy.text = statusText
-            tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
         }
     }
 
