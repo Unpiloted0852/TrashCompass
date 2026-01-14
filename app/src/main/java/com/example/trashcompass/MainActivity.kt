@@ -13,6 +13,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -164,6 +165,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivArrow = findViewById(R.id.ivArrow)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
+
+        // --- VISUAL ADJUSTMENT: Raise elements by ~2mm ---
+        val shiftUp = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_MM, 2f, resources.displayMetrics
+        )
+        tvDistance.translationY = -shiftUp
+        tvMetadata.translationY = -shiftUp
+        tvHint.translationY = -shiftUp
+        tvMapButton.translationY = -shiftUp
+        // -------------------------------------------------
 
         // --- VISUAL FIX: Center text and add padding ---
         tvMetadata.gravity = Gravity.CENTER
@@ -327,6 +338,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             FrameLayout.LayoutParams.WRAP_CONTENT
         )
         params.gravity = Gravity.BOTTOM
+
+        // --- VISUAL ADJUSTMENT: Lift footer by 2mm ---
+        val shiftUp = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_MM, 2f, resources.displayMetrics
+        ).toInt()
+        params.bottomMargin = shiftUp
+        // ---------------------------------------------
 
         tvLegal.layoutParams = params
         tvLegal.setOnClickListener { showLegalDialog() }
@@ -738,11 +756,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
 
-                // --- SMART ERROR MESSAGE ---
-                // If it's a known standard option, say "No X found within 1km"
-                // If it's a custom weird name, say "No 'X' found"
+                // --- SMART ERROR MESSAGE (UPDATED to 3km) ---
                 if (hardcodedOptions.contains(currentAmenityName) || searchDictionary.containsKey(currentAmenityName)) {
-                    tvDistance.text = "None found within 1km"
+                    tvDistance.text = "None found within 3km"
                 } else {
                     tvDistance.text = "No '$currentAmenityName' found"
                 }
@@ -753,7 +769,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
-        val bbox = String.format(Locale.US, "(around:1000, %f, %f)", lat, lon)
+        // --- SEARCH RADIUS INCREASED TO 3KM (3000m) ---
+        val bbox = String.format(Locale.US, "(around:3000, %f, %f)", lat, lon)
 
         // --- DICTIONARY CHECK ---
         if (searchDictionary.containsKey(type)) {
