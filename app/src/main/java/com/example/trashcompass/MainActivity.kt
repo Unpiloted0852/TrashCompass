@@ -13,7 +13,6 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -64,6 +63,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
     private var currentArrowRotation = 0f
+
+    // Compass Accuracy State
+    private var lastMagAccuracy = -1 // Fallback accuracy
 
     // State
     private var currentLocation: Location? = null
@@ -134,19 +136,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         "Car Repair" to "shop=car_repair"
     )
 
-    // Hardcoded list of default options
     private val hardcodedOptions = listOf(
         "Trash Can", "Public Toilet", "Defibrillator (AED)",
         "Water Fountain", "Recycling Bin", "ATM", "Post Box", "Bench"
     )
 
-    // SPEED TUNING: 6 second timeout
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(6, TimeUnit.SECONDS)
         .build()
 
-    // Server Priority List
     private val servers = listOf(
         "https://overpass.kumi.systems/api/interpreter",
         "https://lz4.overpass-api.de/api/interpreter",
@@ -165,18 +164,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivArrow = findViewById(R.id.ivArrow)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
-
-        // --- NEW: Find legal text from XML instead of adding it programmatically ---
         tvLegal = findViewById(R.id.tvLegal)
+
         tvLegal.setOnClickListener { showLegalDialog() }
 
+        // --- FIXED: Removed the negative top margin hack that was cutting off text ---
+        // (The problematic code block is completely deleted here)
 
-        // --- VISUAL FIX: Center text and add padding ---
+        // Center metadata text
         tvMetadata.gravity = Gravity.CENTER
         val padding = (20 * resources.displayMetrics.density).toInt()
         tvMetadata.setPadding(padding, 0, padding, 0)
-
-        // Note: addLegalFooter() removed to prevent duplicate/overlap
 
         addInterferenceWarning()
 
@@ -197,7 +195,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val mainAction = {
             if (isErrorState || (foundAmenities.isEmpty() && initialSearchDone && !isSearching)) {
-                // Retry
                 if (currentLocation != null) {
                     fetchAmenitiesFast(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
                 }
@@ -213,13 +210,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
-
-            // Standard Options
             hardcodedOptions.forEach { popup.menu.add(it) }
-
-            // ADVANCED OPTION
             popup.menu.add("🔍 Search Custom...")
-
             popup.setOnMenuItemClickListener { item ->
                 if (item.title == "🔍 Search Custom...") {
                     showCustomSearchDialog()
@@ -243,8 +235,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun showCustomSearchDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("What are you looking for?")
-
-        // Create Layout programmatically
         val container = LinearLayout(this)
         container.orientation = LinearLayout.VERTICAL
         val padding = (20 * resources.displayMetrics.density).toInt()
@@ -253,38 +243,27 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         input.hint = "Type here (e.g. Pharmacy, Gas...)"
-
-        // Connect Dictionary to AutoComplete
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, searchDictionary.keys.toList())
         input.setAdapter(adapter)
-        input.threshold = 1 // Start suggesting after 1 character
-
+        input.threshold = 1
         container.addView(input)
         builder.setView(container)
 
         builder.setPositiveButton("Search") { _, _ ->
             val query = input.text.toString().trim()
-            if (query.isNotEmpty()) {
-                setNewSearchTarget(query)
-            }
+            if (query.isNotEmpty()) setNewSearchTarget(query)
         }
         builder.setNegativeButton("Cancel", null)
-
-        val dialog = builder.create()
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
-        dialog.show()
+        builder.show()
     }
 
     private fun setNewSearchTarget(targetName: String) {
         currentAmenityName = targetName
         tvTitle.text = "Nearest $currentAmenityName"
-
-        // Reset State
         foundAmenities.clear()
         destinationAmenity = null
         lastFetchLocation = null
         initialSearchDone = false
-
         tvDistance.text = "Searching..."
         tvMetadata.visibility = View.GONE
         tvMapButton.visibility = View.GONE
@@ -301,7 +280,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvInterference.text = "🧲 High Magnetic Interference Detected"
         tvInterference.textSize = 14f
         tvInterference.setTextColor(Color.WHITE)
-        tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000")) // Semi-transparent Red
+        tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000"))
         tvInterference.gravity = Gravity.CENTER
         tvInterference.setPadding(20, 10, 20, 10)
         tvInterference.visibility = View.GONE
@@ -312,7 +291,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         )
         params.gravity = Gravity.TOP
         params.topMargin = (80 * resources.displayMetrics.density).toInt()
-
         tvInterference.layoutParams = params
         rootLayout.addView(tvInterference)
     }
@@ -328,12 +306,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             LICENSE:
             Data is available under the Open Database License (ODbL).
         """.trimIndent()
-
-        AlertDialog.Builder(this)
-            .setTitle("Legal & Safety")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show()
+        AlertDialog.Builder(this).setTitle("Legal & Safety").setMessage(message).setPositiveButton("OK", null).show()
     }
 
     private fun checkPermissions() {
@@ -358,23 +331,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 override fun onLocationResult(p0: LocationResult) {
                     p0.lastLocation?.let { loc ->
                         currentLocation = loc
-
-                        // --- NEW: Update fix time ---
                         lastFixTime = System.currentTimeMillis()
 
                         val speed = loc.speed
                         if (speed > SPEED_THRESHOLD_MPS && loc.hasBearing()) {
-                            // Update UI immediately (avoids initial lag)
                             updateArrowUI(loc, loc.bearing)
-
-                            // Start smooth driving animation
                             startDrivingAnimation()
-
                             tvAccuracy.text = "GPS Heading"
                             tvAccuracy.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#32CD32"))
                             tvInterference.visibility = View.GONE
                         } else {
-                            // Stop animation if we slow down
                             stopDrivingAnimation()
                         }
 
@@ -389,10 +355,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             }
                         }
 
-                        if (foundAmenities.isNotEmpty()) {
-                            recalculateNearest()
-                        }
-
+                        if (foundAmenities.isNotEmpty()) recalculateNearest()
                         if (!isSearching) updateUI()
                     }
                 }
@@ -430,7 +393,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val tags = item.tags
         val infoList = ArrayList<String>()
 
-        // 1. Name & Context
         if (tags.has("name")) {
             val name = tags.getString("name")
             if (currentAmenityName == "Public Toilet" && tags.optString("toilets") == "yes") {
@@ -440,10 +402,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        // 2. Access
         var access = tags.optString("toilets:access")
         if (access.isEmpty()) access = tags.optString("access")
-
         if (access.isNotEmpty()) {
             when (access) {
                 "customers" -> infoList.add("⚠ Customers Only")
@@ -453,36 +413,23 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        // 3. Fees
         var price = tags.optString("charge")
         if (price.isEmpty()) price = tags.optString("toilets:charge")
-
         if (price.isNotEmpty()) {
             infoList.add("Fee: $price")
         } else {
             var fee = tags.optString("toilets:fee")
             if (fee.isEmpty()) fee = tags.optString("fee")
-
-            if (fee == "no") {
-                infoList.add("Free")
-            } else if (fee == "yes") {
-                infoList.add("Fee Required")
-            } else if (fee.isNotEmpty()) {
-                infoList.add("Fee: $fee")
-            }
+            if (fee == "no") infoList.add("Free")
+            else if (fee == "yes") infoList.add("Fee Required")
+            else if (fee.isNotEmpty()) infoList.add("Fee: $fee")
         }
 
-        // 4. Specific details
         when (currentAmenityName) {
-            "Recycling Bin" -> {
-                if (tags.has("recycling_type")) infoList.add("Type: " + tags.getString("recycling_type").replace("_", " ").capitalize())
-            }
-            "Water Fountain" -> {
-                if (tags.has("drinking_water")) {
-                    val dw = tags.getString("drinking_water")
-                    if (dw == "yes") infoList.add("Water: Drinkable")
-                    else if (dw == "no") infoList.add("Water: Not Drinkable")
-                }
+            "Recycling Bin" -> if (tags.has("recycling_type")) infoList.add("Type: " + tags.getString("recycling_type").replace("_", " ").capitalize())
+            "Water Fountain" -> if (tags.has("drinking_water")) {
+                val dw = tags.getString("drinking_water")
+                if (dw == "yes") infoList.add("Water: Drinkable") else if (dw == "no") infoList.add("Water: Not Drinkable")
             }
             "Defibrillator (AED)" -> {
                 var loc = tags.optString("defibrillator:location")
@@ -513,61 +460,35 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onPause() {
         super.onPause()
         sensorManager.unregisterListener(this)
-        stopDrivingAnimation() // Stop animation to save battery
+        stopDrivingAnimation()
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null) return
 
-        // --- 1. HANDLE MAGNETIC FIELD (Interference + Calibration Status) ---
+        // 1. MAGNETIC FIELD (Interference + Fallback Accuracy)
         if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             val magX = event.values[0]
             val magY = event.values[1]
             val magZ = event.values[2]
             val magnitude = sqrt(magX * magX + magY * magY + magZ * magZ)
 
-            val currentSpeed = currentLocation?.speed ?: 0f
-            if (currentSpeed <= SPEED_THRESHOLD_MPS) {
-                if (magnitude > 75 || magnitude < 20) {
-                    tvInterference.visibility = View.VISIBLE
-                } else {
-                    tvInterference.visibility = View.GONE
-                }
-
-                // --- COMPASS STATUS LOGIC (Based on Magnetometer Accuracy) ---
-                val statusText: String
-                val statusColor: Int
-
-                when (event.accuracy) {
-                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
-                        statusText = "Compass: Good"
-                        statusColor = Color.parseColor("#32CD32") // Lime Green
-                    }
-                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
-                        statusText = "Compass: Fair"
-                        statusColor = Color.parseColor("#FFD700") // Gold
-                    }
-                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> {
-                        statusText = "Compass: Poor"
-                        statusColor = Color.parseColor("#FFA500") // Orange
-                    }
-                    else -> { // SENSOR_STATUS_UNRELIABLE (0)
-                        statusText = "Compass: Needs Calib"
-                        statusColor = Color.RED
-                    }
-                }
-
-                tvAccuracy.text = statusText
-                tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
+            // Interference Warning
+            if ((currentLocation?.speed ?: 0f) <= SPEED_THRESHOLD_MPS) {
+                if (magnitude > 75 || magnitude < 20) tvInterference.visibility = View.VISIBLE
+                else tvInterference.visibility = View.GONE
             }
+
+            // Store legacy accuracy in case Rotation Vector doesn't support it
+            lastMagAccuracy = event.accuracy
         }
 
-        // --- 2. HANDLE ROTATION VECTOR (Heading / Arrow Rotation) ---
+        // 2. ROTATION VECTOR (Heading + Smart Status)
         if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
             val currentSpeed = currentLocation?.speed ?: 0f
-            // If driving fast, ignore compass heading (GPS handles it in onLocationResult)
             if (currentSpeed > SPEED_THRESHOLD_MPS) return
 
+            // --- HEADING CALCULATION ---
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
             val axisAdjustedMatrix = FloatArray(9)
             val displayRotation = windowManager.defaultDisplay.rotation
@@ -597,17 +518,54 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
             val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
             updateArrowWithHeading(azimuth)
+
+            // --- NEW: SMART COMPASS STATUS ---
+            // Priority 1: Check 'values[4]' (Estimated Heading Accuracy in Radians)
+            // Available on Android 4.3 (API 18) and newer
+            var statusText = "Compass: Good"
+            var statusColor = Color.parseColor("#32CD32") // Green
+
+            if (event.values.size > 4 && event.values[4] != -1f) {
+                val accuracyRad = event.values[4]
+                // 0.35 rad ≈ 20 degrees, 0.8 rad ≈ 45 degrees
+                if (accuracyRad < 0.35) {
+                    statusText = "Compass: Good"
+                    statusColor = Color.parseColor("#32CD32") // Green
+                } else if (accuracyRad < 0.8) {
+                    statusText = "Compass: Fair"
+                    statusColor = Color.parseColor("#FFD700") // Gold
+                } else {
+                    statusText = "Compass: Poor"
+                    statusColor = Color.RED
+                }
+            } else {
+                // Priority 2: Fallback to Magnetometer status (if values[4] unavailable)
+                when (lastMagAccuracy) {
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
+                        statusText = "Compass: Good"
+                        statusColor = Color.parseColor("#32CD32")
+                    }
+                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
+                        statusText = "Compass: Fair"
+                        statusColor = Color.parseColor("#FFD700")
+                    }
+                    SensorManager.SENSOR_STATUS_ACCURACY_LOW, SensorManager.SENSOR_STATUS_UNRELIABLE -> {
+                        statusText = "Compass: Poor"
+                        statusColor = Color.RED
+                    }
+                }
+            }
+
+            tvAccuracy.text = statusText
+            tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
         }
     }
 
     // --- REFACTORED ARROW LOGIC ---
-
-    // Entry point for sensor-based heading updates
     private fun updateArrowWithHeading(userHeading: Float) {
         currentLocation?.let { updateArrowUI(it, userHeading) }
     }
 
-    // Shared logic for both Sensor (Static) and GPS (Driving) updates
     private fun updateArrowUI(userLoc: Location, userHeading: Float) {
         if (destinationAmenity != null) {
             val bearingToTarget = userLoc.bearingTo(destinationAmenity!!.location)
@@ -623,25 +581,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // --- SMOOTH DRIVING ANIMATION (DEAD RECKONING) ---
+    // --- SMOOTH DRIVING ANIMATION ---
     private fun startDrivingAnimation() {
         if (driveAnimJob?.isActive == true) return
-
         driveAnimJob = CoroutineScope(Dispatchers.Main).launch {
             while (isActive) {
                 val loc = currentLocation
-                // Only animate if we have a valid location, are driving fast, have a heading, and a recent fix
                 if (loc != null && loc.speed > SPEED_THRESHOLD_MPS && loc.hasBearing() && lastFixTime > 0L) {
                     val currentTime = System.currentTimeMillis()
                     val timeDelta = currentTime - lastFixTime
-
-                    // Cap extrapolation at 2 seconds in case GPS is lost (prevents driving off map forever)
                     if (timeDelta < 2000) {
                         val predictedLoc = projectLocation(loc, loc.speed, loc.bearing, timeDelta)
                         updateArrowUI(predictedLoc, loc.bearing)
                     }
                 }
-                delay(33) // ~30 FPS
+                delay(33)
             }
         }
     }
@@ -651,12 +605,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         driveAnimJob = null
     }
 
-    // Projects a lat/lon forward based on speed (m/s), bearing (degrees), and time (ms)
     private fun projectLocation(startLoc: Location, speed: Float, bearing: Float, timeDiff: Long): Location {
         val seconds = timeDiff / 1000.0
-        val dist = speed * seconds // Distance traveled in meters
-
-        val earthRadius = 6371000.0 // Earth radius in meters
+        val dist = speed * seconds
+        val earthRadius = 6371000.0
         val angularDistance = dist / earthRadius
         val bearingRad = Math.toRadians(bearing.toDouble())
         val latRad = Math.toRadians(startLoc.latitude)
@@ -674,7 +626,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun showCalibrationDialog() {
-        AlertDialog.Builder(this).setTitle("Compass Status").setMessage("Wave phone in Figure-8.").setPositiveButton("OK", null).show()
+        AlertDialog.Builder(this).setTitle("Compass Status").setMessage("To calibrate:\nWave phone in a Figure-8 motion.").setPositiveButton("OK", null).show()
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -730,24 +682,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             tvMetadata.visibility = View.GONE
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
-
-                // --- SMART ERROR MESSAGE (UPDATED to 3km) ---
                 if (hardcodedOptions.contains(currentAmenityName) || searchDictionary.containsKey(currentAmenityName)) {
                     tvDistance.text = "None found within 3km"
                 } else {
                     tvDistance.text = "No '$currentAmenityName' found"
                 }
-
                 tvHint.text = "(Tap to retry)"
             }
         }
     }
 
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
-        // --- SEARCH RADIUS INCREASED TO 3KM (3000m) ---
         val bbox = String.format(Locale.US, "(around:3000, %f, %f)", lat, lon)
 
-        // --- DICTIONARY CHECK ---
         if (searchDictionary.containsKey(type)) {
             val tag = searchDictionary[type]!!
             val key = tag.substringBefore("=")
@@ -755,7 +702,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
         }
 
-        // --- HARDCODED SPECIAL CASES ---
         return when (type) {
             "Trash Can" -> """[out:json];(node["amenity"="waste_basket"]$bbox;node["amenity"="waste_disposal"]$bbox;node["bin"="yes"]$bbox;way["amenity"="waste_basket"]$bbox;way["bin"="yes"]$bbox;);out center;"""
             "Defibrillator (AED)" -> """[out:json];(node["emergency"="defibrillator"]$bbox;way["emergency"="defibrillator"]$bbox;);out center;"""
@@ -774,12 +720,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             "ATM" -> """[out:json];node["amenity"="atm"]$bbox;out center;"""
             "Post Box" -> """[out:json];node["amenity"="post_box"]$bbox;out center;"""
             "Bench" -> """[out:json];node["amenity"="bench"]$bbox;out center;"""
-
             else -> {
-                // --- NEW FALLBACK: SMART TAG & NAME SEARCH ---
                 val rawInput = type
                 val snakeCase = type.lowercase().replace(" ", "_")
-
                 """
                 [out:json];
                 (
@@ -802,37 +745,27 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // --- HIGH SPEED FETCH ---
     private fun fetchAmenitiesFast(lat: Double, lon: Double, amenityType: String, isSilent: Boolean) {
         if (!isSilent) {
             isSearching = true
             startSearchingAnimation()
             isErrorState = false
         }
-
         CoroutineScope(Dispatchers.IO).launch {
             var attempts = 0
             var success = false
-
             while (attempts < servers.size && !success) {
                 try {
                     val query = getQueryString(amenityType, lat, lon)
                     val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-
                     val currentServer = servers[attempts]
                     val url = "$currentServer?data=$encodedQuery"
-
-                    val request = Request.Builder()
-                        .url(url)
-                        .header("User-Agent", "TrashCompass/2.0")
-                        .build()
-
+                    val request = Request.Builder().url(url).header("User-Agent", "TrashCompass/2.0").build()
                     val response = httpClient.newCall(request).execute()
 
                     if (response.isSuccessful) {
                         val jsonString = response.body?.string()
                         val tempFoundList = ArrayList<Amenity>()
-
                         if (jsonString != null) {
                             val jsonObj = JSONObject(jsonString)
                             if (jsonObj.has("elements")) {
@@ -842,7 +775,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                     var itemLat = 0.0
                                     var itemLon = 0.0
                                     val tags = if (item.has("tags")) item.getJSONObject("tags") else null
-
                                     if (item.has("lat")) {
                                         itemLat = item.getDouble("lat")
                                         itemLon = item.getDouble("lon")
@@ -850,9 +782,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                         val center = item.getJSONObject("center")
                                         itemLat = center.getDouble("lat")
                                         itemLon = center.getDouble("lon")
-                                    } else {
-                                        continue
-                                    }
+                                    } else continue
                                     val locObj = Location("osm")
                                     locObj.latitude = itemLat
                                     locObj.longitude = itemLon
@@ -860,7 +790,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                 }
                             }
                         }
-
                         success = true
                         withContext(Dispatchers.Main) {
                             if (!isSilent) stopSearchingAnimation()
@@ -869,15 +798,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             else recalculateNearest()
                             updateUI()
                         }
-                    } else {
-                        throw Exception("HTTP:${response.code}")
-                    }
-
-                } catch (e: Exception) {
-                    attempts++
-                }
+                    } else throw Exception("HTTP:${response.code}")
+                } catch (e: Exception) { attempts++ }
             }
-
             if (!success && !isSilent) {
                 withContext(Dispatchers.Main) {
                     stopSearchingAnimation()
