@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // Logic
     private var lastFetchLocation: Location? = null
     private val REFETCH_DISTANCE_THRESHOLD = 150f
+    private val ERROR_RETRY_DISTANCE = 50f
     private var initialSearchDone = false
 
     // --- DRIVING ANIMATION STATE ---
@@ -92,64 +94,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var searchJob: Job? = null
     private var lastFriendlyError = ""
 
-    // --- DICTIONARY FOR "ADVANCED" SEARCH ---
-    private val searchDictionary = mapOf(
-        "Pharmacy" to "amenity=pharmacy",
-        "Hospital" to "amenity=hospital",
-        "Police" to "amenity=police",
-        "Fire Station" to "amenity=fire_station",
-        "Gas Station" to "amenity=fuel",
-        "EV Charging" to "amenity=charging_station",
-        "Parking" to "amenity=parking",
-        "Bus Stop" to "highway=bus_stop",
-        "Taxi Stand" to "amenity=taxi",
-        "Supermarket" to "shop=supermarket",
-        "Convenience Store" to "shop=convenience",
-        "Bakery" to "shop=bakery",
-        "Cafe" to "amenity=cafe",
-        "Restaurant" to "amenity=restaurant",
-        "Fast Food" to "amenity=fast_food",
-        "Bar" to "amenity=bar",
-        "Pub" to "amenity=pub",
-        "Library" to "amenity=library",
-        "Cinema" to "amenity=cinema",
-        "Park" to "leisure=park",
-        "Playground" to "leisure=playground",
-        "Dog Park" to "leisure=dog_park",
-        "Picnic Table" to "leisure=picnic_table",
-        "Picnic Site" to "tourism=picnic_site",
-        "Hotel" to "tourism=hotel",
-        "Motel" to "tourism=motel",
-        "Camp Site" to "tourism=camp_site",
-        "Hostel" to "tourism=hostel",
-        "Museum" to "tourism=museum",
-        "Zoo" to "tourism=zoo",
-        "Vending Machine" to "amenity=vending_machine",
-        "Ice Cream" to "amenity=ice_cream",
-        "Dentist" to "amenity=dentist",
-        "Veterinarian" to "amenity=veterinary",
-        "Bank" to "amenity=bank",
-        "Clothes Shop" to "shop=clothes",
-        "Electronics Store" to "shop=electronics",
-        "Hardware Store" to "shop=hardware",
-        "Bicycle Shop" to "shop=bicycle",
-        "Car Repair" to "shop=car_repair"
-    )
-
+    // Quick access menu options
     private val hardcodedOptions = listOf(
         "Trash Can", "Public Toilet", "Defibrillator (AED)",
         "Water Fountain", "Recycling Bin", "ATM", "Post Box", "Bench"
     )
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(6, TimeUnit.SECONDS)
-        .readTimeout(6, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
         .build()
 
+    // Aggressive Server List
     private val servers = listOf(
         "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass-api.de/api/interpreter",
         "https://lz4.overpass-api.de/api/interpreter",
-        "https://overpass-api.de/api/interpreter"
+        "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+        "https://overpass.openstreetmap.ru/api/interpreter"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -168,13 +130,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvLegal.setOnClickListener { showLegalDialog() }
 
-        // --- FIXED: Removed the negative top margin hack that was cutting off text ---
-        // (The problematic code block is completely deleted here)
-
         // Center metadata text
         tvMetadata.gravity = Gravity.CENTER
         val padding = (20 * resources.displayMetrics.density).toInt()
         tvMetadata.setPadding(padding, 0, padding, 0)
+
+        // Initialize Arrow as Inactive (Grey)
+        setArrowActive(false)
 
         addInterferenceWarning()
 
@@ -195,10 +157,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val mainAction = {
             if (isErrorState || (foundAmenities.isEmpty() && initialSearchDone && !isSearching)) {
+                // Retry action
                 if (currentLocation != null) {
-                    fetchAmenitiesFast(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
+                    fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
                 }
             } else {
+                // Toggle units action
                 useMetric = !useMetric
                 updateUI()
             }
@@ -231,10 +195,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         checkPermissions()
     }
 
+    private fun setArrowActive(isActive: Boolean) {
+        if (isActive) {
+            ivArrow.alpha = 1.0f
+            // Active = Bright Green
+            ivArrow.setColorFilter(Color.parseColor("#32CD32"), PorterDuff.Mode.SRC_IN)
+        } else {
+            ivArrow.alpha = 0.5f
+            // Inactive = Grey
+            ivArrow.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN)
+        }
+    }
+
     // --- SEARCH LOGIC ---
     private fun showCustomSearchDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("What are you looking for?")
+        builder.setTitle("Search Features")
         val container = LinearLayout(this)
         container.orientation = LinearLayout.VERTICAL
         val padding = (20 * resources.displayMetrics.density).toInt()
@@ -242,8 +218,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        input.hint = "Type here (e.g. Pharmacy, Gas...)"
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, searchDictionary.keys.toList())
+        input.hint = "e.g. Castle, Crane, Adit..."
+
+        // Use the massive dictionary for suggestions
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, TagRepository.mapping.keys.toList().sorted())
         input.setAdapter(adapter)
         input.threshold = 1
         container.addView(input)
@@ -267,9 +245,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvDistance.text = "Searching..."
         tvMetadata.visibility = View.GONE
         tvMapButton.visibility = View.GONE
+        setArrowActive(false) // Grey out arrow
 
         if (currentLocation != null) {
-            fetchAmenitiesFast(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
+            fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
         }
     }
 
@@ -344,14 +323,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             stopDrivingAnimation()
                         }
 
+                        // Search Triggers
                         if (!initialSearchDone && !isSearching) {
                             initialSearchDone = true
                             lastFetchLocation = loc
-                            fetchAmenitiesFast(loc.latitude, loc.longitude, currentAmenityName, isSilent = false)
+                            fetchAmenitiesAggressively(loc.latitude, loc.longitude, currentAmenityName, isSilent = false)
                         } else if (lastFetchLocation != null && !isSearching) {
-                            if (loc.distanceTo(lastFetchLocation!!) > REFETCH_DISTANCE_THRESHOLD) {
+                            val dist = loc.distanceTo(lastFetchLocation!!)
+                            // Refetch if moved far, OR if we are in error state and moved slightly (Aggressive recovery)
+                            if (dist > REFETCH_DISTANCE_THRESHOLD || (isErrorState && dist > ERROR_RETRY_DISTANCE)) {
                                 lastFetchLocation = loc
-                                fetchAmenitiesFast(loc.latitude, loc.longitude, currentAmenityName, isSilent = true)
+                                fetchAmenitiesAggressively(loc.latitude, loc.longitude, currentAmenityName, isSilent = true)
                             }
                         }
 
@@ -479,7 +461,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 else tvInterference.visibility = View.GONE
             }
 
-            // Store legacy accuracy in case Rotation Vector doesn't support it
+            // Store legacy accuracy
             lastMagAccuracy = event.accuracy
         }
 
@@ -519,27 +501,23 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
             updateArrowWithHeading(azimuth)
 
-            // --- NEW: SMART COMPASS STATUS ---
-            // Priority 1: Check 'values[4]' (Estimated Heading Accuracy in Radians)
-            // Available on Android 4.3 (API 18) and newer
+            // --- SMART COMPASS STATUS ---
             var statusText = "Compass: Good"
             var statusColor = Color.parseColor("#32CD32") // Green
 
             if (event.values.size > 4 && event.values[4] != -1f) {
                 val accuracyRad = event.values[4]
-                // 0.35 rad ≈ 20 degrees, 0.8 rad ≈ 45 degrees
                 if (accuracyRad < 0.35) {
                     statusText = "Compass: Good"
-                    statusColor = Color.parseColor("#32CD32") // Green
+                    statusColor = Color.parseColor("#32CD32")
                 } else if (accuracyRad < 0.8) {
                     statusText = "Compass: Fair"
-                    statusColor = Color.parseColor("#FFD700") // Gold
+                    statusColor = Color.parseColor("#FFD700")
                 } else {
                     statusText = "Compass: Poor"
                     statusColor = Color.RED
                 }
             } else {
-                // Priority 2: Fallback to Magnetometer status (if values[4] unavailable)
                 when (lastMagAccuracy) {
                     SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
                         statusText = "Compass: Good"
@@ -561,13 +539,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // --- REFACTORED ARROW LOGIC ---
+    // --- ARROW UPDATE ---
     private fun updateArrowWithHeading(userHeading: Float) {
         currentLocation?.let { updateArrowUI(it, userHeading) }
     }
 
     private fun updateArrowUI(userLoc: Location, userHeading: Float) {
         if (destinationAmenity != null) {
+            // Active State: Green, Opaque
+            setArrowActive(true)
+
             val bearingToTarget = userLoc.bearingTo(destinationAmenity!!.location)
             val normalizedBearing = (bearingToTarget + 360) % 360
             val targetRot = (normalizedBearing - userHeading + 360) % 360
@@ -578,6 +559,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
             currentArrowRotation += diff * 0.15f
             ivArrow.rotation = currentArrowRotation
+        } else {
+            // Inactive State: Grey, Semi-transparent
+            setArrowActive(false)
         }
     }
 
@@ -636,6 +620,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (isSearching) return
         isSearching = true
         tvHint.text = "Please wait..."
+        // Ensure arrow is grey while searching
+        setArrowActive(false)
         searchJob?.cancel()
         searchJob = CoroutineScope(Dispatchers.Main).launch {
             tvDistance.textSize = 30f
@@ -662,6 +648,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             tvDistance.textSize = 24f
             tvDistance.text = lastFriendlyError
             tvHint.text = "(Tap to retry)"
+            setArrowActive(false)
             return
         }
 
@@ -677,12 +664,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 else tvDistance.text = "${feet.toInt()} ft"
             }
             tvMapButton.visibility = View.VISIBLE
+            setArrowActive(true) // Target Found -> Active Green
         } else {
             tvMapButton.visibility = View.GONE
             tvMetadata.visibility = View.GONE
+            setArrowActive(false) // No Target -> Inactive Grey
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
-                if (hardcodedOptions.contains(currentAmenityName) || searchDictionary.containsKey(currentAmenityName)) {
+                if (TagRepository.mapping.containsKey(currentAmenityName)) {
                     tvDistance.text = "None found within 3km"
                 } else {
                     tvDistance.text = "No '$currentAmenityName' found"
@@ -692,115 +681,125 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    // --- SMART QUERY GENERATOR ---
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
         val bbox = String.format(Locale.US, "(around:3000, %f, %f)", lat, lon)
 
-        if (searchDictionary.containsKey(type)) {
-            val tag = searchDictionary[type]!!
-            val key = tag.substringBefore("=")
-            val value = tag.substringAfter("=")
+        // 1. Direct Dictionary Lookup (Best Match)
+        val mappedTag = TagRepository.mapping[type]
+        if (mappedTag != null) {
+            val key = mappedTag.substringBefore("=")
+            val value = mappedTag.substringAfter("=")
             return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
         }
 
-        return when (type) {
-            "Trash Can" -> """[out:json];(node["amenity"="waste_basket"]$bbox;node["amenity"="waste_disposal"]$bbox;node["bin"="yes"]$bbox;way["amenity"="waste_basket"]$bbox;way["bin"="yes"]$bbox;);out center;"""
-            "Defibrillator (AED)" -> """[out:json];(node["emergency"="defibrillator"]$bbox;way["emergency"="defibrillator"]$bbox;);out center;"""
-            "Public Toilet" -> """
-                [out:json];
-                (
-                  node["amenity"="toilets"]$bbox;
-                  way["amenity"="toilets"]$bbox;
-                  node["toilets"="yes"]$bbox;
-                  way["toilets"="yes"]$bbox;
-                );
-                out center;
-            """.trimIndent()
-            "Water Fountain" -> """[out:json];(node["amenity"="drinking_water"]$bbox;way["amenity"="drinking_water"]$bbox;);out center;"""
-            "Recycling Bin" -> """[out:json];(node["amenity"="recycling"]$bbox;node["recycling_type"="container"]$bbox;);out center;"""
-            "ATM" -> """[out:json];node["amenity"="atm"]$bbox;out center;"""
-            "Post Box" -> """[out:json];node["amenity"="post_box"]$bbox;out center;"""
-            "Bench" -> """[out:json];node["amenity"="bench"]$bbox;out center;"""
-            else -> {
-                val rawInput = type
-                val snakeCase = type.lowercase().replace(" ", "_")
-                """
-                [out:json];
-                (
-                  node["name"~"$rawInput",i]$bbox;
-                  way["name"~"$rawInput",i]$bbox;
-                  node["amenity"="$snakeCase"]$bbox;
-                  way["amenity"="$snakeCase"]$bbox;
-                  node["leisure"="$snakeCase"]$bbox;
-                  way["leisure"="$snakeCase"]$bbox;
-                  node["tourism"="$snakeCase"]$bbox;
-                  way["tourism"="$snakeCase"]$bbox;
-                  node["shop"="$snakeCase"]$bbox;
-                  way["shop"="$snakeCase"]$bbox;
-                  node["man_made"="$snakeCase"]$bbox;
-                  way["man_made"="$snakeCase"]$bbox;
-                );
-                out center;
-                """.trimIndent()
-            }
+        // 2. Raw Tag Lookup (Power User: "natural=tree")
+        if (type.contains("=")) {
+            val key = type.substringBefore("=")
+            val value = type.substringAfter("=")
+            return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
         }
+
+        // 3. Smart Fallback (Snake Case + Expanded Keys)
+        val rawInput = type
+        val snakeCase = type.lowercase().replace(" ", "_")
+
+        val fallbackKeys = listOf(
+            "amenity", "shop", "leisure", "tourism", "natural",
+            "historic", "highway", "emergency", "man_made",
+            "craft", "office", "sport", "building", "waterway",
+            "aerialway", "aeroway", "barrier", "military", "power"
+        )
+
+        val queryParts = StringBuilder()
+        // Name matches
+        queryParts.append("""node["name"~"$rawInput",i]$bbox;""")
+        queryParts.append("""way["name"~"$rawInput",i]$bbox;""")
+
+        // Broad key search
+        for (key in fallbackKeys) {
+            queryParts.append("""node["$key"="$snakeCase"]$bbox;""")
+            queryParts.append("""way["$key"="$snakeCase"]$bbox;""")
+        }
+
+        return """[out:json];($queryParts);out center;"""
     }
 
-    private fun fetchAmenitiesFast(lat: Double, lon: Double, amenityType: String, isSilent: Boolean) {
+    // --- AGGRESSIVE FETCHING LOGIC ---
+    private fun fetchAmenitiesAggressively(lat: Double, lon: Double, amenityType: String, isSilent: Boolean) {
         if (!isSilent) {
             isSearching = true
             startSearchingAnimation()
             isErrorState = false
         }
         CoroutineScope(Dispatchers.IO).launch {
-            var attempts = 0
             var success = false
-            while (attempts < servers.size && !success) {
-                try {
-                    val query = getQueryString(amenityType, lat, lon)
-                    val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-                    val currentServer = servers[attempts]
-                    val url = "$currentServer?data=$encodedQuery"
-                    val request = Request.Builder().url(url).header("User-Agent", "TrashCompass/2.0").build()
-                    val response = httpClient.newCall(request).execute()
+            // Aggressive: Try the full server list 3 times
+            val maxLoops = 3
+            var currentLoop = 0
 
-                    if (response.isSuccessful) {
-                        val jsonString = response.body?.string()
-                        val tempFoundList = ArrayList<Amenity>()
-                        if (jsonString != null) {
-                            val jsonObj = JSONObject(jsonString)
-                            if (jsonObj.has("elements")) {
-                                val elements = jsonObj.getJSONArray("elements")
-                                for (i in 0 until elements.length()) {
-                                    val item = elements.getJSONObject(i)
-                                    var itemLat = 0.0
-                                    var itemLon = 0.0
-                                    val tags = if (item.has("tags")) item.getJSONObject("tags") else null
-                                    if (item.has("lat")) {
-                                        itemLat = item.getDouble("lat")
-                                        itemLon = item.getDouble("lon")
-                                    } else if (item.has("center")) {
-                                        val center = item.getJSONObject("center")
-                                        itemLat = center.getDouble("lat")
-                                        itemLon = center.getDouble("lon")
-                                    } else continue
-                                    val locObj = Location("osm")
-                                    locObj.latitude = itemLat
-                                    locObj.longitude = itemLon
-                                    tempFoundList.add(Amenity(locObj, tags))
+            while (currentLoop < maxLoops && !success) {
+                var serverIndex = 0
+                while (serverIndex < servers.size && !success) {
+                    try {
+                        val query = getQueryString(amenityType, lat, lon)
+                        val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                        val currentServer = servers[serverIndex]
+                        val url = "$currentServer?data=$encodedQuery"
+
+                        val request = Request.Builder().url(url).header("User-Agent", "TrashCompass/2.0").build()
+                        val response = httpClient.newCall(request).execute()
+
+                        if (response.isSuccessful) {
+                            val jsonString = response.body?.string()
+                            val tempFoundList = ArrayList<Amenity>()
+                            if (jsonString != null) {
+                                val jsonObj = JSONObject(jsonString)
+                                if (jsonObj.has("elements")) {
+                                    val elements = jsonObj.getJSONArray("elements")
+                                    for (i in 0 until elements.length()) {
+                                        val item = elements.getJSONObject(i)
+                                        var itemLat = 0.0
+                                        var itemLon = 0.0
+                                        val tags = if (item.has("tags")) item.getJSONObject("tags") else null
+                                        if (item.has("lat")) {
+                                            itemLat = item.getDouble("lat")
+                                            itemLon = item.getDouble("lon")
+                                        } else if (item.has("center")) {
+                                            val center = item.getJSONObject("center")
+                                            itemLat = center.getDouble("lat")
+                                            itemLon = center.getDouble("lon")
+                                        } else continue
+                                        val locObj = Location("osm")
+                                        locObj.latitude = itemLat
+                                        locObj.longitude = itemLon
+                                        tempFoundList.add(Amenity(locObj, tags))
+                                    }
                                 }
                             }
+                            success = true
+                            withContext(Dispatchers.Main) {
+                                if (!isSilent) stopSearchingAnimation()
+                                isErrorState = false
+                                foundAmenities = tempFoundList
+                                if (foundAmenities.isEmpty()) destinationAmenity = null
+                                else recalculateNearest()
+                                updateUI()
+                            }
+                        } else {
+                            serverIndex++
                         }
-                        success = true
-                        withContext(Dispatchers.Main) {
-                            if (!isSilent) stopSearchingAnimation()
-                            foundAmenities = tempFoundList
-                            if (foundAmenities.isEmpty()) destinationAmenity = null
-                            else recalculateNearest()
-                            updateUI()
-                        }
-                    } else throw Exception("HTTP:${response.code}")
-                } catch (e: Exception) { attempts++ }
+                    } catch (e: Exception) {
+                        serverIndex++
+                    }
+                }
+
+                if (!success) {
+                    currentLoop++
+                    delay(1000)
+                }
             }
+
             if (!success && !isSilent) {
                 withContext(Dispatchers.Main) {
                     stopSearchingAnimation()
@@ -811,4 +810,361 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
+}
+
+// --- MASSIVE OSM DICTIONARY ---
+object TagRepository {
+    val mapping = mapOf(
+        // Essentials
+        "Trash Can" to "amenity=waste_basket",
+        "Public Toilet" to "amenity=toilets",
+        "Defibrillator (AED)" to "emergency=defibrillator",
+        "Water Fountain" to "amenity=drinking_water",
+        "Recycling Bin" to "amenity=recycling",
+        "ATM" to "amenity=atm",
+        "Post Box" to "amenity=post_box",
+        "Bench" to "amenity=bench",
+        "Surveillance Camera" to "man_made=surveillance",
+
+        // Food & Drink
+        "Cafe" to "amenity=cafe",
+        "Restaurant" to "amenity=restaurant",
+        "Fast Food" to "amenity=fast_food",
+        "Bar" to "amenity=bar",
+        "Pub" to "amenity=pub",
+        "Biergarten" to "amenity=biergarten",
+        "Food Court" to "amenity=food_court",
+        "Ice Cream" to "amenity=ice_cream",
+        "Vending Machine" to "amenity=vending_machine",
+
+        // Shops
+        "Supermarket" to "shop=supermarket",
+        "Convenience Store" to "shop=convenience",
+        "Bakery" to "shop=bakery",
+        "Department Store" to "shop=department_store",
+        "General Store" to "shop=general",
+        "Mall" to "shop=mall",
+        "Kiosk" to "shop=kiosk",
+        "Alcohol Shop" to "shop=alcohol",
+        "Beverage Shop" to "shop=beverages",
+        "Butcher" to "shop=butcher",
+        "Cheese Shop" to "shop=cheese",
+        "Chocolate Shop" to "shop=chocolate",
+        "Coffee Shop" to "shop=coffee",
+        "Confectionery" to "shop=confectionery",
+        "Dairy" to "shop=dairy",
+        "Deli" to "shop=deli",
+        "Farm Shop" to "shop=farm",
+        "Greengrocer" to "shop=greengrocer",
+        "Health Food" to "shop=health_food",
+        "Ice Cream Shop" to "shop=ice_cream",
+        "Pasta Shop" to "shop=pasta",
+        "Pastry Shop" to "shop=pastry",
+        "Seafood Shop" to "shop=seafood",
+        "Spices Shop" to "shop=spices",
+        "Tea Shop" to "shop=tea",
+        "Water Shop" to "shop=water",
+        "Wine Shop" to "shop=wine",
+        "Antiques" to "shop=antiques",
+        "Bag Shop" to "shop=bag",
+        "Baby Goods" to "shop=baby_goods",
+        "Beauty Shop" to "shop=beauty",
+        "Bedding Shop" to "shop=bed",
+        "Book Store" to "shop=books",
+        "Boutique" to "shop=boutique",
+        "Camera Shop" to "shop=camera",
+        "Carpet Shop" to "shop=carpet",
+        "Charity Shop" to "shop=charity",
+        "Chemist" to "shop=chemist",
+        "Clothes Shop" to "shop=clothes",
+        "Computer Shop" to "shop=computer",
+        "Cosmetics" to "shop=cosmetics",
+        "Craft Shop" to "shop=craft",
+        "Curtain Shop" to "shop=curtain",
+        "Drugstore" to "shop=drugstore",
+        "Electronics Store" to "shop=electronics",
+        "Fabric Shop" to "shop=fabric",
+        "Florist" to "shop=florist",
+        "Furniture Store" to "shop=furniture",
+        "Garden Centre" to "shop=garden_centre",
+        "Gift Shop" to "shop=gift",
+        "Hardware Store" to "shop=hardware",
+        "Hearing Aids" to "shop=hearing_aids",
+        "Hifi Shop" to "shop=hifi",
+        "Interior Decoration" to "shop=interior_decoration",
+        "Jewelry" to "shop=jewelry",
+        "Kitchen Shop" to "shop=kitchen",
+        "Lighting Shop" to "shop=lighting",
+        "Mobile Phone Shop" to "shop=mobile_phone",
+        "Music Shop" to "shop=music",
+        "Musical Instrument" to "shop=musical_instrument",
+        "Newsagent" to "shop=newsagent",
+        "Optician" to "shop=optician",
+        "Paint Shop" to "shop=paint",
+        "Perfume Shop" to "shop=perfumery",
+        "Pet Shop" to "shop=pet",
+        "Photo Shop" to "shop=photo",
+        "Second Hand" to "shop=second_hand",
+        "Shoe Shop" to "shop=shoes",
+        "Sports Shop" to "shop=sports",
+        "Stationery" to "shop=stationery",
+        "Tailor" to "shop=tailor",
+        "Tattoo Parlour" to "shop=tattoo",
+        "Ticket Shop" to "shop=ticket",
+        "Tobacco Shop" to "shop=tobacco",
+        "Toy Shop" to "shop=toys",
+        "Video Games" to "shop=video_games",
+        "Watches" to "shop=watches",
+        "Weapons" to "shop=weapons",
+        "Wholesale" to "shop=wholesale",
+        "Bicycle Shop" to "shop=bicycle",
+        "Car Parts" to "shop=car_parts",
+        "Car Repair" to "shop=car_repair",
+        "Car Shop" to "shop=car",
+        "Fuel Station" to "amenity=fuel",
+        "Tyre Shop" to "shop=tyres",
+        "Laundry" to "shop=laundry",
+        "Dry Cleaning" to "shop=dry_cleaning",
+        "Funeral Directors" to "shop=funeral_directors",
+        "Hairdresser" to "shop=hairdresser",
+        "Massage" to "shop=massage",
+        "Medical Supply" to "shop=medical_supply",
+        "Money Lender" to "shop=money_lender",
+        "Pawnbroker" to "shop=pawnbroker",
+        "Travel Agency" to "shop=travel_agency",
+        "Vacant Shop" to "shop=vacant",
+
+        // Emergency
+        "Ambulance Station" to "emergency=ambulance_station",
+        "Defibrillator" to "emergency=defibrillator",
+        "Fire Hydrant" to "emergency=fire_hydrant",
+        "Fire Station" to "amenity=fire_station",
+        "Emergency Phone" to "emergency=phone",
+        "Police" to "amenity=police",
+        "Siren" to "emergency=siren",
+        "Hospital" to "amenity=hospital",
+        "Lifeguard" to "emergency=lifeguard",
+        "Assembly Point" to "emergency=assembly_point",
+
+        // Healthcare
+        "Clinic" to "amenity=clinic",
+        "Dentist" to "amenity=dentist",
+        "Doctors" to "amenity=doctors",
+        "Pharmacy" to "amenity=pharmacy",
+        "Veterinary" to "amenity=veterinary",
+        "Nursing Home" to "amenity=nursing_home",
+
+        // Transport
+        "Airport" to "aeroway=aerodrome",
+        "Helipad" to "aeroway=helipad",
+        "Bus Station" to "amenity=bus_station",
+        "Bus Stop" to "highway=bus_stop",
+        "Car Rental" to "amenity=car_rental",
+        "Car Wash" to "amenity=car_wash",
+        "EV Charging" to "amenity=charging_station",
+        "Ferry Terminal" to "amenity=ferry_terminal",
+        "Parking" to "amenity=parking",
+        "Bicycle Parking" to "amenity=bicycle_parking",
+        "Taxi Stand" to "amenity=taxi",
+        "Train Station" to "railway=station",
+        "Tram Stop" to "railway=tram_stop",
+        "Subway Entrance" to "railway=subway_entrance",
+        "Platform" to "railway=platform",
+
+        // Tourism & Leisure
+        "Hotel" to "tourism=hotel",
+        "Motel" to "tourism=motel",
+        "Hostel" to "tourism=hostel",
+        "Guest House" to "tourism=guest_house",
+        "Camp Site" to "tourism=camp_site",
+        "Caravan Site" to "tourism=caravan_site",
+        "Chalet" to "tourism=chalet",
+        "Museum" to "tourism=museum",
+        "Art Gallery" to "tourism=gallery",
+        "Attraction" to "tourism=attraction",
+        "Information" to "tourism=information",
+        "Picnic Site" to "tourism=picnic_site",
+        "Viewpoint" to "tourism=viewpoint",
+        "Zoo" to "tourism=zoo",
+        "Theme Park" to "tourism=theme_park",
+        "Water Park" to "leisure=water_park",
+        "Casino" to "amenity=casino",
+        "Cinema" to "amenity=cinema",
+        "Nightclub" to "amenity=nightclub",
+        "Theatre" to "amenity=theatre",
+        "Library" to "amenity=library",
+        "Park" to "leisure=park",
+        "Playground" to "leisure=playground",
+        "Golf Course" to "leisure=golf_course",
+        "Slipway" to "leisure=slipway",
+        "Swimming Pool" to "leisure=swimming_pool",
+        "Stadium" to "leisure=stadium",
+        "Pitch" to "leisure=pitch",
+        "Dog Park" to "leisure=dog_park",
+        "Marina" to "leisure=marina",
+        "Fishing" to "leisure=fishing",
+        "Sauna" to "leisure=sauna",
+
+        // Public Service
+        "Town Hall" to "amenity=townhall",
+        "Courthouse" to "amenity=courthouse",
+        "Prison" to "amenity=prison",
+        "Embassy" to "amenity=embassy",
+        "Post Office" to "amenity=post_office",
+        "Community Centre" to "amenity=community_centre",
+        "Social Facility" to "amenity=social_facility",
+        "Marketplace" to "amenity=marketplace",
+        "Crematorium" to "amenity=crematorium",
+        "Graveyard" to "amenity=graveyard",
+        "Cemetery" to "landuse=cemetery",
+
+        // Education
+        "College" to "amenity=college",
+        "Kindergarten" to "amenity=kindergarten",
+        "School" to "amenity=school",
+        "University" to "amenity=university",
+        "Driving School" to "amenity=driving_school",
+
+        // Historic
+        "Archaeological Site" to "historic=archaeological_site",
+        "Castle" to "historic=castle",
+        "Church" to "historic=church",
+        "City Gate" to "historic=city_gate",
+        "Fort" to "historic=fort",
+        "Manor" to "historic=manor",
+        "Memorial" to "historic=memorial",
+        "Monument" to "historic=monument",
+        "Ruins" to "historic=ruins",
+        "Battlefield" to "historic=battlefield",
+        "Shipwreck" to "historic=wreck",
+        "Wayside Cross" to "historic=wayside_cross",
+        "Wayside Shrine" to "historic=wayside_shrine",
+        "Cannon" to "historic=cannon",
+
+        // Nature & Geography
+        "Tree" to "natural=tree",
+        "Peak" to "natural=peak",
+        "Volcano" to "natural=volcano",
+        "Cave Entrance" to "natural=cave_entrance",
+        "Spring" to "natural=spring",
+        "Beach" to "natural=beach",
+        "Glacier" to "natural=glacier",
+        "Cliff" to "natural=cliff",
+        "Bay" to "natural=bay",
+        "Wetland" to "natural=wetland",
+        "Wood" to "natural=wood",
+        "Scrub" to "natural=scrub",
+        "Heath" to "natural=heath",
+        "Grassland" to "natural=grassland",
+        "Sand" to "natural=sand",
+        "Rock" to "natural=bare_rock",
+        "Geyser" to "natural=geyser",
+        "Hot Spring" to "natural=hot_spring",
+
+        // Man Made & Structures
+        "Tower" to "man_made=tower",
+        "Water Tower" to "man_made=water_tower",
+        "Lighthouse" to "man_made=lighthouse",
+        "Windmill" to "man_made=windmill",
+        "Crane" to "man_made=crane",
+        "Chimney" to "man_made=chimney",
+        "Communications Tower" to "man_made=communications_tower",
+        "Mast" to "man_made=mast",
+        "Flagpole" to "man_made=flagpole",
+        "Silo" to "man_made=silo",
+        "Storage Tank" to "man_made=storage_tank",
+        "Telescope" to "man_made=telescope",
+        "Water Well" to "man_made=water_well",
+        "Pipeline" to "man_made=pipeline",
+        "Pier" to "man_made=pier",
+        "Breakwater" to "man_made=breakwater",
+        "Groyne" to "man_made=groyne",
+        "Dyke" to "man_made=dyke",
+        "Adit (Mine Entrance)" to "man_made=adit",
+        "Mineshaft" to "man_made=mineshaft",
+        "Kiln" to "man_made=kiln",
+        "Maypole" to "man_made=maypole",
+        "Obelisk" to "man_made=obelisk",
+        "Street Cabinet" to "man_made=street_cabinet",
+        "Survey Point" to "man_made=survey_point",
+
+        // Barriers
+        "Gate" to "barrier=gate",
+        "Bollard" to "barrier=bollard",
+        "Border Control" to "barrier=border_control",
+        "Cattle Grid" to "barrier=cattle_grid",
+        "Toll Booth" to "barrier=toll_booth",
+        "Stile" to "barrier=stile",
+        "Kissing Gate" to "barrier=kissing_gate",
+
+        // Power
+        "Generator" to "power=generator",
+        "Power Line" to "power=line",
+        "Power Pole" to "power=pole",
+        "Power Tower" to "power=tower",
+        "Transformer" to "power=transformer",
+        "Substation" to "power=substation",
+        "Nuclear Power Plant" to "power=plant",
+
+        // Waterway
+        "Water Fall" to "waterway=waterfall",
+        "Lock Gate" to "waterway=lock_gate",
+        "Weir" to "waterway=weir",
+        "Dam" to "waterway=dam",
+
+        // Aerialway
+        "Cable Car" to "aerialway=cable_car",
+        "Gondola" to "aerialway=gondola",
+        "Chair Lift" to "aerialway=chair_lift",
+        "Drag Lift" to "aerialway=drag_lift",
+        "Zip Line" to "aerialway=zip_line",
+
+        // Office
+        "Office" to "office=yes",
+        "Estate Agent" to "office=estate_agent",
+        "Insurance" to "office=insurance",
+        "Lawyer" to "office=lawyer",
+        "IT Office" to "office=it",
+        "Government Office" to "office=government",
+        "Employment Agency" to "office=employment_agency",
+        "NGO" to "office=ngo",
+        "Coworking Space" to "office=coworking",
+
+        // Craft
+        "Shoemaker" to "craft=shoemaker",
+        "Carpenter" to "craft=carpenter",
+        "Electrician" to "craft=electrician",
+        "Plumber" to "craft=plumber",
+        "Photographer" to "craft=photographer",
+        "Blacksmith" to "craft=blacksmith",
+        "Brewery" to "craft=brewery",
+        "Distillery" to "craft=distillery",
+        "Winery" to "craft=winery",
+        "Sawmill" to "craft=sawmill",
+        "Stonemason" to "craft=stonemason",
+        "Tailor (Craft)" to "craft=tailor",
+        "Clockmaker" to "craft=clockmaker",
+        "Key Cutter" to "craft=key_cutter",
+        "Locksmith" to "craft=locksmith",
+
+        // Highway features
+        "Traffic Signals" to "highway=traffic_signals",
+        "Crosswalk" to "highway=crossing",
+        "Street Lamp" to "highway=street_lamp",
+        "Stop Sign" to "highway=stop",
+        "Speed Camera" to "highway=speed_camera",
+        "Milestone" to "highway=milestone",
+
+        // Military
+        "Bunker" to "military=bunker",
+        "Barracks" to "military=barracks",
+
+        // Religious
+        "Place of Worship" to "amenity=place_of_worship",
+        "Cathedral" to "building=cathedral",
+        "Chapel" to "building=chapel",
+        "Mosque" to "building=mosque",
+        "Synagogue" to "building=synagogue",
+        "Temple" to "building=temple"
+    )
 }
