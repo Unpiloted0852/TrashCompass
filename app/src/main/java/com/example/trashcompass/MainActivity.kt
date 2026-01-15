@@ -24,10 +24,12 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
@@ -55,6 +57,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvMapButton: TextView
     private lateinit var tvLegal: TextView
     private lateinit var tvInterference: TextView
+    private lateinit var loadingSpinner: ProgressBar
 
     // Sensors
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -76,7 +79,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // Logic
     private var lastFetchLocation: Location? = null
     private val REFETCH_DISTANCE_THRESHOLD = 150f
-    private val ERROR_RETRY_DISTANCE = 50f
+    private val ERROR_RETRY_DISTANCE = 100f // INCREASED: Prevents rapid toggling on GPS drift
     private var initialSearchDone = false
 
     // --- DRIVING ANIMATION STATE ---
@@ -100,16 +103,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         "Water Fountain", "Recycling Bin", "ATM", "Post Box", "Bench"
     )
 
+    // INCREASED TIMEOUTS to prevent server switching loops
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
     // Aggressive Server List
     private val servers = listOf(
-        "https://overpass.kumi.systems/api/interpreter",
         "https://overpass-api.de/api/interpreter",
-        "https://lz4.overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
         "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
         "https://overpass.openstreetmap.ru/api/interpreter"
     )
@@ -127,6 +130,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
         tvLegal = findViewById(R.id.tvLegal)
+        loadingSpinner = findViewById(R.id.loadingSpinner)
 
         tvLegal.setOnClickListener { showLegalDialog() }
 
@@ -331,6 +335,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         } else if (lastFetchLocation != null && !isSearching) {
                             val dist = loc.distanceTo(lastFetchLocation!!)
                             // Refetch if moved far, OR if we are in error state and moved slightly (Aggressive recovery)
+                            // CHANGED: Increased error distance to 100f
                             if (dist > REFETCH_DISTANCE_THRESHOLD || (isErrorState && dist > ERROR_RETRY_DISTANCE)) {
                                 lastFetchLocation = loc
                                 fetchAmenitiesAggressively(loc.latitude, loc.longitude, currentAmenityName, isSilent = true)
@@ -366,6 +371,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    // --- UPDATED METADATA PARSER ---
+    // Detects "Inside X", "Fee", "Bus Stop", etc.
     private fun parseMetadata(item: Amenity?) {
         if (item?.tags == null) {
             tvMetadata.visibility = View.GONE
@@ -375,15 +382,34 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val tags = item.tags
         val infoList = ArrayList<String>()
 
-        if (tags.has("name")) {
-            val name = tags.getString("name")
-            if (currentAmenityName == "Public Toilet" && tags.optString("toilets") == "yes") {
-                infoList.add("Inside $name")
-            } else {
+        // 1. NAME \ CONTEXT
+        var name = tags.optString("name")
+
+        // Context Logic: Toilets
+        if (tags.has("toilets") && tags.optString("amenity") != "toilets") {
+            // It is an object (Shop/Building) WITH a toilet
+            val building = tags.optString("name", "Building")
+            infoList.add("Inside $building")
+        }
+        // Context Logic: Bins
+        else if (tags.optString("bin") == "yes" || tags.optString("rubbish") == "yes" || tags.optString("waste_basket") == "yes") {
+            val attachedTo = when {
+                tags.optString("highway") == "bus_stop" -> "Bus Stop"
+                tags.optString("amenity") == "bench" -> "Bench"
+                else -> tags.optString("name")
+            }
+
+            if (attachedTo.isNotEmpty() && attachedTo != "null") {
+                infoList.add("At $attachedTo")
+            } else if (name.isNotEmpty()) {
                 infoList.add(name)
             }
         }
+        else if (name.isNotEmpty()) {
+            infoList.add(name)
+        }
 
+        // 2. ACCESS
         var access = tags.optString("toilets:access")
         if (access.isEmpty()) access = tags.optString("access")
         if (access.isNotEmpty()) {
@@ -395,6 +421,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
+        // 3. FEE
         var price = tags.optString("charge")
         if (price.isEmpty()) price = tags.optString("toilets:charge")
         if (price.isNotEmpty()) {
@@ -404,9 +431,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (fee.isEmpty()) fee = tags.optString("fee")
             if (fee == "no") infoList.add("Free")
             else if (fee == "yes") infoList.add("Fee Required")
-            else if (fee.isNotEmpty()) infoList.add("Fee: $fee")
         }
 
+        // 4. SPECIFIC TYPES
         when (currentAmenityName) {
             "Recycling Bin" -> if (tags.has("recycling_type")) infoList.add("Type: " + tags.getString("recycling_type").replace("_", " ").capitalize())
             "Water Fountain" -> if (tags.has("drinking_water")) {
@@ -417,10 +444,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 var loc = tags.optString("defibrillator:location")
                 if (loc.isEmpty()) loc = tags.optString("location")
                 if (loc.isNotEmpty()) infoList.add("Location: $loc")
-                if (tags.has("description")) infoList.add("Note: " + tags.getString("description"))
                 if (tags.optString("indoor") == "yes") infoList.add("(Indoors)")
             }
         }
+
+        // 5. GENERIC NOTES
+        if (tags.has("description")) infoList.add(tags.getString("description"))
+        if (tags.optString("wheelchair") == "yes") infoList.add("♿ Accessible")
 
         if (infoList.isNotEmpty()) {
             tvMetadata.text = infoList.joinToString("\n")
@@ -619,6 +649,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun startSearchingAnimation() {
         if (isSearching) return
         isSearching = true
+        loadingSpinner.visibility = View.VISIBLE
         tvHint.text = "Please wait..."
         // Ensure arrow is grey while searching
         setArrowActive(false)
@@ -637,6 +668,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun stopSearchingAnimation() {
         isSearching = false
+        loadingSpinner.visibility = View.GONE
         searchJob?.cancel()
         tvHint.text = "(Tap to change units)"
     }
@@ -672,7 +704,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
                 if (TagRepository.mapping.containsKey(currentAmenityName)) {
-                    tvDistance.text = "None found within 3km"
+                    tvDistance.text = "None found within 2km"
                 } else {
                     tvDistance.text = "No '$currentAmenityName' found"
                 }
@@ -681,34 +713,66 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // --- SMART QUERY GENERATOR ---
+    // --- UPDATED SMART QUERY GENERATOR ---
+    // Now handles complex Unions (Toilets inside buildings, Bins at bus stops)
     private fun getQueryString(type: String, lat: Double, lon: Double): String {
-        val bbox = String.format(Locale.US, "(around:3000, %f, %f)", lat, lon)
+        val radius = 2000 // Reduced from 3000 to improve speed
+        val bbox = String.format(Locale.US, "(around:$radius, %f, %f)", lat, lon)
+        val header = "[out:json];"
 
-        // 1. Direct Dictionary Lookup (Best Match)
+        // 1. COMPLEX TYPES
+        if (type == "Public Toilet") {
+            return """
+                $header
+                (
+                  node["amenity"="toilets"]$bbox;
+                  way["amenity"="toilets"]$bbox;
+                  node["toilets"~"yes|designated|public"]$bbox;
+                  way["toilets"~"yes|designated|public"]$bbox;
+                );
+                out center;
+            """.trimIndent()
+        }
+
+        if (type == "Trash Can" || type == "Trash Bin") {
+            return """
+                $header
+                (
+                  node["amenity"="waste_basket"]$bbox;
+                  way["amenity"="waste_basket"]$bbox;
+                  node["bin"="yes"]$bbox;
+                  way["bin"="yes"]$bbox;
+                  node["rubbish"="yes"]$bbox;
+                  way["rubbish"="yes"]$bbox;
+                  node["amenity"="waste_disposal"]$bbox;
+                );
+                out center;
+            """.trimIndent()
+        }
+
+        // 2. Direct Dictionary Lookup (Best Match)
         val mappedTag = TagRepository.mapping[type]
         if (mappedTag != null) {
             val key = mappedTag.substringBefore("=")
             val value = mappedTag.substringAfter("=")
-            return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
+            return """$header(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
         }
 
-        // 2. Raw Tag Lookup (Power User: "natural=tree")
+        // 3. Raw Tag Lookup (Power User: "natural=tree")
         if (type.contains("=")) {
             val key = type.substringBefore("=")
             val value = type.substringAfter("=")
-            return """[out:json];(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
+            return """$header(node["$key"="$value"]$bbox;way["$key"="$value"]$bbox;);out center;"""
         }
 
-        // 3. Smart Fallback (Snake Case + Expanded Keys)
+        // 4. Smart Fallback (Snake Case + Expanded Keys)
         val rawInput = type
         val snakeCase = type.lowercase().replace(" ", "_")
 
         val fallbackKeys = listOf(
             "amenity", "shop", "leisure", "tourism", "natural",
             "historic", "highway", "emergency", "man_made",
-            "craft", "office", "sport", "building", "waterway",
-            "aerialway", "aeroway", "barrier", "military", "power"
+            "craft", "office", "sport", "building"
         )
 
         val queryParts = StringBuilder()
@@ -722,7 +786,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             queryParts.append("""way["$key"="$snakeCase"]$bbox;""")
         }
 
-        return """[out:json];($queryParts);out center;"""
+        return """$header($queryParts);out center;"""
     }
 
     // --- AGGRESSIVE FETCHING LOGIC ---
@@ -747,7 +811,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         val currentServer = servers[serverIndex]
                         val url = "$currentServer?data=$encodedQuery"
 
-                        val request = Request.Builder().url(url).header("User-Agent", "TrashCompass/2.0").build()
+                        val request = Request.Builder().url(url).header("User-Agent", "TrashCompass/2.1").build()
                         val response = httpClient.newCall(request).execute()
 
                         if (response.isSuccessful) {
@@ -762,6 +826,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                         var itemLat = 0.0
                                         var itemLon = 0.0
                                         val tags = if (item.has("tags")) item.getJSONObject("tags") else null
+
+                                        // Support "center" from 'out center;' queries
                                         if (item.has("lat")) {
                                             itemLat = item.getDouble("lat")
                                             itemLon = item.getDouble("lon")
@@ -770,6 +836,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                             itemLat = center.getDouble("lat")
                                             itemLon = center.getDouble("lon")
                                         } else continue
+
                                         val locObj = Location("osm")
                                         locObj.latitude = itemLat
                                         locObj.longitude = itemLon
@@ -812,7 +879,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 }
 
-// --- MASSIVE OSM DICTIONARY ---
+// --- MASSIVE OSM DICTIONARY (Kept as is) ---
 object TagRepository {
     val mapping = mapOf(
         // Essentials
