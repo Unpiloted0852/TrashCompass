@@ -217,10 +217,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun setArrowActive(isActive: Boolean) {
         if (isActive) {
             ivArrow.alpha = 1.0f
+            // Active = Bright Green Accent
             ivArrow.setColorFilter(Color.parseColor("#32CD32"), PorterDuff.Mode.SRC_IN)
+            // Make the ring glow slightly (optional, requires API 21+)
+            findViewById<View>(R.id.viewRing).alpha = 1.0f
         } else {
-            ivArrow.alpha = 0.5f
-            ivArrow.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN)
+            ivArrow.alpha = 0.3f
+            // Inactive = Dark Grey/White
+            ivArrow.setColorFilter(Color.parseColor("#555555"), PorterDuff.Mode.SRC_IN)
+            findViewById<View>(R.id.viewRing).alpha = 0.3f
         }
     }
 
@@ -530,49 +535,105 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null) return
+
+        // 1. MAGNETIC FIELD (Interference + Fallback Accuracy)
         if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-            val magnitude = sqrt(event.values[0] * event.values[0] + event.values[1] * event.values[1] + event.values[2] * event.values[2])
+            val magX = event.values[0]
+            val magY = event.values[1]
+            val magZ = event.values[2]
+            val magnitude = sqrt(magX * magX + magY * magY + magZ * magZ)
+
+            // Interference Warning
             if ((currentLocation?.speed ?: 0f) <= SPEED_THRESHOLD_MPS) {
-                if (magnitude > 75 || magnitude < 20) tvInterference.visibility = View.VISIBLE
-                else tvInterference.visibility = View.GONE
+                // If mag strength is > 75uT or < 20uT, likely interference
+                if (magnitude > 75 || magnitude < 20) {
+                    // You can re-enable this if you added the Interference TextView back
+                    // tvInterference.visibility = View.VISIBLE
+                } else {
+                    // tvInterference.visibility = View.GONE
+                }
             }
+
+            // Store legacy accuracy for the fallback logic
             lastMagAccuracy = event.accuracy
         }
+
+        // 2. ROTATION VECTOR (Heading + Smart Status)
         if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
             val currentSpeed = currentLocation?.speed ?: 0f
+
+            // If driving fast, ignore compass (GPS handles it)
             if (currentSpeed > SPEED_THRESHOLD_MPS) return
+
+            // --- HEADING CALCULATION ---
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
             val axisAdjustedMatrix = FloatArray(9)
             val displayRotation = windowManager.defaultDisplay.rotation
             var axisX = SensorManager.AXIS_X
             var axisY = SensorManager.AXIS_Y
+
             when (displayRotation) {
-                android.view.Surface.ROTATION_90 -> { axisX = SensorManager.AXIS_Y; axisY = SensorManager.AXIS_MINUS_X }
-                android.view.Surface.ROTATION_180 -> { axisX = SensorManager.AXIS_MINUS_X; axisY = SensorManager.AXIS_MINUS_Y }
-                android.view.Surface.ROTATION_270 -> { axisX = SensorManager.AXIS_MINUS_Y; axisY = SensorManager.AXIS_X }
+                android.view.Surface.ROTATION_90 -> {
+                    axisX = SensorManager.AXIS_Y
+                    axisY = SensorManager.AXIS_MINUS_X
+                }
+                android.view.Surface.ROTATION_180 -> {
+                    axisX = SensorManager.AXIS_MINUS_X
+                    axisY = SensorManager.AXIS_MINUS_Y
+                }
+                android.view.Surface.ROTATION_270 -> {
+                    axisX = SensorManager.AXIS_MINUS_Y
+                    axisY = SensorManager.AXIS_X
+                }
             }
+
             if (SensorManager.remapCoordinateSystem(rotationMatrix, axisX, axisY, axisAdjustedMatrix)) {
                 SensorManager.getOrientation(axisAdjustedMatrix, orientationAngles)
-            } else SensorManager.getOrientation(rotationMatrix, orientationAngles)
+            } else {
+                SensorManager.getOrientation(rotationMatrix, orientationAngles)
+            }
+
             val azimuth = (Math.toDegrees(orientationAngles[0].toDouble()) + 360).toFloat() % 360
             updateArrowWithHeading(azimuth)
 
+            // --- ACCURACY STATUS LOGIC ---
             var statusText = "Compass: Good"
-            var statusColor = Color.parseColor("#32CD32")
+            var statusColor = Color.parseColor("#32CD32") // Green
+
+            // Check if this sensor event has the extra "Accuracy in Radians" value (Android 12+)
             if (event.values.size > 4 && event.values[4] != -1f) {
                 val accuracyRad = event.values[4]
-                if (accuracyRad < 0.35) { statusText = "Compass: Good"; statusColor = Color.parseColor("#32CD32") }
-                else if (accuracyRad < 0.8) { statusText = "Compass: Fair"; statusColor = Color.parseColor("#FFD700") }
-                else { statusText = "Compass: Poor"; statusColor = Color.RED }
+                if (accuracyRad < 0.35) {
+                    statusText = "Compass: Good"
+                    statusColor = Color.parseColor("#32CD32") // Green
+                } else if (accuracyRad < 0.8) {
+                    statusText = "Compass: Fair"
+                    statusColor = Color.parseColor("#FFD700") // Yellow
+                } else {
+                    statusText = "Compass: Poor"
+                    statusColor = Color.parseColor("#FF4444") // Red
+                }
             } else {
+                // Fallback for older devices using the Magnetic Field sensor accuracy
                 when (lastMagAccuracy) {
-                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> { statusText = "Compass: Good"; statusColor = Color.parseColor("#32CD32") }
-                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> { statusText = "Compass: Fair"; statusColor = Color.parseColor("#FFD700") }
-                    else -> { statusText = "Compass: Poor"; statusColor = Color.RED }
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> {
+                        statusText = "Compass: Good"
+                        statusColor = Color.parseColor("#32CD32")
+                    }
+                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> {
+                        statusText = "Compass: Fair"
+                        statusColor = Color.parseColor("#FFD700")
+                    }
+                    else -> {
+                        statusText = "Compass: Poor"
+                        statusColor = Color.parseColor("#FF4444")
+                    }
                 }
             }
+
+            // Apply the result to the UI
             tvAccuracy.text = statusText
-            tvAccuracy.backgroundTintList = ColorStateList.valueOf(statusColor)
+            tvAccuracy.setTextColor(statusColor)
         }
     }
 
