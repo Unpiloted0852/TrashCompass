@@ -136,7 +136,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvLegal.setOnClickListener { showLegalDialog() }
 
-        // Open Radius Settings
+        // --- THIS OPENS THE RADIUS SETTINGS ---
         ivSettings.setOnClickListener { showSettingsDialog() }
 
         tvMetadata.gravity = Gravity.CENTER
@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvAccuracy.setOnClickListener { showCalibrationDialog() }
 
-        // MAIN MENU LOGIC (This is how you switch targets)
+        // MENU SELECTION
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
             hardcodedOptions.forEach { popup.menu.add(it) }
