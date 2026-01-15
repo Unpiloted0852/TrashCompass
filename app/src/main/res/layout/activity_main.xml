@@ -7,37 +7,39 @@
     android:background="@drawable/bg_gradient"
     tools:context=".MainActivity">
 
-    <!-- SETTINGS (Pinned to top-right, independent of Title) -->
-    <ImageView
-        android:id="@+id/ivSettings"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="10dp"
-        android:src="@drawable/ic_gear"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- TITLE (Lower down, Bigger, Bold, with Caret) -->
+    <!-- TITLE (Anchor Point) -->
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="8dp"
         android:drawableEnd="@drawable/ic_caret_down"
         android:drawablePadding="8dp"
         android:fontFamily="sans-serif-condensed"
         android:text="Nearest Trash Can"
         android:textColor="#FFFFFF"
-        android:textSize="28sp"
+        android:textSize="26sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ivSettings"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ACCURACY INDICATOR -->
+    <!-- SETTINGS (Aligned to Title) -->
+    <ImageView
+        android:id="@+id/ivSettings"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="10dp"
+        android:src="@drawable/ic_gear"
+        app:layout_constraintBottom_toBottomOf="@+id/tvTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvTitle" />
+
+    <!-- ACCURACY -->
     <TextView
         android:id="@+id/tvAccuracy"
         android:layout_width="wrap_content"
@@ -47,15 +49,14 @@
         android:text="Compass: Calibrating..."
         android:textColor="#CCCCCC"
         android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="@+id/tvTitle"
         app:layout_constraintStart_toStartOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
-    <!-- COMPASS RING (Huge) -->
+    <!-- COMPASS RING -->
     <View
         android:id="@+id/viewRing"
-        android:layout_width="340dp"
-        android:layout_height="340dp"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:background="@drawable/compass_ring"
         app:layout_constraintBottom_toTopOf="@+id/tvDistance"
         app:layout_constraintEnd_toEndOf="parent"
@@ -63,11 +64,11 @@
         app:layout_constraintTop_toBottomOf="@+id/tvAccuracy"
         app:layout_constraintVertical_bias="0.45" />
 
-    <!-- ARROW (Huge) -->
+    <!-- ARROW -->
     <ImageView
         android:id="@+id/ivArrow"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
         android:src="@drawable/ic_navigation_arrow"
         app:tint="#444444"
         app:layout_constraintBottom_toBottomOf="@+id/viewRing"
@@ -75,7 +76,7 @@
         app:layout_constraintStart_toStartOf="@+id/viewRing"
         app:layout_constraintTop_toTopOf="@+id/viewRing" />
 
-    <!-- LOADING SPINNER -->
+    <!-- SPINNER -->
     <ProgressBar
         android:id="@+id/loadingSpinner"
         android:layout_width="80dp"
@@ -87,12 +88,12 @@
         app:layout_constraintStart_toStartOf="@+id/viewRing"
         app:layout_constraintTop_toTopOf="@+id/viewRing" />
 
-    <!-- DISTANCE TEXT -->
+    <!-- DISTANCE -->
     <TextView
         android:id="@+id/tvDistance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="0dp"
         android:fontFamily="sans-serif-light"
         android:text="---"
         android:textColor="#FFFFFF"
@@ -101,13 +102,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- METADATA (Inside X, Fee, etc) -->
+    <!-- METADATA -->
     <TextView
         android:id="@+id/tvMetadata"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:gravity="center"
         android:text="Searching..."
         android:textColor="#32CD32"
@@ -117,12 +118,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- MAP BUTTON (Minor Feature: Small, Grey) -->
+    <!-- MAP BUTTON (Hidden by default) -->
     <TextView
         android:id="@+id/tvMapButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
+        android:layout_marginBottom="16dp"
         android:background="@drawable/compass_ring"
         android:backgroundTint="#11FFFFFF"
         android:gravity="center"
@@ -132,36 +133,67 @@
         android:textColor="#AAAAAA"
         android:textSize="12sp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/tvHint"
+        app:layout_constraintBottom_toTopOf="@+id/layoutButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- FOOTER HINT -->
-    <TextView
-        android:id="@+id/tvHint"
-        android:layout_width="wrap_content"
+    <!-- QUICK BUTTONS (RESTORED) -->
+    <LinearLayout
+        android:id="@+id/layoutButtons"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:alpha="0.3"
-        android:text="Tap distance to change units"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="40dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <!-- LEGAL -->
-    <TextView
-        android:id="@+id/tvLegal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
-        android:alpha="0.2"
-        android:text="Legal"
-        android:textColor="#FFFFFF"
-        android:textSize="10sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <TextView
+            android:id="@+id/btnTrash"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/compass_ring"
+            android:backgroundTint="#33FFFFFF"
+            android:gravity="center"
+            android:text="🗑️"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/btnRecycle"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/compass_ring"
+            android:backgroundTint="#33FFFFFF"
+            android:gravity="center"
+            android:text="♻️"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/btnToilet"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/compass_ring"
+            android:backgroundTint="#33FFFFFF"
+            android:gravity="center"
+            android:text="🚻"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/btnWater"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/compass_ring"
+            android:backgroundTint="#33FFFFFF"
+            android:gravity="center"
+            android:text="💧"
+            android:textSize="22sp" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

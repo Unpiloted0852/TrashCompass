@@ -53,14 +53,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvTitle: TextView
     private lateinit var tvDistance: TextView
     private lateinit var tvMetadata: TextView
-    private lateinit var tvHint: TextView
     private lateinit var ivArrow: ImageView
     private lateinit var ivSettings: ImageView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
-    private lateinit var tvLegal: TextView
-    private lateinit var tvInterference: TextView
     private lateinit var loadingSpinner: ProgressBar
+
+    // Quick Buttons
+    private lateinit var btnTrash: TextView
+    private lateinit var btnRecycle: TextView
+    private lateinit var btnToilet: TextView
+    private lateinit var btnWater: TextView
 
     // Preferences
     private lateinit var prefs: SharedPreferences
@@ -124,20 +127,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // Load Preferences
         prefs = getSharedPreferences("TrashCompassPrefs", Context.MODE_PRIVATE)
         searchRadiusMeters = prefs.getInt("search_radius", 2000)
-        useMetric = prefs.getBoolean("use_metric", true) // Load unit preference
+        useMetric = prefs.getBoolean("use_metric", true)
 
         tvTitle = findViewById(R.id.tvTitle)
         tvDistance = findViewById(R.id.tvDistance)
         tvMetadata = findViewById(R.id.tvMetadata)
-        tvHint = findViewById(R.id.tvHint)
         ivArrow = findViewById(R.id.ivArrow)
         ivSettings = findViewById(R.id.ivSettings)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
-        tvLegal = findViewById(R.id.tvLegal)
         loadingSpinner = findViewById(R.id.loadingSpinner)
 
-        tvLegal.setOnClickListener { showLegalDialog() }
+        btnTrash = findViewById(R.id.btnTrash)
+        btnRecycle = findViewById(R.id.btnRecycle)
+        btnToilet = findViewById(R.id.btnToilet)
+        btnWater = findViewById(R.id.btnWater)
+
         ivSettings.setOnClickListener { showSettingsDialog() }
 
         tvMetadata.gravity = Gravity.CENTER
@@ -145,7 +150,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvMetadata.setPadding(padding, 0, padding, 0)
 
         setArrowActive(false)
-        addInterferenceWarning()
 
         tvDistance.text = "Waiting for GPS..."
 
@@ -162,22 +166,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        val mainAction = {
-            if (isErrorState || (foundAmenities.isEmpty() && initialSearchDone && !isSearching)) {
-                if (currentLocation != null) {
-                    fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
-                }
-            } else {
-                // Toggle units AND SAVE
-                useMetric = !useMetric
-                prefs.edit().putBoolean("use_metric", useMetric).apply()
-                updateUI()
-            }
+        tvDistance.setOnClickListener {
+            useMetric = !useMetric
+            prefs.edit().putBoolean("use_metric", useMetric).apply()
+            updateUI()
         }
-        tvDistance.setOnClickListener { mainAction() }
-        tvHint.setOnClickListener { mainAction() }
-
-        tvAccuracy.setOnClickListener { showCalibrationDialog() }
 
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
@@ -194,6 +187,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             popup.show()
         }
 
+        // Setup Buttons
+        btnTrash.setOnClickListener { setQuickTarget("Trash Can", btnTrash) }
+        btnRecycle.setOnClickListener { setQuickTarget("Recycling Bin", btnRecycle) }
+        btnToilet.setOnClickListener { setQuickTarget("Public Toilet", btnToilet) }
+        btnWater.setOnClickListener { setQuickTarget("Water Fountain", btnWater) }
+
+        // Init Button State
+        setQuickTarget("Trash Can", btnTrash)
+
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
@@ -202,15 +204,31 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         checkPermissions()
     }
 
+    private fun setQuickTarget(name: String, activeBtn: TextView) {
+        // Reset Visuals
+        val allBtns = listOf(btnTrash, btnRecycle, btnToilet, btnWater)
+        allBtns.forEach {
+            it.alpha = 0.5f
+            it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#33FFFFFF"))
+        }
+
+        // Highlight Active
+        activeBtn.alpha = 1.0f
+        activeBtn.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#32CD32"))
+
+        // Set Search
+        if (currentAmenityName != name) {
+            setNewSearchTarget(name)
+        }
+    }
+
     private fun setArrowActive(isActive: Boolean) {
         if (isActive) {
             ivArrow.alpha = 1.0f
-            // Bright Green
             ivArrow.setColorFilter(Color.parseColor("#32CD32"), PorterDuff.Mode.SRC_IN)
             findViewById<View>(R.id.viewRing).alpha = 1.0f
         } else {
             ivArrow.alpha = 0.3f
-            // Dark Grey
             ivArrow.setColorFilter(Color.parseColor("#555555"), PorterDuff.Mode.SRC_IN)
             findViewById<View>(R.id.viewRing).alpha = 0.3f
         }
@@ -288,7 +306,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         builder.setPositiveButton("Search") { _, _ ->
             val query = input.text.toString().trim()
-            if (query.isNotEmpty()) setNewSearchTarget(query)
+            if (query.isNotEmpty()) {
+                setNewSearchTarget(query)
+                // Deselect buttons for custom search
+                listOf(btnTrash, btnRecycle, btnToilet, btnWater).forEach {
+                    it.alpha = 0.5f
+                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#33FFFFFF"))
+                }
+            }
         }
         builder.setNegativeButton("Cancel", null)
         builder.show()
@@ -306,23 +331,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvMapButton.visibility = View.GONE
         setArrowActive(false)
         if (currentLocation != null) fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
-    }
-
-    private fun addInterferenceWarning() {
-        val rootLayout = findViewById<ViewGroup>(android.R.id.content)
-        tvInterference = TextView(this)
-        tvInterference.text = "🧲 High Magnetic Interference Detected"
-        tvInterference.textSize = 14f
-        tvInterference.setTextColor(Color.WHITE)
-        tvInterference.setBackgroundColor(Color.parseColor("#CCFF0000"))
-        tvInterference.gravity = Gravity.CENTER
-        tvInterference.setPadding(20, 10, 20, 10)
-        tvInterference.visibility = View.GONE
-        val params = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
-        params.gravity = Gravity.TOP
-        params.topMargin = (80 * resources.displayMetrics.density).toInt()
-        tvInterference.layoutParams = params
-        rootLayout.addView(tvInterference)
     }
 
     private fun showLegalDialog() {
@@ -360,7 +368,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             startDrivingAnimation()
                             tvAccuracy.text = "GPS Heading"
                             tvAccuracy.setTextColor(Color.parseColor("#32CD32"))
-                            tvInterference.visibility = View.GONE
                         } else {
                             stopDrivingAnimation()
                         }
@@ -491,13 +498,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             val magnitude = sqrt(event.values[0] * event.values[0] + event.values[1] * event.values[1] + event.values[2] * event.values[2])
-            if ((currentLocation?.speed ?: 0f) <= SPEED_THRESHOLD_MPS) {
-                if (magnitude > 75 || magnitude < 20) {
-                    // tvInterference.visibility = View.VISIBLE
-                } else {
-                    // tvInterference.visibility = View.GONE
-                }
-            }
             lastMagAccuracy = event.accuracy
         }
 
@@ -619,7 +619,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (isSearching) return
         isSearching = true
         loadingSpinner.visibility = View.VISIBLE
-        tvHint.text = "Please wait..."
         setArrowActive(false)
         searchJob?.cancel()
         searchJob = CoroutineScope(Dispatchers.Main).launch {
@@ -638,7 +637,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         isSearching = false
         loadingSpinner.visibility = View.GONE
         searchJob?.cancel()
-        tvHint.text = "(Tap to change units)"
     }
 
     private fun updateUI() {
@@ -646,7 +644,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (isErrorState) {
             tvDistance.textSize = 24f
             tvDistance.text = lastFriendlyError
-            tvHint.text = "(Tap to retry)"
             setArrowActive(false)
             return
         }
@@ -676,7 +673,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 } else {
                     tvDistance.text = "No '$currentAmenityName' found"
                 }
-                tvHint.text = "(Tap to retry)"
             }
         }
     }
