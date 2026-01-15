@@ -7,7 +7,7 @@
     android:background="@drawable/bg_gradient"
     tools:context=".MainActivity">
 
-    <!-- SETTINGS (Top Right, aligned with Title) -->
+    <!-- SETTINGS (Fixed Top Right) -->
     <ImageView
         android:id="@+id/ivSettings"
         android:layout_width="48dp"
@@ -20,22 +20,25 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- TITLE (Click to change search target) -->
+    <!-- TITLE (Constrained width to prevent overlap) -->
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="55dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="8dp"
         android:drawableEnd="@drawable/ic_caret_down"
         android:drawablePadding="8dp"
         android:fontFamily="sans-serif-condensed"
+        android:gravity="center_vertical|start"
         android:text="Nearest Trash Can"
         android:textColor="#FFFFFF"
         android:textSize="26sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/ivSettings"
+        app:layout_constraintEnd_toStartOf="@+id/ivSettings"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/ivSettings" />
 
     <!-- ACCURACY -->
     <TextView
@@ -47,7 +50,6 @@
         android:text="Compass: Calibrating..."
         android:textColor="#CCCCCC"
         android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="@+id/tvTitle"
         app:layout_constraintStart_toStartOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
@@ -117,20 +119,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- MAP BUTTON (The ONLY button at the bottom) -->
+    <!-- MAP BUTTON (Made smaller & minor) -->
     <TextView
         android:id="@+id/tvMapButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:background="@drawable/compass_ring"
-        android:backgroundTint="#11FFFFFF"
+        android:backgroundTint="#0DFFFFFF"
         android:gravity="center"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="10dp"
-        android:text="OPEN MAP"
-        android:textColor="#AAAAAA"
-        android:textSize="12sp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="6dp"
+        android:text="Open Map"
+        android:textColor="#888888"
+        android:textSize="10sp"
         android:letterSpacing="0.1"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/tvHint"
