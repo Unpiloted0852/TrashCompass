@@ -135,8 +135,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val tvLegal = findViewById<TextView>(R.id.tvLegal)
 
         tvLegal.setOnClickListener { showLegalDialog() }
-
-        // --- THIS OPENS THE RADIUS SETTINGS ---
         ivSettings.setOnClickListener { showSettingsDialog() }
 
         tvMetadata.gravity = Gravity.CENTER
@@ -176,7 +174,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvAccuracy.setOnClickListener { showCalibrationDialog() }
 
-        // MENU SELECTION
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
             hardcodedOptions.forEach { popup.menu.add(it) }
@@ -212,6 +209,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    // FIXED: Explicit text colors to prevent "empty box" issue
     private fun showSettingsDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Settings")
@@ -223,6 +221,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val lblRadius = TextView(this)
         lblRadius.text = "Search Radius: ${searchRadiusMeters}m"
         lblRadius.textSize = 16f
+        lblRadius.setTextColor(Color.BLACK) // Force Visible Color
         layout.addView(lblRadius)
 
         val lblWarning = TextView(this)
@@ -254,6 +253,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         })
         layout.addView(seekBar)
 
+        builder.setView(layout) // Ensure view is added
+
         builder.setPositiveButton("Save") { _, _ ->
             val newRadius = 500 + (seekBar.progress * 100)
             searchRadiusMeters = newRadius
@@ -275,6 +276,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         input.hint = "e.g. Castle, Crane, Adit..."
+        input.setTextColor(Color.BLACK) // Force visible
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, TagRepository.mapping.keys.toList().sorted())
         input.setAdapter(adapter)

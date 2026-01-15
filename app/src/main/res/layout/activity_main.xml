@@ -7,38 +7,37 @@
     android:background="@drawable/bg_gradient"
     tools:context=".MainActivity">
 
-    <!-- SETTINGS (Fixed Top Right) -->
+    <!-- SETTINGS (Safe distance from clock) -->
     <ImageView
         android:id="@+id/ivSettings"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_marginTop="48dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginTop="60dp"
+        android:layout_marginEnd="24dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="10dp"
+        android:padding="8dp"
         android:src="@drawable/ic_gear"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- TITLE (Constrained width to prevent overlap) -->
+    <!-- TITLE (Lower down, Constrained width) -->
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="130dp"
+        android:layout_marginEnd="16dp"
         android:drawableEnd="@drawable/ic_caret_down"
         android:drawablePadding="8dp"
         android:fontFamily="sans-serif-condensed"
-        android:gravity="center_vertical|start"
         android:text="Nearest Trash Can"
         android:textColor="#FFFFFF"
-        android:textSize="26sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/ivSettings"
         app:layout_constraintEnd_toStartOf="@+id/ivSettings"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/ivSettings" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- ACCURACY -->
     <TextView
@@ -56,8 +55,8 @@
     <!-- COMPASS RING -->
     <View
         android:id="@+id/viewRing"
-        android:layout_width="320dp"
-        android:layout_height="320dp"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:background="@drawable/compass_ring"
         app:layout_constraintBottom_toTopOf="@+id/tvDistance"
         app:layout_constraintEnd_toEndOf="parent"
@@ -68,8 +67,8 @@
     <!-- ARROW -->
     <ImageView
         android:id="@+id/ivArrow"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
         android:src="@drawable/ic_navigation_arrow"
         app:tint="#444444"
         app:layout_constraintBottom_toBottomOf="@+id/viewRing"
@@ -119,21 +118,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- MAP BUTTON (Made smaller & minor) -->
+    <!-- MAP BUTTON (Fixed size, visible color) -->
     <TextView
         android:id="@+id/tvMapButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
-        android:background="@drawable/compass_ring"
-        android:backgroundTint="#0DFFFFFF"
+        android:background="@drawable/bg_map_button"
         android:gravity="center"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
-        android:text="Open Map"
-        android:textColor="#888888"
-        android:textSize="10sp"
-        android:letterSpacing="0.1"
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="12dp"
+        android:text="OPEN MAP"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/tvHint"
         app:layout_constraintEnd_toEndOf="parent"
@@ -145,7 +143,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        android:alpha="0.3"
+        android:alpha="0.5"
         android:text="Tap distance to change units"
         android:textColor="#FFFFFF"
         android:textSize="12sp"
