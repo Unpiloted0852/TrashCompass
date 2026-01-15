@@ -32,7 +32,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
@@ -53,17 +52,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvTitle: TextView
     private lateinit var tvDistance: TextView
     private lateinit var tvMetadata: TextView
+    private lateinit var tvHint: TextView
     private lateinit var ivArrow: ImageView
     private lateinit var ivSettings: ImageView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
     private lateinit var loadingSpinner: ProgressBar
-
-    // Quick Buttons
-    private lateinit var btnTrash: TextView
-    private lateinit var btnRecycle: TextView
-    private lateinit var btnToilet: TextView
-    private lateinit var btnWater: TextView
 
     // Preferences
     private lateinit var prefs: SharedPreferences
@@ -132,17 +126,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvTitle = findViewById(R.id.tvTitle)
         tvDistance = findViewById(R.id.tvDistance)
         tvMetadata = findViewById(R.id.tvMetadata)
+        tvHint = findViewById(R.id.tvHint)
         ivArrow = findViewById(R.id.ivArrow)
         ivSettings = findViewById(R.id.ivSettings)
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
         loadingSpinner = findViewById(R.id.loadingSpinner)
+        val tvLegal = findViewById<TextView>(R.id.tvLegal)
 
-        btnTrash = findViewById(R.id.btnTrash)
-        btnRecycle = findViewById(R.id.btnRecycle)
-        btnToilet = findViewById(R.id.btnToilet)
-        btnWater = findViewById(R.id.btnWater)
+        tvLegal.setOnClickListener { showLegalDialog() }
 
+        // Open Radius Settings
         ivSettings.setOnClickListener { showSettingsDialog() }
 
         tvMetadata.gravity = Gravity.CENTER
@@ -166,12 +160,23 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        tvDistance.setOnClickListener {
-            useMetric = !useMetric
-            prefs.edit().putBoolean("use_metric", useMetric).apply()
-            updateUI()
+        val mainAction = {
+            if (isErrorState || (foundAmenities.isEmpty() && initialSearchDone && !isSearching)) {
+                if (currentLocation != null) {
+                    fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
+                }
+            } else {
+                useMetric = !useMetric
+                prefs.edit().putBoolean("use_metric", useMetric).apply()
+                updateUI()
+            }
         }
+        tvDistance.setOnClickListener { mainAction() }
+        tvHint.setOnClickListener { mainAction() }
 
+        tvAccuracy.setOnClickListener { showCalibrationDialog() }
+
+        // MAIN MENU LOGIC (This is how you switch targets)
         tvTitle.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
             hardcodedOptions.forEach { popup.menu.add(it) }
@@ -187,39 +192,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             popup.show()
         }
 
-        // Setup Buttons
-        btnTrash.setOnClickListener { setQuickTarget("Trash Can", btnTrash) }
-        btnRecycle.setOnClickListener { setQuickTarget("Recycling Bin", btnRecycle) }
-        btnToilet.setOnClickListener { setQuickTarget("Public Toilet", btnToilet) }
-        btnWater.setOnClickListener { setQuickTarget("Water Fountain", btnWater) }
-
-        // Init Button State
-        setQuickTarget("Trash Can", btnTrash)
-
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         checkPermissions()
-    }
-
-    private fun setQuickTarget(name: String, activeBtn: TextView) {
-        // Reset Visuals
-        val allBtns = listOf(btnTrash, btnRecycle, btnToilet, btnWater)
-        allBtns.forEach {
-            it.alpha = 0.5f
-            it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#33FFFFFF"))
-        }
-
-        // Highlight Active
-        activeBtn.alpha = 1.0f
-        activeBtn.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#32CD32"))
-
-        // Set Search
-        if (currentAmenityName != name) {
-            setNewSearchTarget(name)
-        }
     }
 
     private fun setArrowActive(isActive: Boolean) {
@@ -306,14 +284,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         builder.setPositiveButton("Search") { _, _ ->
             val query = input.text.toString().trim()
-            if (query.isNotEmpty()) {
-                setNewSearchTarget(query)
-                // Deselect buttons for custom search
-                listOf(btnTrash, btnRecycle, btnToilet, btnWater).forEach {
-                    it.alpha = 0.5f
-                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#33FFFFFF"))
-                }
-            }
+            if (query.isNotEmpty()) setNewSearchTarget(query)
         }
         builder.setNegativeButton("Cancel", null)
         builder.show()
