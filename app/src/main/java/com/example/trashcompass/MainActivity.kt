@@ -903,6 +903,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
 object TagRepository {
     val mapping = mapOf(
+        "Defibrillator (AED)" to "emergency=defibrillator",
+        "Public Toilet" to "amenity=toilets",
+        "Water Fountain" to "amenity=drinking_water",
+        "Recycling Bin" to "amenity=recycling",
+        "Trash Bin" to "amenity=waste_basket",
         // --- SUSTENANCE ---
         "Bar" to "amenity=bar",
         "BBQ / Grill" to "amenity=bbq",
