@@ -98,6 +98,18 @@
         android:text="---"
         android:textColor="#FFFFFF"
         android:textSize="64sp"
+        app:layout_constraintBottom_toTopOf="@+id/ivAmenityImage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- AMENITY IMAGE (NEW FEATURE) -->
+    <ImageView
+        android:id="@+id/ivAmenityImage"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:layout_marginBottom="8dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/tvMetadata"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

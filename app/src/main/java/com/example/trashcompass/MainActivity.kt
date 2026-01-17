@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.hardware.Sensor
@@ -48,6 +49,10 @@ data class Amenity(
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
+    // --- NEW: Mapillary Token ---
+    // Get one free at https://www.mapillary.com/dashboard/developers
+    private val MAPILLARY_ACCESS_TOKEN = "MLY|26782956327960665|7ea4bb0428dc48fe0089e13b8f2b0617"
+
     // UI
     private lateinit var tvTitle: TextView
     private lateinit var tvDistance: TextView
@@ -58,6 +63,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
     private lateinit var loadingSpinner: ProgressBar
+    private lateinit var ivAmenityImage: ImageView // New Image View
 
     // Preferences
     private lateinit var prefs: SharedPreferences
@@ -132,6 +138,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
         loadingSpinner = findViewById(R.id.loadingSpinner)
+        ivAmenityImage = findViewById(R.id.ivAmenityImage) // Initialize new view
         val tvLegal = findViewById<TextView>(R.id.tvLegal)
 
         tvLegal.setOnClickListener { showLegalDialog() }
@@ -301,6 +308,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         initialSearchDone = false
         tvDistance.text = "Searching..."
         tvMetadata.visibility = View.GONE
+        ivAmenityImage.visibility = View.GONE
         tvMapButton.visibility = View.GONE
         setArrowActive(false)
         if (currentLocation != null) fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
@@ -385,11 +393,29 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun parseMetadata(item: Amenity?) {
+        // Reset Image
+        ivAmenityImage.setImageDrawable(null)
+        ivAmenityImage.visibility = View.GONE
+
         if (item?.tags == null) {
             tvMetadata.visibility = View.GONE
             return
         }
         val tags = item.tags
+
+        // --- NEW IMAGE LOADING LOGIC ---
+        val mapillaryId = tags.optString("mapillary")
+        val imageUrl = tags.optString("image")
+
+        if (mapillaryId.isNotEmpty()) {
+            loadAmenityImage(mapillaryId, isMapillaryId = true)
+        } else if (imageUrl.isNotEmpty()) {
+            if (imageUrl.startsWith("http")) {
+                loadAmenityImage(imageUrl, isMapillaryId = false)
+            }
+        }
+        // --------------------------------
+
         val infoList = ArrayList<String>()
         var name = tags.optString("name")
         if (tags.has("toilets") && tags.optString("amenity") != "toilets") {
@@ -449,6 +475,54 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             tvMetadata.visibility = View.VISIBLE
         } else {
             tvMetadata.visibility = View.GONE
+        }
+    }
+
+    private fun loadAmenityImage(source: String, isMapillaryId: Boolean) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                var finalUrl = source
+
+                // If Mapillary, we need to ask their API for the real image URL
+                if (isMapillaryId) {
+                    if (MAPILLARY_ACCESS_TOKEN.isEmpty()) {
+                        println("Mapillary Token missing.")
+                        return@launch
+                    }
+                    val apiUrl = "https://graph.mapillary.com/$source?fields=thumb_1024_url&access_token=$MAPILLARY_ACCESS_TOKEN"
+                    val request = Request.Builder().url(apiUrl).build()
+                    val response = httpClient.newCall(request).execute()
+
+                    if (response.isSuccessful) {
+                        val json = JSONObject(response.body?.string() ?: "{}")
+                        if (json.has("thumb_1024_url")) {
+                            finalUrl = json.getString("thumb_1024_url")
+                        } else {
+                            return@launch
+                        }
+                    } else {
+                        return@launch
+                    }
+                }
+
+                // Download the actual image
+                val imageRequest = Request.Builder().url(finalUrl).build()
+                val imageResponse = httpClient.newCall(imageRequest).execute()
+
+                if (imageResponse.isSuccessful) {
+                    val inputStream = imageResponse.body?.byteStream()
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+
+                    withContext(Dispatchers.Main) {
+                        if (bitmap != null) {
+                            ivAmenityImage.setImageBitmap(bitmap)
+                            ivAmenityImage.visibility = View.VISIBLE
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -636,6 +710,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         } else {
             tvMapButton.visibility = View.GONE
             tvMetadata.visibility = View.GONE
+            ivAmenityImage.visibility = View.GONE
             setArrowActive(false)
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
