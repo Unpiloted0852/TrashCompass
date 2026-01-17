@@ -312,7 +312,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        input.hint = "e.g. Castle, Crane, Adit..."
+        input.hint = "e.g. bicycle repair"
         input.setTextColor(Color.BLACK)
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, TagRepository.mapping.keys.toList().sorted())
