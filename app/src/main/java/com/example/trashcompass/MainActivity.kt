@@ -1524,6 +1524,65 @@ object TagRepository {
         "Swimming" to "sport=swimming",
         "Yoga" to "sport=yoga",
 
+        // --- SPECIFIC RECYCLING (TrashCompass Specials) ---
+        "Glass Recycling" to "recycling:glass=yes",
+        "Paper Recycling" to "recycling:paper=yes",
+        "Clothes Recycling" to "recycling:clothes=yes",
+        "Metal Recycling" to "recycling:cans=yes",
+        "Plastic Recycling" to "recycling:plastic=yes",
+        "Battery Recycling" to "recycling:batteries=yes",
+        "Dog Poop Bags" to "vending=excrement_bags",
+
+        // --- HIKING & NAVIGATION ---
+        "Hiking Sign (Guidepost)" to "information=guidepost",
+        "Map Board" to "information=map",
+        "Trail Blaze" to "information=route_marker",
+        "Cairn (Rock Pile)" to "man_made=cairn",
+
+        // --- SPECIFIC VENDING MACHINES ---
+        "Ticket Machine" to "vending=public_transport_tickets",
+        "Parking Ticket Machine" to "vending=parking_tickets",
+        "Drinks Machine" to "vending=drinks",
+        "Snack Machine" to "vending=food",
+        "Cigarette Machine" to "vending=cigarettes",
+        "Condom Machine" to "vending=condoms",
+        "Newspaper Box" to "vending=newspapers",
+        "Parcel Locker" to "amenity=parcel_locker",
+
+        // --- PLAYGROUND EQUIPMENT (For Parents) ---
+        "Slide" to "playground=slide",
+        "Swing" to "playground=swing",
+        "Sandpit" to "playground=sandpit",
+        "Seesaw" to "playground=seesaw",
+        "Climbing Frame" to "playground=structure",
+        "Zipwire" to "playground=zipwire",
+
+        // --- WINTER SPORTS ---
+        "Ski Piste Map" to "information=piste_map",
+        "Ski Rental" to "shop=ski",
+        "Snow Cannon" to "man_made=snow_cannon",
+        "Sled Rental" to "shop=sled",
+
+        // --- WATER INFRASTRUCTURE ---
+        "Water Well" to "man_made=water_well",
+        "Water Pump" to "man_made=water_pump",
+        "Water Tower" to "man_made=water_tower",
+        "Watermill" to "man_made=water_mill",
+
+        // --- RURAL & BARRIERS ---
+        "Stile (Fence Step)" to "barrier=stile",
+        "Kissing Gate" to "barrier=kissing_gate",
+        "Cattle Grid" to "barrier=cattle_grid",
+        "Toll Booth" to "barrier=toll_booth",
+        "Grit Bin (Salt)" to "amenity=grit_bin",
+        "Hunting Stand" to "amenity=hunting_stand",
+        "Feeding Place (Animals)" to "amenity=feeding_place"
+
+        // --- ADVERTISING & MEDIA ---
+        "Billboard" to "advertising=billboard",
+        "Advertising Column" to "advertising=column",
+        "Flagpole" to "man_made=flagpole",
+
         // --- NAVIGATION & STREETS ---
         "Street Lamp" to "highway=street_lamp",
         "Stairs" to "highway=steps",
