@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -19,17 +18,16 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -42,15 +40,18 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
+// UPDATED: Added 'id' to track unique objects and prevent flickering
 data class Amenity(
+    val id: Long,
     val location: Location,
     val tags: JSONObject?
 )
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
-    // --- NEW: Mapillary Token ---
+    // --- MAPILLARY TOKEN ---
     // Get one free at https://www.mapillary.com/dashboard/developers
+    // If blank, mapillary tags will be ignored, but regular images will still work.
     private val MAPILLARY_ACCESS_TOKEN = "MLY|26782956327960665|7ea4bb0428dc48fe0089e13b8f2b0617"
 
     // UI
@@ -63,7 +64,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvAccuracy: TextView
     private lateinit var tvMapButton: TextView
     private lateinit var loadingSpinner: ProgressBar
-    private lateinit var ivAmenityImage: ImageView // New Image View
+
+    // Image Views
+    private lateinit var ivAmenityImage: ImageView
+    private lateinit var ivFullScreen: ImageView
+    private lateinit var viewDimmer: View
 
     // Preferences
     private lateinit var prefs: SharedPreferences
@@ -91,15 +96,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val ERROR_RETRY_DISTANCE = 100f
     private var initialSearchDone = false
 
-    // Driving Animation
+    // Jobs
     private var driveAnimJob: Job? = null
+    private var searchJob: Job? = null
+    private var imageLoadingJob: Job? = null // To cancel old image loads
+
     private var lastFixTime: Long = 0L
     private val SPEED_THRESHOLD_MPS = 6.7f
 
     private var currentAmenityName = "Trash Can"
     private var isSearching = false
     private var isErrorState = false
-    private var searchJob: Job? = null
     private var lastFriendlyError = ""
 
     private val hardcodedOptions = listOf(
@@ -138,11 +145,35 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvAccuracy = findViewById(R.id.tvAccuracy)
         tvMapButton = findViewById(R.id.tvMapButton)
         loadingSpinner = findViewById(R.id.loadingSpinner)
-        ivAmenityImage = findViewById(R.id.ivAmenityImage) // Initialize new view
+
+        ivAmenityImage = findViewById(R.id.ivAmenityImage)
+        ivFullScreen = findViewById(R.id.ivFullScreen)
+        viewDimmer = findViewById(R.id.viewDimmer)
+
         val tvLegal = findViewById<TextView>(R.id.tvLegal)
 
         tvLegal.setOnClickListener { showLegalDialog() }
         ivSettings.setOnClickListener { showSettingsDialog() }
+
+        // Setup Fullscreen Close Listeners
+        val closeFullscreen = View.OnClickListener {
+            ivFullScreen.visibility = View.GONE
+            viewDimmer.visibility = View.GONE
+        }
+        ivFullScreen.setOnClickListener(closeFullscreen)
+        viewDimmer.setOnClickListener(closeFullscreen)
+
+        // Handle Back Button
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (ivFullScreen.visibility == View.VISIBLE) {
+                    closeFullscreen.onClick(null)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
 
         tvMetadata.gravity = Gravity.CENTER
         val padding = (20 * resources.displayMetrics.density).toInt()
@@ -216,7 +247,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // FIXED: Explicit text colors to prevent "empty box" issue
     private fun showSettingsDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Settings")
@@ -228,7 +258,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val lblRadius = TextView(this)
         lblRadius.text = "Search Radius: ${searchRadiusMeters}m"
         lblRadius.textSize = 16f
-        lblRadius.setTextColor(Color.BLACK) // Force Visible Color
+        lblRadius.setTextColor(Color.BLACK)
         layout.addView(lblRadius)
 
         val lblWarning = TextView(this)
@@ -260,7 +290,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         })
         layout.addView(seekBar)
 
-        builder.setView(layout) // Ensure view is added
+        builder.setView(layout)
 
         builder.setPositiveButton("Save") { _, _ ->
             val newRadius = 500 + (seekBar.progress * 100)
@@ -283,7 +313,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         input.hint = "e.g. Castle, Crane, Adit..."
-        input.setTextColor(Color.BLACK) // Force visible
+        input.setTextColor(Color.BLACK)
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, TagRepository.mapping.keys.toList().sorted())
         input.setAdapter(adapter)
@@ -309,6 +339,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvDistance.text = "Searching..."
         tvMetadata.visibility = View.GONE
         ivAmenityImage.visibility = View.GONE
+        ivFullScreen.visibility = View.GONE
+        viewDimmer.visibility = View.GONE
         tvMapButton.visibility = View.GONE
         setArrowActive(false)
         if (currentLocation != null) fetchAmenitiesAggressively(currentLocation!!.latitude, currentLocation!!.longitude, currentAmenityName, isSilent = false)
@@ -385,7 +417,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 bestTarget = item
             }
         }
-        if (bestTarget != destinationAmenity) {
+
+        // FIXED: Check ID equality instead of object reference to prevent flickering
+        if (bestTarget?.id != destinationAmenity?.id) {
             destinationAmenity = bestTarget
             parseMetadata(bestTarget)
             updateUI()
@@ -393,9 +427,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun parseMetadata(item: Amenity?) {
-        // Reset Image
+        // Cancel any pending image loads to prevent "wrong image" race conditions
+        imageLoadingJob?.cancel()
+
+        // Reset Image Views
         ivAmenityImage.setImageDrawable(null)
         ivAmenityImage.visibility = View.GONE
+        ivAmenityImage.setOnClickListener(null)
+
+        // Close Fullscreen if target changed
+        ivFullScreen.visibility = View.GONE
+        viewDimmer.visibility = View.GONE
 
         if (item?.tags == null) {
             tvMetadata.visibility = View.GONE
@@ -403,18 +445,29 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
         val tags = item.tags
 
-        // --- NEW IMAGE LOADING LOGIC ---
+        // --- IMPROVED IMAGE LOADING LOGIC ---
         val mapillaryId = tags.optString("mapillary")
         val imageUrl = tags.optString("image")
 
-        if (mapillaryId.isNotEmpty()) {
-            loadAmenityImage(mapillaryId, isMapillaryId = true)
+        var validSource = ""
+        var isMapillary = false
+
+        // Only try Mapillary if we have an ID AND a token
+        if (mapillaryId.isNotEmpty() && MAPILLARY_ACCESS_TOKEN.isNotEmpty()) {
+            validSource = mapillaryId
+            isMapillary = true
         } else if (imageUrl.isNotEmpty()) {
+            // Fallback to regular image if Mapillary is missing or token is blank
             if (imageUrl.startsWith("http")) {
-                loadAmenityImage(imageUrl, isMapillaryId = false)
+                validSource = imageUrl
+                isMapillary = false
             }
         }
-        // --------------------------------
+
+        if (validSource.isNotEmpty()) {
+            imageLoadingJob = loadAmenityImage(validSource, isMapillary)
+        }
+        // ------------------------------------
 
         val infoList = ArrayList<String>()
         var name = tags.optString("name")
@@ -478,17 +531,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun loadAmenityImage(source: String, isMapillaryId: Boolean) {
-        CoroutineScope(Dispatchers.IO).launch {
+    private fun loadAmenityImage(source: String, isMapillaryId: Boolean): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
             try {
                 var finalUrl = source
 
-                // If Mapillary, we need to ask their API for the real image URL
                 if (isMapillaryId) {
-                    if (MAPILLARY_ACCESS_TOKEN.isEmpty()) {
-                        println("Mapillary Token missing.")
-                        return@launch
-                    }
                     val apiUrl = "https://graph.mapillary.com/$source?fields=thumb_1024_url&access_token=$MAPILLARY_ACCESS_TOKEN"
                     val request = Request.Builder().url(apiUrl).build()
                     val response = httpClient.newCall(request).execute()
@@ -505,7 +553,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     }
                 }
 
-                // Download the actual image
                 val imageRequest = Request.Builder().url(finalUrl).build()
                 val imageResponse = httpClient.newCall(imageRequest).execute()
 
@@ -517,6 +564,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         if (bitmap != null) {
                             ivAmenityImage.setImageBitmap(bitmap)
                             ivAmenityImage.visibility = View.VISIBLE
+
+                            ivAmenityImage.setOnClickListener {
+                                ivFullScreen.setImageBitmap(bitmap)
+                                ivFullScreen.visibility = View.VISIBLE
+                                viewDimmer.visibility = View.VISIBLE
+                            }
                         }
                     }
                 }
@@ -796,6 +849,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                         var itemLon = 0.0
                                         val tags = if (item.has("tags")) item.getJSONObject("tags") else null
 
+                                        // NEW: Capture OSM ID for stable tracking
+                                        val id = item.optLong("id", -1L)
+
                                         if (item.has("lat")) {
                                             itemLat = item.getDouble("lat")
                                             itemLon = item.getDouble("lon")
@@ -808,7 +864,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                         val locObj = Location("osm")
                                         locObj.latitude = itemLat
                                         locObj.longitude = itemLon
-                                        tempFoundList.add(Amenity(locObj, tags))
+                                        tempFoundList.add(Amenity(id, locObj, tags))
                                     }
                                 }
                             }
@@ -846,6 +902,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 }
 
 object TagRepository {
+    // (Keep the TagRepository object from previous code or just paste the big list here if you deleted it)
+    // For brevity I am not pasting the 200+ lines of TagRepository here again,
+    // but MAKE SURE YOU KEEP IT at the bottom of the file!
     val mapping = mapOf(
         "Trash Can" to "amenity=waste_basket",
         "Public Toilet" to "amenity=toilets",
