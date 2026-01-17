@@ -1576,7 +1576,7 @@ object TagRepository {
         "Toll Booth" to "barrier=toll_booth",
         "Grit Bin (Salt)" to "amenity=grit_bin",
         "Hunting Stand" to "amenity=hunting_stand",
-        "Feeding Place (Animals)" to "amenity=feeding_place"
+        "Feeding Place (Animals)" to "amenity=feeding_place",
 
         // --- ADVERTISING & MEDIA ---
         "Billboard" to "advertising=billboard",
@@ -1593,7 +1593,7 @@ object TagRepository {
         "Traffic Mirror" to "highway=traffic_mirror",
         "Milestone" to "highway=milestone",
         "Summit" to "natural=peak",
-        "Tree" to "natural=tree"
+        "Tree" to "natural=tree",
 
         // --- MAN MADE ---
         "Adit" to "man_made=adit",
