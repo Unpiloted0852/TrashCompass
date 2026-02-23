@@ -40,7 +40,12 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
-// UPDATED: Added 'id' to track unique objects and prevent flickering
+// Image source type constants
+private const val SOURCE_MAPILLARY   = "mapillary"
+private const val SOURCE_DIRECT      = "direct"
+private const val SOURCE_WIKIMEDIA   = "wikimedia"
+private const val SOURCE_WIKIDATA    = "wikidata"
+
 data class Amenity(
     val id: Long,
     val location: Location,
@@ -51,7 +56,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // --- MAPILLARY TOKEN ---
     // Get one free at https://www.mapillary.com/dashboard/developers
-    // If blank, mapillary tags will be ignored, but regular images will still work.
+    // If blank, mapillary tags will be ignored, but other images will still work.
     private val MAPILLARY_ACCESS_TOKEN = "MLY|26782956327960665|7ea4bb0428dc48fe0089e13b8f2b0617"
 
     // UI
@@ -99,7 +104,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // Jobs
     private var driveAnimJob: Job? = null
     private var searchJob: Job? = null
-    private var imageLoadingJob: Job? = null // To cancel old image loads
+    private var imageLoadingJob: Job? = null
 
     private var lastFixTime: Long = 0L
     private val SPEED_THRESHOLD_MPS = 6.7f
@@ -131,7 +136,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Load Preferences
         prefs = getSharedPreferences("TrashCompassPrefs", Context.MODE_PRIVATE)
         searchRadiusMeters = prefs.getInt("search_radius", 2000)
         useMetric = prefs.getBoolean("use_metric", true)
@@ -155,7 +159,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvLegal.setOnClickListener { showLegalDialog() }
         ivSettings.setOnClickListener { showSettingsDialog() }
 
-        // Setup Fullscreen Close Listeners
         val closeFullscreen = View.OnClickListener {
             ivFullScreen.visibility = View.GONE
             viewDimmer.visibility = View.GONE
@@ -163,7 +166,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivFullScreen.setOnClickListener(closeFullscreen)
         viewDimmer.setOnClickListener(closeFullscreen)
 
-        // Handle Back Button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (ivFullScreen.visibility == View.VISIBLE) {
@@ -180,7 +182,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvMetadata.setPadding(padding, 0, padding, 0)
 
         setArrowActive(false)
-
         tvDistance.text = "Waiting for GPS..."
 
         tvMapButton.setOnClickListener {
@@ -291,7 +292,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         layout.addView(seekBar)
 
         builder.setView(layout)
-
         builder.setPositiveButton("Save") { _, _ ->
             val newRadius = 500 + (seekBar.progress * 100)
             searchRadiusMeters = newRadius
@@ -417,8 +417,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 bestTarget = item
             }
         }
-
-        // FIXED: Check ID equality instead of object reference to prevent flickering
         if (bestTarget?.id != destinationAmenity?.id) {
             destinationAmenity = bestTarget
             parseMetadata(bestTarget)
@@ -427,15 +425,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun parseMetadata(item: Amenity?) {
-        // Cancel any pending image loads to prevent "wrong image" race conditions
         imageLoadingJob?.cancel()
 
-        // Reset Image Views
         ivAmenityImage.setImageDrawable(null)
         ivAmenityImage.visibility = View.GONE
         ivAmenityImage.setOnClickListener(null)
-
-        // Close Fullscreen if target changed
         ivFullScreen.visibility = View.GONE
         viewDimmer.visibility = View.GONE
 
@@ -445,29 +439,34 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
         val tags = item.tags
 
-        // --- IMPROVED IMAGE LOADING LOGIC ---
-        val mapillaryId = tags.optString("mapillary")
-        val imageUrl = tags.optString("image")
+        // ---------------------------------------------------------------
+        // IMAGE PRIORITY CHAIN
+        //
+        // 1. Direct URL in "image" tag  — no API needed, load immediately
+        // 2. Mapillary                  — requires token + one API call
+        // 3. Wikimedia Commons          — free API, no key needed
+        // 4. Wikidata P18               — free API, resolves via Wikimedia
+        // ---------------------------------------------------------------
+        val imageUrl        = tags.optString("image").trim()
+        val mapillaryId     = tags.optString("mapillary").trim()
+        val wikimediaValue  = tags.optString("wikimedia_commons").trim()
+        val wikidataId      = tags.optString("wikidata").trim()
 
-        var validSource = ""
-        var isMapillary = false
-
-        // Only try Mapillary if we have an ID AND a token
-        if (mapillaryId.isNotEmpty() && MAPILLARY_ACCESS_TOKEN.isNotEmpty()) {
-            validSource = mapillaryId
-            isMapillary = true
-        } else if (imageUrl.isNotEmpty()) {
-            // Fallback to regular image if Mapillary is missing or token is blank
-            if (imageUrl.startsWith("http")) {
-                validSource = imageUrl
-                isMapillary = false
+        when {
+            imageUrl.isNotEmpty() && imageUrl.startsWith("http") -> {
+                imageLoadingJob = loadAmenityImage(imageUrl, SOURCE_DIRECT)
+            }
+            mapillaryId.isNotEmpty() && MAPILLARY_ACCESS_TOKEN.isNotEmpty() -> {
+                imageLoadingJob = loadAmenityImage(mapillaryId, SOURCE_MAPILLARY)
+            }
+            wikimediaValue.isNotEmpty() -> {
+                imageLoadingJob = loadAmenityImage(wikimediaValue, SOURCE_WIKIMEDIA)
+            }
+            wikidataId.isNotEmpty() -> {
+                imageLoadingJob = loadAmenityImage(wikidataId, SOURCE_WIKIDATA)
             }
         }
-
-        if (validSource.isNotEmpty()) {
-            imageLoadingJob = loadAmenityImage(validSource, isMapillary)
-        }
-        // ------------------------------------
+        // ---------------------------------------------------------------
 
         val infoList = ArrayList<String>()
         var name = tags.optString("name")
@@ -490,10 +489,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (access.isEmpty()) access = tags.optString("access")
         if (access.isNotEmpty()) {
             when (access) {
-                "customers" -> infoList.add("⚠ Customers Only")
-                "permissive", "yes" -> infoList.add("Public Access")
-                "private", "no" -> infoList.add("⚠ Private")
-                else -> infoList.add("Access: $access")
+                "customers"           -> infoList.add("⚠ Customers Only")
+                "permissive", "yes"   -> infoList.add("Public Access")
+                "private", "no"       -> infoList.add("⚠ Private")
+                else                  -> infoList.add("Access: $access")
             }
         }
 
@@ -531,40 +530,71 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun loadAmenityImage(source: String, isMapillaryId: Boolean): Job {
+    /**
+     * Loads an image from one of four source types and displays it.
+     *
+     * SOURCE_DIRECT    — [source] is already a full http(s) URL.
+     * SOURCE_MAPILLARY — [source] is a Mapillary image/sequence ID;
+     *                    we resolve it to a thumb URL via the Graph API first.
+     * SOURCE_WIKIMEDIA — [source] is a Wikimedia Commons value, e.g.
+     *                    "File:Foo.jpg" or a category name. We call the
+     *                    Commons API to get a scaled thumbnail URL.
+     * SOURCE_WIKIDATA  — [source] is a Wikidata QID, e.g. "Q12345". We
+     *                    fetch the P18 (image) claim and then resolve it
+     *                    via the Wikimedia Commons API (same as above).
+     */
+    private fun loadAmenityImage(source: String, sourceType: String): Job {
         return CoroutineScope(Dispatchers.IO).launch {
             try {
-                var finalUrl = source
+                val finalUrl: String? = when (sourceType) {
 
-                if (isMapillaryId) {
-                    val apiUrl = "https://graph.mapillary.com/$source?fields=thumb_1024_url&access_token=$MAPILLARY_ACCESS_TOKEN"
-                    val request = Request.Builder().url(apiUrl).build()
-                    val response = httpClient.newCall(request).execute()
+                    SOURCE_DIRECT -> source
 
-                    if (response.isSuccessful) {
-                        val json = JSONObject(response.body?.string() ?: "{}")
-                        if (json.has("thumb_1024_url")) {
-                            finalUrl = json.getString("thumb_1024_url")
-                        } else {
-                            return@launch
-                        }
-                    } else {
-                        return@launch
+                    SOURCE_MAPILLARY -> {
+                        val apiUrl = "https://graph.mapillary.com/$source?fields=thumb_1024_url&access_token=$MAPILLARY_ACCESS_TOKEN"
+                        val response = httpClient.newCall(Request.Builder().url(apiUrl).build()).execute()
+                        if (response.isSuccessful) {
+                            val json = JSONObject(response.body?.string() ?: "{}")
+                            json.optString("thumb_1024_url").takeIf { it.isNotEmpty() }
+                        } else null
                     }
+
+                    SOURCE_WIKIMEDIA -> resolveWikimediaUrl(source)
+
+                    SOURCE_WIKIDATA -> {
+                        // Fetch P18 (image) claim from Wikidata
+                        val url = "https://www.wikidata.org/wiki/Special:EntityData/$source.json"
+                        val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
+                        if (response.isSuccessful) {
+                            val json = JSONObject(response.body?.string() ?: "{}")
+                            val fileName = json
+                                .optJSONObject("entities")
+                                ?.optJSONObject(source)
+                                ?.optJSONObject("claims")
+                                ?.optJSONArray("P18")
+                                ?.optJSONObject(0)
+                                ?.optJSONObject("mainsnak")
+                                ?.optJSONObject("datavalue")
+                                ?.optJSONObject("value")
+                                ?.optString("value")
+                            if (!fileName.isNullOrEmpty()) {
+                                resolveWikimediaUrl("File:$fileName")
+                            } else null
+                        } else null
+                    }
+
+                    else -> null
                 }
 
-                val imageRequest = Request.Builder().url(finalUrl).build()
-                val imageResponse = httpClient.newCall(imageRequest).execute()
+                if (finalUrl.isNullOrEmpty()) return@launch
 
+                val imageResponse = httpClient.newCall(Request.Builder().url(finalUrl).build()).execute()
                 if (imageResponse.isSuccessful) {
-                    val inputStream = imageResponse.body?.byteStream()
-                    val bitmap = BitmapFactory.decodeStream(inputStream)
-
+                    val bitmap = BitmapFactory.decodeStream(imageResponse.body?.byteStream())
                     withContext(Dispatchers.Main) {
                         if (bitmap != null) {
                             ivAmenityImage.setImageBitmap(bitmap)
                             ivAmenityImage.visibility = View.VISIBLE
-
                             ivAmenityImage.setOnClickListener {
                                 ivFullScreen.setImageBitmap(bitmap)
                                 ivFullScreen.visibility = View.VISIBLE
@@ -579,7 +609,46 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun String.capitalize() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+    /**
+     * Calls the Wikimedia Commons imageinfo API to get a scaled thumbnail URL.
+     *
+     * [value] should be in "File:Foo.jpg" form. Category values are skipped
+     * (they have no single canonical image). Returns null if anything fails.
+     */
+    private fun resolveWikimediaUrl(value: String): String? {
+        // Only "File:" entries have a direct image; skip categories
+        val normalized = when {
+            value.startsWith("File:")     -> value
+            value.startsWith("file:")     -> "File:" + value.removePrefix("file:")
+            // Raw filename with no namespace prefix — assume File:
+            !value.contains(":")          -> "File:$value"
+            else                          -> return null  // Category or unknown namespace
+        }
+
+        val encoded = java.net.URLEncoder.encode(normalized, "UTF-8")
+        val apiUrl = "https://commons.wikimedia.org/w/api.php" +
+                "?action=query&titles=$encoded&prop=imageinfo" +
+                "&iiprop=url&iiurlwidth=1024&format=json"
+
+        val response = httpClient.newCall(Request.Builder().url(apiUrl).build()).execute()
+        if (!response.isSuccessful) return null
+
+        val json = JSONObject(response.body?.string() ?: "{}")
+        val pages = json.optJSONObject("query")?.optJSONObject("pages") ?: return null
+
+        // The API returns one page object keyed by a numeric ID (or "-1" on miss)
+        val pageKey = pages.keys().next()
+        val page = pages.optJSONObject(pageKey) ?: return null
+        if (pageKey == "-1") return null  // File not found
+
+        return page.optJSONArray("imageinfo")
+            ?.optJSONObject(0)
+            ?.optString("thumburl")
+            ?.takeIf { it.isNotEmpty() }
+    }
+
+    private fun String.capitalize() =
+        replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
     override fun onResume() {
         super.onResume()
@@ -611,7 +680,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             var axisX = SensorManager.AXIS_X
             var axisY = SensorManager.AXIS_Y
             when (displayRotation) {
-                android.view.Surface.ROTATION_90 -> { axisX = SensorManager.AXIS_Y; axisY = SensorManager.AXIS_MINUS_X }
+                android.view.Surface.ROTATION_90  -> { axisX = SensorManager.AXIS_Y;       axisY = SensorManager.AXIS_MINUS_X }
                 android.view.Surface.ROTATION_180 -> { axisX = SensorManager.AXIS_MINUS_X; axisY = SensorManager.AXIS_MINUS_Y }
                 android.view.Surface.ROTATION_270 -> { axisX = SensorManager.AXIS_MINUS_Y; axisY = SensorManager.AXIS_X }
             }
@@ -628,21 +697,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             var statusColor = Color.parseColor("#32CD32")
             if (event.values.size > 4 && event.values[4] != -1f) {
                 val accuracyRad = event.values[4]
-                if (accuracyRad < 0.35) {
-                    statusText = "Compass: Good"
-                    statusColor = Color.parseColor("#32CD32")
-                } else if (accuracyRad < 0.8) {
-                    statusText = "Compass: Fair"
-                    statusColor = Color.parseColor("#FFD700")
-                } else {
-                    statusText = "Compass: Poor"
-                    statusColor = Color.parseColor("#FF4444")
+                when {
+                    accuracyRad < 0.35 -> { statusText = "Compass: Good"; statusColor = Color.parseColor("#32CD32") }
+                    accuracyRad < 0.8  -> { statusText = "Compass: Fair"; statusColor = Color.parseColor("#FFD700") }
+                    else               -> { statusText = "Compass: Poor"; statusColor = Color.parseColor("#FF4444") }
                 }
             } else {
                 when (lastMagAccuracy) {
-                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> { statusText = "Compass: Good"; statusColor = Color.parseColor("#32CD32") }
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH   -> { statusText = "Compass: Good"; statusColor = Color.parseColor("#32CD32") }
                     SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> { statusText = "Compass: Fair"; statusColor = Color.parseColor("#FFD700") }
-                    else -> { statusText = "Compass: Poor"; statusColor = Color.parseColor("#FF4444") }
+                    else                                         -> { statusText = "Compass: Poor"; statusColor = Color.parseColor("#FF4444") }
                 }
             }
             tvAccuracy.text = statusText
@@ -710,7 +774,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun showCalibrationDialog() {
-        AlertDialog.Builder(this).setTitle("Compass Status").setMessage("To calibrate:\nWave phone in a Figure-8 motion.").setPositiveButton("OK", null).show()
+        AlertDialog.Builder(this).setTitle("Compass Status")
+            .setMessage("To calibrate:\nWave phone in a Figure-8 motion.")
+            .setPositiveButton("OK", null).show()
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -848,8 +914,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                         var itemLat = 0.0
                                         var itemLon = 0.0
                                         val tags = if (item.has("tags")) item.getJSONObject("tags") else null
-
-                                        // NEW: Capture OSM ID for stable tracking
                                         val id = item.optLong("id", -1L)
 
                                         if (item.has("lat")) {
