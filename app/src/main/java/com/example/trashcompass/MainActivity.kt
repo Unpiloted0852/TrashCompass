@@ -588,7 +588,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
                 if (finalUrl.isNullOrEmpty()) return@launch
 
-                val imageResponse = httpClient.newCall(Request.Builder().url(finalUrl).build()).execute()
+                val imageResponse = httpClient.newCall(
+                    Request.Builder()
+                        .url(finalUrl)
+                        .header("User-Agent", "TrashCompass/2.1 (https://github.com/Unpiloted0852/TrashCompass)")
+                        .build()
+                ).execute()
                 if (imageResponse.isSuccessful) {
                     val bitmap = BitmapFactory.decodeStream(imageResponse.body?.byteStream())
                     withContext(Dispatchers.Main) {
@@ -614,15 +619,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
      *
      * [value] should be in "File:Foo.jpg" form. Category values are skipped
      * (they have no single canonical image). Returns null if anything fails.
+     *
+     * NOTE: Wikimedia policy requires a descriptive User-Agent header or
+     * requests will be rate-limited / rejected.
      */
     private fun resolveWikimediaUrl(value: String): String? {
         // Only "File:" entries have a direct image; skip categories
         val normalized = when {
-            value.startsWith("File:")     -> value
-            value.startsWith("file:")     -> "File:" + value.removePrefix("file:")
-            // Raw filename with no namespace prefix — assume File:
-            !value.contains(":")          -> "File:$value"
-            else                          -> return null  // Category or unknown namespace
+            value.startsWith("File:")  -> value
+            value.startsWith("file:")  -> "File:" + value.removePrefix("file:")
+            !value.contains(":")       -> "File:$value"   // bare filename, assume File:
+            else                       -> return null      // Category: or unknown namespace
         }
 
         val encoded = java.net.URLEncoder.encode(normalized, "UTF-8")
@@ -630,7 +637,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 "?action=query&titles=$encoded&prop=imageinfo" +
                 "&iiprop=url&iiurlwidth=1024&format=json"
 
-        val response = httpClient.newCall(Request.Builder().url(apiUrl).build()).execute()
+        val request = Request.Builder()
+            .url(apiUrl)
+            .header("User-Agent", "TrashCompass/2.1 (https://github.com/Unpiloted0852/TrashCompass)")
+            .build()
+
+        val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) return null
 
         val json = JSONObject(response.body?.string() ?: "{}")
@@ -639,8 +651,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // The API returns one page object keyed by a numeric ID (or "-1" on miss)
         val pageKey = pages.keys().next()
         val page = pages.optJSONObject(pageKey) ?: return null
-        if (pageKey == "-1") return null  // File not found
+        if (pageKey == "-1") return null  // File not found on Commons
 
+        // thumburl is a fully-qualified https:// URL ready to download directly
         return page.optJSONArray("imageinfo")
             ?.optJSONObject(0)
             ?.optString("thumburl")
@@ -1035,7 +1048,7 @@ object TagRepository {
         "Subway Station" to "station=subway",
         "Light Rail Station" to "station=light_rail",
         "Monorail Station" to "station=monorail",
-        "Funicular Station" to "railway=station", // often tagged same as general station
+        "Funicular Station" to "railway=station",
 
         // --- TRANSPORTATION (AIR) ---
         "Airport" to "aeroway=aerodrome",
@@ -1164,7 +1177,7 @@ object TagRepository {
         "Letter Box" to "amenity=letter_box",
         "Loading Dock" to "amenity=loading_dock",
         "Mortuary" to "amenity=mortuary",
-        "Public Building" to "amenity=public_building", // discourage use, but exists
+        "Public Building" to "amenity=public_building",
 
         // --- SHOP: FOOD & BEVERAGES ---
         "Alcohol Shop" to "shop=alcohol",
