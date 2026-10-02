@@ -21,25 +21,27 @@ import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.InputType
-import android.view.Gravity
 import android.view.Surface
 import android.view.View
 import android.view.WindowManager
-import android.view.inputmethod.EditorInfo
-import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupMenu
+import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -54,6 +56,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.exp
@@ -61,6 +65,7 @@ import kotlin.math.exp
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // UI
+    private lateinit var tvUpdate: TextView
     private lateinit var tvTitle: TextView
     private lateinit var tvSearchBar: TextView
     private lateinit var tvDistance: TextView
@@ -76,6 +81,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var ivAmenityImage: ImageView
     private lateinit var ivFullScreen: ImageView
     private lateinit var viewDimmer: View
+    private lateinit var searchPanel: SearchPanel
+    private val updater by lazy { AppUpdater(this) }
 
     // Preferences
     private lateinit var prefs: SharedPreferences
@@ -131,13 +138,26 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     companion object {
         private const val MAX_CACHED_FIX_AGE_MS = 10 * 60 * 1000L // 10 minutes
+        private const val MAX_RADIUS_METERS = 50_000
+        private const val MAX_NAME_SEARCH_RADIUS_METERS = 20_000 // name search is a regex scan
+        private const val MAX_RECENT = 6
     }
 
     // Haptics
     private var lastPulseTime = 0L
     private val alignmentToleranceDeg = 12f
 
+    // What we are hunting. [currentAmenityName] is the search target (a
+    // catalog entry name, a tag filter, or free text for a name search);
+    // [currentLabel] is its plain-language name when the target is not
+    // already one.
     private var currentAmenityName = "Trash Can"
+    private var currentLabel: String? = null
+
+    // The radius the current results came from. Starts at the Settings
+    // radius and widens automatically when nothing is found (see
+    // fetchAmenities), so rare things are still found.
+    private var activeRadiusMeters = 2000
 
     private val quickPicks = listOf(
         "Trash Can", "Public Toilet", "Defibrillator (AED)",
@@ -145,6 +165,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // The app is dark in both themes, so keep the system bar icons light.
+        enableEdgeToEdge(
+            SystemBarStyle.dark(Color.TRANSPARENT),
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        )
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -153,17 +178,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         searchRadiusMeters = prefs.getInt("search_radius", 2000)
         useMetric = prefs.getBoolean("use_metric", true)
         hapticsEnabled = prefs.getBoolean("haptics", true)
+        activeRadiusMeters = searchRadiusMeters
         val savedTarget = prefs.getString("last_target", null)
-        if (savedTarget != null && TagRepository.mapping.containsKey(savedTarget)) {
+        if (!savedTarget.isNullOrBlank()) {
             currentAmenityName = savedTarget
+            currentLabel = prefs.getString("last_label", null)
         }
+        lifecycleScope.launch(Dispatchers.IO) { FeatureIndex.load(applicationContext) }
 
         bindViews()
+        applyWindowInsets()
         tvTitle.text = "Nearest ${displayNameFor(currentAmenityName)}"
-
-        tvMetadata.gravity = Gravity.CENTER
-        val padding = (20 * resources.displayMetrics.density).toInt()
-        tvMetadata.setPadding(padding, 0, padding, 0)
 
         setArrowActive(false)
         tvDistance.text = "Waiting for GPS..."
@@ -177,9 +202,62 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         checkPermissions()
+        checkForUpdate()
+    }
+
+    /**
+     * The window is edge-to-edge, so pad the content by the system bars (and
+     * the search screen by the keyboard too) instead of guessing margins.
+     */
+    private fun applyWindowInsets() {
+        val column = findViewById<View>(R.id.mainColumn)
+        val panel = findViewById<View>(R.id.searchPanel)
+        val overlay = findViewById<View>(R.id.ivFullScreen)
+        val columnTop = column.paddingTop
+        val columnBottom = column.paddingBottom
+        val overlayPad = overlay.paddingTop
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { _, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            column.setPadding(
+                column.paddingLeft, columnTop + bars.top, column.paddingRight, columnBottom + bars.bottom
+            )
+            panel.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
+            overlay.setPadding(overlayPad, overlayPad + bars.top, overlayPad, overlayPad + bars.bottom)
+            insets
+        }
+    }
+
+    /** Once per launch: if GitHub has a newer release, offer it as a tappable pill at the top. */
+    private fun checkForUpdate() {
+        lifecycleScope.launch {
+            val release = updater.checkForUpdate() ?: return@launch
+            val offer = "Update available: v${release.versionName} -- tap to install"
+            var busy = false
+            tvUpdate.text = offer
+            tvUpdate.visibility = View.VISIBLE
+            tvUpdate.setOnClickListener {
+                if (busy) return@setOnClickListener
+                busy = true
+                lifecycleScope.launch {
+                    val error = updater.downloadAndInstall(release) { pct ->
+                        tvUpdate.text = if (pct < 100) "Downloading update... $pct%" else "Installing update..."
+                    }
+                    // Only reached if the update did not replace the running app.
+                    busy = false
+                    tvUpdate.text = offer
+                    if (error != null && error != "cancelled") {
+                        Toast.makeText(this@MainActivity, "Update failed: $error", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
     }
 
     private fun bindViews() {
+        tvUpdate = findViewById(R.id.tvUpdate)
         tvTitle = findViewById(R.id.tvTitle)
         tvSearchBar = findViewById(R.id.tvSearchBar)
         tvDistance = findViewById(R.id.tvDistance)
@@ -195,12 +273,32 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         ivAmenityImage = findViewById(R.id.ivAmenityImage)
         ivFullScreen = findViewById(R.id.ivFullScreen)
         viewDimmer = findViewById(R.id.viewDimmer)
+
+        searchPanel = SearchPanel(
+            this,
+            findViewById(R.id.searchPanel),
+            findViewById<EditText>(R.id.etSearch),
+            findViewById<ListView>(R.id.lvSearch),
+            findViewById(R.id.tvSearchClose),
+            object : SearchPanel.Host {
+                override fun pick(target: String, label: String?) = setNewSearchTarget(target, label)
+                override fun recentSearches() = loadRecent()
+                override fun quickPicks() = quickPicks
+                override fun currentLocation() = currentLocation
+                override fun formatDistance(meters: Float) = this@MainActivity.formatDistance(meters)
+                override fun browseCategories() = showCategoryBrowser()
+                override fun openTagDatabase() = showTaginfoKeySearchDialog()
+            }
+        )
     }
 
     private fun setUpClickListeners() {
         findViewById<TextView>(R.id.tvLegal).setOnClickListener { showLegalDialog() }
         ivSettings.setOnClickListener { showSettingsDialog() }
-        tvSearchBar.setOnClickListener { showFindAnythingDialog() }
+        // Both the search bar and the title open the same search screen.
+        tvSearchBar.setOnClickListener { searchPanel.open() }
+        tvTitle.setOnClickListener { searchPanel.open() }
+        tvMetadata.setOnClickListener { showDetailsDialog() }
 
         val closeFullscreen = View.OnClickListener {
             ivFullScreen.visibility = View.GONE
@@ -266,23 +364,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         tvAccuracy.setOnClickListener { showCalibrationDialog() }
 
-        tvTitle.setOnClickListener { view ->
-            val popup = PopupMenu(this, view)
-            quickPicks.forEach { popup.menu.add(it) }
-            popup.menu.add("🔍 Find Anything...")
-            popup.menu.add("📂 Browse Categories...")
-            popup.menu.add("🛠 Advanced: Tag Database...")
-            popup.setOnMenuItemClickListener { item ->
-                when (item.title.toString()) {
-                    "🔍 Find Anything..." -> showFindAnythingDialog()
-                    "📂 Browse Categories..." -> showCategoryBrowser()
-                    "🛠 Advanced: Tag Database..." -> showTaginfoKeySearchDialog()
-                    else -> setNewSearchTarget(item.title.toString())
-                }
-                true
-            }
-            popup.show()
-        }
     }
 
     private fun setUpBackHandling() {
@@ -291,6 +372,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 if (ivFullScreen.visibility == View.VISIBLE) {
                     ivFullScreen.visibility = View.GONE
                     viewDimmer.visibility = View.GONE
+                } else if (searchPanel.isOpen) {
+                    searchPanel.close()
                 } else {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
@@ -337,7 +420,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT
         input.hint = "e.g. recycling, amenity, surface"
-        input.setTextColor(Color.BLACK)
         container.addView(input)
         builder.setView(container)
         builder.setPositiveButton("Search") { _, _ ->
@@ -410,7 +492,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         if (hasMore && which == items.size - 1) {
                             showTaginfoValuesDialog(key, filter, page + 1, accumulated)
                         } else {
-                            setNewSearchTarget("$key=${accumulated[which].value}")
+                            val value = accumulated[which].value
+                            setNewSearchTarget("$key=$value", prettyTagName(value))
                         }
                     }
                     .setNeutralButton("Filter values...") { _, _ -> showTaginfoValueFilterDialog(key) }
@@ -434,7 +517,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val input = AutoCompleteTextView(this)
         input.inputType = InputType.TYPE_CLASS_TEXT
         input.hint = "substring, e.g. glass"
-        input.setTextColor(Color.BLACK)
         container.addView(input)
         builder.setView(container)
         builder.setPositiveButton("Filter") { _, _ ->
@@ -452,14 +534,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // that a trash can is "amenity=waste_basket".
     // ------------------------------------------------------------------
 
-    /** "waste_basket" -> "Waste Basket" */
-    private fun prettyTagName(raw: String): String =
-        raw.replace('_', ' ').split(' ').joinToString(" ") { word ->
-            word.replaceFirstChar {
-                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-            }
-        }
-
     /**
      * Human-readable name for whatever we're hunting. Catalog entries
      * already have friendly names; raw "key=value" targets get their
@@ -467,6 +541,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
      */
     private fun displayNameFor(target: String): String {
         if (TagRepository.mapping.containsKey(target)) return target
+        if (target == currentAmenityName) currentLabel?.let { return it }
         if (target.contains("=")) {
             val key = target.substringBefore("=").trim()
             val value = target.substringAfter("=").trim()
@@ -476,219 +551,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         return target
     }
 
-    /**
-     * One search box for everyone. Type plain words ("trash can",
-     * "water fountain", "pharmacy") and get, in one list:
-     *   1. matching entries from the built-in catalog (instant),
-     *   2. matching tags from the live OSM wiki word index (taginfo),
-     *      shown by their human name,
-     *   3. a fallback that searches the actual names of places nearby.
-     * Typing "key=value" directly still works for people who know OSM.
-     */
-    private fun showFindAnythingDialog() {
-        val container = LinearLayout(this)
-        container.orientation = LinearLayout.VERTICAL
-        val padding = (20 * resources.displayMetrics.density).toInt()
-        container.setPadding(padding, padding, padding, 0)
-
-        val input = AutoCompleteTextView(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        input.hint = "toilet, playground, ice cream..."
-        input.setTextColor(Color.BLACK)
-        input.setSingleLine(true)
-        input.imeOptions = EditorInfo.IME_ACTION_SEARCH
-        val adapter = ArrayAdapter(
-            this, android.R.layout.simple_dropdown_item_1line,
-            TagRepository.mapping.keys.toList().sorted()
-        )
-        input.setAdapter(adapter)
-        input.threshold = 1
-        container.addView(input)
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Find Anything")
-            .setView(container)
-            .setPositiveButton("Search", null) // handled below so we control dismissal
-            .setNegativeButton("Cancel", null)
-            .create()
-
-        // One code path no matter how the person triggers the search:
-        // the Search button, the keyboard's search key, or tapping an
-        // autocomplete suggestion (that last one navigates instantly:
-        // type "toi", tap "Toilets", the arrow starts pointing).
-        fun go() {
-            val query = input.text.toString().trim()
-            if (query.isEmpty()) return
-            dialog.dismiss()
-            if (query.contains("=")) { // power-user shortcut, never required
-                setNewSearchTarget(query)
-                return
-            }
-            // Exactly matches a catalog entry? No more dialogs -- just go.
-            val exact = TagRepository.mapping.keys.firstOrNull { it.equals(query, ignoreCase = true) }
-            if (exact != null) setNewSearchTarget(exact) else runFindAnything(query)
-        }
-
-        input.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                go()
-                true
-            } else {
-                false
-            }
-        }
-        input.setOnItemClickListener { _, _, _, _ -> go() }
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener { go() }
-            input.requestFocus()
-        }
-        // Pop the keyboard immediately -- typing is the only step.
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
-        dialog.show()
-    }
-
-    private fun runFindAnything(query: String) {
-        val queryLower = query.lowercase(Locale.getDefault())
-        val queryWords = queryLower.split(Regex("\\s+")).filter { it.isNotEmpty() }
-
-        // Catalog matches: every word the person typed must appear in
-        // the entry name (any order), so "water drink" finds
-        // "Drinking Water".
-        val localMatches = TagRepository.mapping.keys.filter { name ->
-            val n = name.lowercase(Locale.getDefault())
-            queryWords.all { n.contains(it) }
-        }.take(25)
-
-        lifecycleScope.launch {
-            // The taginfo keyword search is a substring match against
-            // each tag's wiki words, so a multi-word phrase can miss
-            // even when every individual word would hit. Search the
-            // whole phrase AND each word (plus naive singulars for
-            // plural words), then merge; tags matched by more terms
-            // rank higher.
-            val searchTerms = LinkedHashSet<String>()
-            searchTerms.add(queryLower)
-            if (queryWords.size > 1) searchTerms.addAll(queryWords)
-            for (w in queryWords) {
-                if (w.length > 3 && w.endsWith("s")) searchTerms.add(w.dropLast(1))
-            }
-
-            val hits = LinkedHashMap<String, TaginfoClient.TagHit>()
-            val termMatches = HashMap<String, Int>()
-            for (term in searchTerms.take(4)) { // keep the request count polite
-                val result: List<TaginfoClient.TagHit> = try {
-                    TaginfoClient.searchByKeyword(term)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    emptyList() // offline: catalog + name fallback still work
-                }
-                for (h in result) {
-                    val id = "${h.key}=${h.value}"
-                    if (!hits.containsKey(id)) hits[id] = h
-                    termMatches[id] = (termMatches[id] ?: 0) + 1
-                }
-            }
-
-            val ranked = hits.values.sortedBy { hit ->
-                findScore(hit, queryLower, queryWords, termMatches["${hit.key}=${hit.value}"] ?: 1)
-            }
-
-            if (localMatches.isEmpty() && ranked.isEmpty()) {
-                // Nothing recognized: fall straight through to hunting
-                // places whose NAME matches (works for brand names like
-                // "Aldi" or "Starbucks" too).
-                Toast.makeText(
-                    this@MainActivity,
-                    "Searching places named \"$query\" nearby...",
-                    Toast.LENGTH_SHORT
-                ).show()
-                setNewSearchTarget(query)
-            } else {
-                showFindResults(query, localMatches, ranked)
-            }
-        }
-    }
-
-    /** Lower is better. Exact-name matches beat partial ones; tags hit by more search terms beat one-offs. */
-    private fun findScore(
-        hit: TaginfoClient.TagHit,
-        queryLower: String,
-        queryWords: List<String>,
-        termMatchCount: Int
-    ): Int {
-        val name = prettyTagName(if (hit.value.isNotEmpty()) hit.value else hit.key)
-            .lowercase(Locale.getDefault())
-        val base = when {
-            name == queryLower -> 0
-            name.contains(queryLower) -> 1
-            queryWords.all { name.contains(it) } -> 2
-            else -> 3
-        }
-        return base * 100 - termMatchCount
-    }
-
-    private fun showFindResults(
-        query: String,
-        local: List<String>,
-        remote: List<TaginfoClient.TagHit>
-    ) {
-        val labels = ArrayList<String>()
-        val actions = ArrayList<() -> Unit>()
-
-        for (name in local) {
-            labels.add(name)
-            actions.add { setNewSearchTarget(name) }
-        }
-
-        // Same friendly name can come from different contexts (a
-        // bakery shop vs. a baker's workshop). Disambiguate duplicates
-        // with a human word in parentheses -- never raw notation.
-        val localLower = local.map { it.lowercase(Locale.getDefault()) }.toHashSet()
-        val nameCounts = HashMap<String, Int>()
-        for (hit in remote) {
-            if (hit.value.isEmpty()) continue
-            val p = prettyTagName(hit.value).lowercase(Locale.getDefault())
-            nameCounts[p] = (nameCounts[p] ?: 0) + 1
-        }
-
-        var added = 0
-        for (hit in remote) {
-            if (added >= 30) break
-            if (hit.value.isNotEmpty()) {
-                val pretty = prettyTagName(hit.value)
-                val prettyLower = pretty.lowercase(Locale.getDefault())
-                if (prettyLower in localLower) continue // already listed above
-                val label = if ((nameCounts[prettyLower] ?: 0) > 1) {
-                    "$pretty  (${prettyTagName(hit.key)})"
-                } else {
-                    pretty
-                }
-                labels.add(label)
-                actions.add { setNewSearchTarget("${hit.key}=${hit.value}") }
-            } else {
-                labels.add(prettyTagName(hit.key) + "  (see all types...)")
-                actions.add { showTaginfoValuesDialog(hit.key, null, 1, ArrayList()) }
-            }
-            added++
-        }
-
-        labels.add("📍 Places NAMED \"$query\" near me")
-        actions.add { setNewSearchTarget(query) }
-
-        val items = labels.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle("Results for \"$query\"")
-            .setItems(items) { _, which -> actions[which].invoke() }
-            .setNegativeButton("Back") { _, _ -> showFindAnythingDialog() }
-            .show()
-    }
-
-    private fun setNewSearchTarget(targetName: String) {
+    private fun setNewSearchTarget(targetName: String, label: String? = null) {
+        // Re-running the same target (retry, changed radius) keeps its label.
+        currentLabel = label ?: if (targetName == currentAmenityName) currentLabel else null
         currentAmenityName = targetName
-        if (TagRepository.mapping.containsKey(targetName)) {
-            prefs.edit().putString("last_target", targetName).apply()
-        }
+        prefs.edit()
+            .putString("last_target", targetName)
+            .putString("last_label", currentLabel)
+            .apply()
+        rememberRecent(targetName, displayNameFor(targetName))
+        activeRadiusMeters = searchRadiusMeters
         tvTitle.text = "Nearest ${displayNameFor(currentAmenityName)}"
         foundAmenities = emptyList()
         skippedKeys.clear()
@@ -712,8 +584,45 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     // ------------------------------------------------------------------
+    // Recent searches (shown on the search screen's starting page)
+    // ------------------------------------------------------------------
+
+    private fun loadRecent(): List<Pair<String, String>> {
+        val out = ArrayList<Pair<String, String>>()
+        try {
+            val arr = JSONArray(prefs.getString("recent", "[]"))
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                out.add(o.getString("t") to o.getString("l"))
+            }
+        } catch (e: Exception) {
+            // corrupt entry: start over with an empty list
+        }
+        return out
+    }
+
+    private fun rememberRecent(target: String, label: String) {
+        val list = ArrayList(loadRecent().filter { it.first != target })
+        list.add(0, target to label)
+        val arr = JSONArray()
+        for ((t, l) in list.take(MAX_RECENT)) arr.put(JSONObject().put("t", t).put("l", l))
+        prefs.edit().putString("recent", arr.toString()).apply()
+    }
+
+    // ------------------------------------------------------------------
     // Dialogs
     // ------------------------------------------------------------------
+
+    /** The details line is capped at a few lines on the main screen; tapping it shows everything. */
+    private fun showDetailsDialog() {
+        val text = tvMetadata.text
+        if (text.isNullOrEmpty()) return
+        AlertDialog.Builder(this)
+            .setTitle(displayNameFor(currentAmenityName))
+            .setMessage(text)
+            .setPositiveButton("OK", null)
+            .show()
+    }
 
     private fun showSettingsDialog() {
         val builder = AlertDialog.Builder(this)
@@ -726,7 +635,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val lblRadius = TextView(this)
         lblRadius.text = "Search Radius: ${searchRadiusMeters}m"
         lblRadius.textSize = 16f
-        lblRadius.setTextColor(Color.BLACK)
         layout.addView(lblRadius)
 
         val lblWarning = TextView(this)
@@ -755,7 +663,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val hapticsSwitch = Switch(this)
         hapticsSwitch.text = "Vibrate when pointing at target"
         hapticsSwitch.isChecked = hapticsEnabled
-        hapticsSwitch.setTextColor(Color.BLACK)
         hapticsSwitch.setPadding(0, padding / 2, 0, 0)
         layout.addView(hapticsSwitch)
 
@@ -990,7 +897,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val infoList = ArrayList<String>()
         val name = tags.optString("name")
-        if (tags.has("toilets") && tags.optString("amenity") != "toilets") {
+        // "Inside X" only makes sense when hunting toilets and the match is a
+        // building that has some (a museum is not "inside" itself).
+        val huntingToilets = (TagRepository.mapping[currentAmenityName] ?: currentAmenityName).contains("toilets")
+        if (huntingToilets && tags.has("toilets") && tags.optString("amenity") != "toilets") {
             val building = tags.optString("name", "Building")
             infoList.add("Inside $building")
         } else if (tags.optString("bin") == "yes" || tags.optString("rubbish") == "yes" ||
@@ -1287,14 +1197,32 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         searchAnimJob?.cancel()
     }
 
-    private fun fetchAmenities(lat: Double, lon: Double, target: String, silent: Boolean) {
+    /**
+     * The next, wider radius to try after [radius] came back empty, or null
+     * once the limit is reached. Free-text name searches stop earlier because
+     * they make the server scan every name in the area.
+     */
+    private fun widerRadius(radius: Int, target: String): Int? {
+        val isNameSearch = !TagRepository.mapping.containsKey(target) && !target.contains("=")
+        val limit = if (isNameSearch) MAX_NAME_SEARCH_RADIUS_METERS else MAX_RADIUS_METERS
+        return if (radius >= limit) null else (radius * 5).coerceAtMost(limit)
+    }
+
+    private fun formatRadius(meters: Int): String =
+        if (meters >= 1000) String.format(Locale.getDefault(), "%.0f km", meters / 1000.0)
+        else "$meters m"
+
+    private fun fetchAmenities(
+        lat: Double, lon: Double, target: String, silent: Boolean,
+        radius: Int = if (silent) activeRadiusMeters else searchRadiusMeters
+    ) {
         fetchJob?.cancel()
         if (!silent) {
             startSearchingAnimation()
             isErrorState = false
         }
         fetchJob = lifecycleScope.launch {
-            val query = OverpassClient.buildQuery(target, lat, lon, searchRadiusMeters)
+            val query = OverpassClient.buildQuery(target, lat, lon, radius)
             val result: List<Amenity>? = try {
                 OverpassClient.fetch(query)
             } catch (e: CancellationException) {
@@ -1304,8 +1232,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
             if (target != currentAmenityName) return@launch // stale response
             if (result != null) {
+                if (result.isEmpty() && !silent) {
+                    // Nothing this close: look farther before giving up.
+                    val wider = widerRadius(radius, target)
+                    if (wider != null) {
+                        tvCount.text = "None within ${formatRadius(radius)} -- looking up to ${formatRadius(wider)}"
+                        tvCount.visibility = View.VISIBLE
+                        fetchAmenities(lat, lon, target, silent = false, radius = wider)
+                        return@launch
+                    }
+                }
                 if (!silent) stopSearchingAnimation()
                 isErrorState = false
+                if (!silent || result.isNotEmpty()) activeRadiusMeters = radius
                 foundAmenities = result
                 if (foundAmenities.isEmpty()) {
                     destinationAmenity = null
@@ -1344,14 +1283,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (here != null && dest != null) {
             tvDistance.textSize = 64f
             val dist = here.distanceTo(dest.location)
-            tvDistance.text = if (useMetric) {
-                if (dist >= 1000) String.format(Locale.getDefault(), "%.1f km", dist / 1000)
-                else "${dist.toInt()} m"
-            } else {
-                val feet = dist * 3.28084
-                if (feet >= 1000) String.format(Locale.getDefault(), "%.2f mi", feet / 5280)
-                else "${feet.toInt()} ft"
-            }
+            tvDistance.text = formatDistance(dist)
 
             val total = foundAmenities.size
             if (total > 1) {
@@ -1374,12 +1306,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             setArrowActive(false)
             if (foundAmenities.isEmpty() && initialSearchDone) {
                 tvDistance.textSize = 24f
-                val km = searchRadiusMeters / 1000.0
-                val msg = if (km >= 1.0) String.format(Locale.getDefault(), "None within %.1f km", km)
-                else "None within ${searchRadiusMeters}m"
-                tvDistance.text = if (TagRepository.mapping.containsKey(currentAmenityName)) msg
-                else "No ${displayNameFor(currentAmenityName)} found"
+                tvDistance.text = "None within ${formatRadius(activeRadiusMeters)}.\nTap to search again."
             }
         }
     }
+
+    private fun formatDistance(meters: Float): String =
+        if (useMetric) {
+            if (meters >= 1000) String.format(Locale.getDefault(), "%.1f km", meters / 1000)
+            else "${meters.toInt()} m"
+        } else {
+            val feet = meters * 3.28084
+            if (feet >= 1000) String.format(Locale.getDefault(), "%.2f mi", feet / 5280)
+            else "${feet.toInt()} ft"
+        }
 }

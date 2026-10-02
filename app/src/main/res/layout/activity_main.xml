@@ -1,236 +1,332 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    One vertical column, so nothing can ever be drawn on top of anything else:
+    header, search bar, compass (takes whatever height is left and shrinks on
+    small screens), distance, details, buttons, footer. If even the smallest
+    compass does not fit (tiny screens, landscape, huge fonts) the column scrolls.
+    The search screen and the full-screen photo are overlays on top of it.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient"
     tools:context=".MainActivity">
 
-    <!-- SETTINGS BUTTON -->
-    <ImageView
-        android:id="@+id/ivSettings"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="60dp"
-        android:layout_marginEnd="24dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="8dp"
-        android:src="@drawable/ic_gear"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <ScrollView
+        android:id="@+id/mainScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
-    <!-- TITLE -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="130dp"
-        android:layout_marginEnd="16dp"
-        android:drawableEnd="@drawable/ic_caret_down"
-        android:drawablePadding="8dp"
-        android:fontFamily="sans-serif-condensed"
-        android:text="Nearest Trash Can"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/ivSettings"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <LinearLayout
+            android:id="@+id/mainColumn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp">
 
-    <!-- ACCURACY TEXT -->
-    <TextView
-        android:id="@+id/tvAccuracy"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:alpha="0.7"
-        android:text="Compass: Calibrating..."
-        android:textColor="#CCCCCC"
-        android:textSize="12sp"
-        app:layout_constraintStart_toStartOf="@+id/tvTitle"
-        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
+            <!-- UPDATE PILL: shown when a newer release is on GitHub -->
+            <TextView
+                android:id="@+id/tvUpdate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_update_pill"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:textColor="#0D1117"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
-    <!-- SEARCH BAR: the one obvious way in. Always visible. -->
-    <TextView
-        android:id="@+id/tvSearchBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="14dp"
-        android:layout_marginEnd="24dp"
-        android:background="@drawable/bg_map_button"
-        android:gravity="start|center_vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="14dp"
-        android:text="🔍  What are you looking for?"
-        android:textColor="#DDDDDD"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvAccuracy" />
+            <!-- TITLE + SETTINGS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-    <!-- COMPASS RING -->
-    <View
-        android:id="@+id/viewRing"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:background="@drawable/compass_ring"
-        app:layout_constraintBottom_toTopOf="@+id/tvDistance"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvAccuracy"
-        app:layout_constraintVertical_bias="0.45" />
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawableEnd="@drawable/ic_caret_down"
+                    android:drawablePadding="8dp"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-condensed"
+                    android:maxLines="2"
+                    android:text="Nearest Trash Can"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
 
-    <!-- ARROW -->
-    <ImageView
-        android:id="@+id/ivArrow"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
-        android:src="@drawable/ic_navigation_arrow"
-        app:tint="#444444"
-        app:layout_constraintBottom_toBottomOf="@+id/viewRing"
-        app:layout_constraintEnd_toEndOf="@+id/viewRing"
-        app:layout_constraintStart_toStartOf="@+id/viewRing"
-        app:layout_constraintTop_toTopOf="@+id/viewRing" />
+                <ImageView
+                    android:id="@+id/ivSettings"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Settings"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_gear" />
+            </LinearLayout>
 
-    <!-- SPINNER -->
-    <ProgressBar
-        android:id="@+id/loadingSpinner"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:indeterminateTint="#32CD32"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/viewRing"
-        app:layout_constraintEnd_toEndOf="@+id/viewRing"
-        app:layout_constraintStart_toStartOf="@+id/viewRing"
-        app:layout_constraintTop_toTopOf="@+id/viewRing" />
+            <!-- ACCURACY TEXT -->
+            <TextView
+                android:id="@+id/tvAccuracy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:alpha="0.7"
+                android:text="Compass: Calibrating..."
+                android:textColor="#CCCCCC"
+                android:textSize="12sp" />
 
-    <!-- DISTANCE TEXT -->
-    <TextView
-        android:id="@+id/tvDistance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:fontFamily="sans-serif-light"
-        android:text="---"
-        android:textColor="#FFFFFF"
-        android:textSize="64sp"
-        app:layout_constraintBottom_toTopOf="@+id/tvCount"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+            <!-- SEARCH BAR: the one obvious way in. Always visible. -->
+            <TextView
+                android:id="@+id/tvSearchBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_map_button"
+                android:gravity="start|center_vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="14dp"
+                android:text="🔍  What are you looking for?"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
 
-    <!-- RESULT COUNT (e.g. "#2 of 14 found") -->
-    <TextView
-        android:id="@+id/tvCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:alpha="0.7"
-        android:text=""
-        android:textColor="#CCCCCC"
-        android:textSize="13sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/ivAmenityImage"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+            <!-- COMPASS: ring, arrow and spinner in a centred square -->
+            <com.example.trashcompass.CompassBox
+                android:id="@+id/compassBox"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:layout_weight="1"
+                android:minHeight="150dp">
 
-    <!-- SMALL AMENITY IMAGE -->
-    <ImageView
-        android:id="@+id/ivAmenityImage"
-        android:layout_width="200dp"
-        android:layout_height="150dp"
-        android:layout_marginBottom="8dp"
-        android:scaleType="centerCrop"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/tvMetadata"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+                <View
+                    android:id="@+id/viewRing"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@drawable/compass_ring" />
 
-    <!-- METADATA TEXT -->
-    <TextView
-        android:id="@+id/tvMetadata"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginBottom="24dp"
-        android:gravity="center"
-        android:text="Searching..."
-        android:textColor="#32CD32"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/tvMapButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+                <ImageView
+                    android:id="@+id/ivArrow"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:contentDescription="Direction to target"
+                    android:scaleX="0.6"
+                    android:scaleY="0.6"
+                    android:src="@drawable/ic_navigation_arrow"
+                    android:tint="#444444" />
 
-    <!-- MAP BUTTON -->
-    <TextView
-        android:id="@+id/tvMapButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:background="@drawable/bg_map_button"
-        android:gravity="center"
-        android:paddingHorizontal="28dp"
-        android:paddingVertical="12dp"
-        android:text="OPEN MAP"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/tvHint"
-        app:layout_constraintEnd_toStartOf="@+id/tvSkipButton"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent" />
+                <ProgressBar
+                    android:id="@+id/loadingSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="#32CD32"
+                    android:scaleX="0.28"
+                    android:scaleY="0.28"
+                    android:visibility="gone" />
+            </com.example.trashcompass.CompassBox>
 
-    <!-- SKIP BUTTON (point to next-nearest target) -->
-    <TextView
-        android:id="@+id/tvSkipButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:background="@drawable/bg_map_button"
-        android:gravity="center"
-        android:paddingHorizontal="28dp"
-        android:paddingVertical="12dp"
-        android:text="SKIP →"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/tvMapButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/tvMapButton"
-        app:layout_constraintTop_toTopOf="@+id/tvMapButton" />
+            <!-- DISTANCE TEXT (fixed minimum height so the compass does not
+                 jump when the text size changes between states) -->
+            <TextView
+                android:id="@+id/tvDistance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-light"
+                android:gravity="center"
+                android:maxLines="2"
+                android:minHeight="86dp"
+                android:text="---"
+                android:textColor="#FFFFFF"
+                android:textSize="64sp" />
 
-    <!-- HINT TEXT -->
-    <TextView
-        android:id="@+id/tvHint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:alpha="0.5"
-        android:text="Tap distance to change units"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+            <!-- RESULT COUNT (e.g. "#2 of 14 found") -->
+            <TextView
+                android:id="@+id/tvCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:alpha="0.7"
+                android:gravity="center"
+                android:textColor="#CCCCCC"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
-    <!-- LEGAL TEXT -->
-    <TextView
-        android:id="@+id/tvLegal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="24dp"
-        android:alpha="0.2"
-        android:text="Legal"
-        android:textColor="#FFFFFF"
-        android:textSize="10sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+            <!-- DETAILS: photo thumbnail + what we know about the target -->
+            <LinearLayout
+                android:id="@+id/detailsRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/ivAmenityImage"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_marginEnd="12dp"
+                    android:contentDescription="Photo of the target"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvMetadata"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="4"
+                    android:textColor="#32CD32"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- MAP + SKIP BUTTONS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvMapButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_map_button"
+                    android:gravity="center"
+                    android:paddingHorizontal="28dp"
+                    android:paddingVertical="12dp"
+                    android:text="OPEN MAP"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <!-- Point to the next-nearest target -->
+                <TextView
+                    android:id="@+id/tvSkipButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_map_button"
+                    android:gravity="center"
+                    android:paddingHorizontal="28dp"
+                    android:paddingVertical="12dp"
+                    android:text="SKIP →"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- FOOTER: hint in the middle, legal link at the end -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp">
+
+                <TextView
+                    android:id="@+id/tvHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:alpha="0.5"
+                    android:paddingVertical="6dp"
+                    android:text="Tap distance to change units"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvLegal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:alpha="0.4"
+                    android:paddingVertical="6dp"
+                    android:paddingStart="12dp"
+                    android:text="Legal"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp" />
+            </FrameLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- === SEARCH SCREEN (overlay) === -->
+    <LinearLayout
+        android:id="@+id/searchPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0D1117"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/tvSearchClose"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Close search"
+                android:gravity="center"
+                android:text="←"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp" />
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_search_field"
+                android:hint="toilet, playground, ice cream..."
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
+                android:inputType="text|textCapSentences"
+                android:maxLines="1"
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="12dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#8B949E"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/lvSearch"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:divider="#1FFFFFFF"
+            android:dividerHeight="1px" />
+    </LinearLayout>
 
     <!-- === FULLSCREEN IMAGE OVERLAY === -->
 
@@ -242,23 +338,16 @@
         android:background="#E6000000"
         android:clickable="true"
         android:focusable="true"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="gone" />
 
     <!-- Large Image -->
     <ImageView
         android:id="@+id/ivFullScreen"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:contentDescription="Photo of the target"
         android:padding="16dp"
         android:scaleType="fitCenter"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="gone" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

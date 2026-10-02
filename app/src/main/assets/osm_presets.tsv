@@ -1,0 +1,1597 @@
+Address		addr:*=*
+Advertising Device	advertising screen|flag|neon sign|sign	advertising=*
+Billboard	ad|advertising|spam	advertising=billboard
+Notice Board	Bulletin Board|Pin Board|ad|advertising|announcements|blackboard|bulletinboard|cork board|corkboard|fliers|flyers|noticeboard|pinboard|sign|spam|whiteboard	advertising=board
+Advertising Column	ad|advertising|spam	advertising=column
+Poster Box	ad|advertising|spam	advertising=poster_box
+Advertising Sign	ad|fascia|logo|storefront	advertising=sign
+Advertising Totem	ad|advertising|spam	advertising=totem
+Cable Car	Aerial Tramway|Sky Tram|aerial cable|aerialway|lift|ropeway|skiing|snowboarding|tramway	aerialway=cable_car
+Chair Lift	aerial cable|aerialway|skiing|snowboarding	aerialway=chair_lift
+Drag Lift	aerialway|skiing|snowboarding|surface cable	aerialway=drag_lift
+Gondola Lift	aerial cable|aerialway|lift|skiing|snowboarding	aerialway=gondola
+Goods Aerialway	aerial cable|aerialway	aerialway=goods
+J-Bar Lift	aerialway|drag lift|jaybar|jbar|skiing|snowboarding|surface cable	aerialway=j-bar
+Magic Carpet Lift	aerialway|conveyor belt|skiing|snowboarding|surface lift	aerialway=magic_carpet
+Mixed Lift	aerial cable|aerialway|skiing|snowboarding	aerialway=mixed_lift
+Platter Lift	aerialway|button lift|disc lift|drag lift|poma lift|skiing|snowboarding|surface cable	aerialway=platter
+Aerialway Pylon	chair lift pole|lift tower|skiing|snowboarding	aerialway=pylon
+Rope Tow Lift	aerialway|bugel lift|drag lift|handle tow|skiing|snowboarding|surface cable	aerialway=rope_tow
+T-Bar Lift	aerialway|drag lift|skiing|surface cable|tbar	aerialway=t-bar
+Zip Line	Zip Wire|Aerial Runway|Flying Fox|aerialway|canopy|foefie slide|gravity propelled aerial ropeslide|tyrolean traverse|zip-line|zipline|zipwire	aerialway=zip_line
+Airport	Aerodrome|aeroway|airplane|jet|plane	aeroway=aerodrome
+Airport Apron	aircraft parking|flight line|hardstand|ramp|tarmac|taxiway	aeroway=apron
+Airport Gate		aeroway=gate
+Hangar		aeroway=hangar
+Helipad	helicopter|heliport	aeroway=helipad
+Aircraft Holding Position		aeroway=holding_position
+Jetway	Jet Bridge|Skybridge|Aerobridge|Airbirdge|Airgate|Airtube|Passenger Boarding Bridge|air jetty|finger|gangway|jet way|jetbridge|pbb|portal|terminal gate connector	aeroway=jet_bridge
+Aircraft Parking Position		aeroway=parking_position
+Runway	landing strip	aeroway=runway
+Spaceport	cosmodrome|rocket launch center|rocket launch complex|rocket launch site|rocket range|space port	aeroway=spaceport
+Taxiway		aeroway=taxiway
+Airport Terminal	aerodrome|airport	aeroway=terminal
+Windsock		aeroway=windsock
+Community Garden Plot		allotments=plot
+Animal Boarding Facility	boarding|cat|cattery|dog|horse|kennel|kitten|pet|pet boarding|pet care|pet hotel|puppy|reptile	amenity=animal_boarding
+Animal Breeding Facility	breeding|bull|cat|cow|dog|horse|husbandry|kitten|livestock|pet breeding|puppy|reptile	amenity=animal_breeding
+Animal Shelter	adoption|aspca|cat|dog|horse|kitten|pet care|pet rescue|pound|puppy|raptor|reptile|rescue|spca	amenity=animal_shelter
+Arts Center	arts centre|community arts|cultural center|performance venue|theater space|theatre space	amenity=arts_centre
+ATM	Cash Machine|Automated Teller Machine|cash|machine|money|withdrawal	amenity=atm
+Baking Oven	bakehouse|beehive oven|bread|clay oven|horno|masonry oven|pizza oven|tabun oven	amenity=baking_oven
+Bank	Credit Union|check|deposit|financial|fund|investment|repository|reserve|safe|savings|stock|treasury|trust|vault	amenity=bank
+Bar	beer|bier|booze|cocktails|dive|drink|pub|tavern	amenity=bar
+LGBTQ+ Bar	gay bar|lesbian bar|lgb bar|lgbt bar|lgbtq bar	amenity=bar&lgbtq=primary
+Barbecue / Grill	bbq|grill	amenity=bbq
+Bench	chair|seat	amenity=bench
+Bicycle Parking	bike|bike parking|bike rack|bike stands|cycle parking|cycling	amenity=bicycle_parking
+Bicycle Parking Garage	bike parking station|cycle parking|cycling|multi-storey bicycle park|multi-storey bike park	amenity=bicycle_parking&bicycle_parking=building
+Bicycle Lockers	bike lockers|cycle locker|cycling	amenity=bicycle_parking&bicycle_parking=lockers
+Bicycle Shed	bike shed|cycle shed|cycling	amenity=bicycle_parking&bicycle_parking=shed
+Bicycle Rental	bicycle|bicycle share|bike|bike share|bikeshare|cycle dock|cycle hub|cycleshare|cycling|rent a bike	amenity=bicycle_rental
+Bicycle Repair Tool Stand	bike chain|bike multitool|bike pump|bike repair|bike tools|compressed air|cycle pump|cycle repair|cycling	amenity=bicycle_repair_station
+Bicycle Wash	bicycle|bicycle cleaning|bike|bike wash|cycle rinse station|cycle wash|cycling	amenity=bicycle_wash
+Biergarten	beer|beer garden|bier|booze	amenity=biergarten
+Mounted Binoculars	observation viewer|optical ranger|sight|spotting scope|spyglass|telescope|tower viewer|viewfinder|viewing stand	amenity=binoculars
+Boat Rental	boat hire|boat livery|canoe|dinghy|houseboat|jetski|kayak|motorboat|pedalboat|rowboat|sailboat|stand up paddleboard|stand-up paddleboard|standup paddleboard|sup|yacht	amenity=boat_rental
+Boat Storage	boat garage|boat shed|boathouse|dry dock|marina	amenity=boat_storage
+Currency Exchange	Bureau de Change|foreign exchange|money changer	amenity=bureau_de_change
+Cafe	bistro|coffee|espresso|latte|tea	amenity=cafe
+Bubble Tea Cafe	boba|boba drink|bubble milk tea|pearl milk tea|pearl tea|taiwanese tea drink|tapioca	amenity=cafe&cuisine=bubble_tea
+Coffeehouse	americano|brew|cafe|caffe|caffè|café|cappuccino|cocoa|coffee shop|drip|espresso|hot drinks|latte|macchiato|tea	amenity=cafe&cuisine=coffee_shop
+Teahouse	black tea|green tea|hot drinks|oolong tea|tea|tea drink|tea house|tea room|tearoom|white tea|yellow tea	amenity=cafe&cuisine=tea
+Car Pooling Station	car sharing|carpooling|lift sharing|ride sharing	amenity=car_pooling
+Car Rental	hire|vehicle	amenity=car_rental
+Car Sharing Station	car pool|carpooling|lift sharing|ride sharing	amenity=car_sharing
+Car Wash	auto wash|car cleaning|wash bay	amenity=car_wash
+Casino	blackjack|craps|gambling|poker|roulette|slot machines	amenity=casino
+Charging Station	charge point|charger|charging stall|dc charger|electric vehicle|ev|fast charger|fast charging|supercharger	amenity=charging_station
+Bicycle Charging Station	charger|electric bicycle|electric bike	amenity=charging_station&bicycle=yes&motorcar=no
+Nursery / Childcare	daycare|orphanage|playgroup	amenity=childcare
+Cinema	drive-in|film|flick|imax|movie|multiplex|picture|screen|show|theater	amenity=cinema
+Clinic	medical|urgentcare	amenity=clinic
+Abortion Clinic	women's healthcare	amenity=clinic&healthcare=clinic&healthcare:speciality=abortion
+Dialysis Center	dialysis clinic|kidney dialysis	healthcare=dialysis
+Fertility Clinic	egg|fertility|ovulation|reproductive|sperm	amenity=clinic&healthcare=clinic&healthcare:speciality=fertility
+Clock	time	amenity=clock
+Sundial	gnomon|shadow	amenity=clock&display=sundial
+Community Center	event|hall	amenity=community_centre
+Chitalishte	community center	community_centre=chitalishte
+Club Home		amenity=community_centre&community_centre=club_home
+Community Hall	community center	amenity=community_centre&community_centre=community_hall
+Cultural Center	cultural centre	amenity=community_centre&community_centre=cultural_centre
+Family Center	family centre	amenity=community_centre&community_centre=family_centre
+LGBTQ+ Community Center	lgb event|lgb hall|lgbt event|lgbt hall|lgbtq event|lgbtq hall	amenity=community_centre&lgbtq=primary
+Parish Hall	parish center	amenity=community_centre&community_centre=parish_hall
+Village Hall	village community center	amenity=community_centre&community_centre=village_hall
+Youth Center	youth centre|youth club	amenity=community_centre&community_centre=youth_centre
+Compressed Air	air compressor|air pump|tire inflation	amenity=compressed_air
+Convention Center	Conference Center|auditorium|exhibition|exposition|lecture	amenity=conference_centre
+Courthouse	judicial|justice|law court	amenity=courthouse
+Crematorium	cemetery|funeral	amenity=crematorium
+Dentist	dental|teeth|tooth	amenity=dentist
+Device Charging Station	cell phone|charger|mobile|phone|plug|smartphone|usb	amenity=device_charging_station
+Dive Center	diving|scuba	amenity=dive_centre
+Doctor	general practitioner|medic|medical doctor|physician	amenity=doctors
+Allergologist	allergy|asthma	amenity=doctors&healthcare:speciality=allergology
+Cardiologist	cardiac surgeon|cardiology|cardiovascular system|coronary artery|heart	amenity=doctors&healthcare:speciality=cardiology
+Child and Adolescent Psychiatrist	Pediatric Psychiatrist|adolescent psychiatry|child psychiatry|pediatric psychiatry	amenity=doctors&healthcare:speciality=child_psychiatry
+Dermatologist	dermatology|hair|nails|skin	amenity=doctors&healthcare:speciality=dermatology
+Gastroenterologist	bowels|digestion|digestive system|esophagus|food pipe|gallstone|gastroenterology|gastrointestinal tract|gullet|intestines|large intestine|liver|oesophagus|small intestine|stomach	amenity=doctors&healthcare:speciality=gastroenterology
+Primary Care Physician	General Practitioner|family doctor|family physician|family practitioner|gp	amenity=doctors&healthcare:speciality=general
+Obstetrician / Gynecologist	Gynecologist|Obstetrician|egg|gynaecologist|gynaecology|gynecology|ob/gyn|obgyn|obstetrics|ovulation|reproductive|woman's doctor|women's doctor	amenity=doctors&healthcare:speciality=gynaecology
+Hematologist	Haematologist|anemia|blood|bone marrow|haematology|leukemia|lymphoma	amenity=doctors&healthcare:speciality=haematology
+Internist	internal general practitioner|internal medicine|physician	amenity=doctors&healthcare:speciality=internal
+Nephrologist	kidney|kidney medicine|kidneys|nephrology|renal	amenity=doctors&healthcare:speciality=nephrology
+Neurologist	brain|nerves|nervous system|neurology|neurosurgery	amenity=doctors&healthcare:speciality=neurology
+Neurosurgeon	Brain Surgeon|brain|neurological surgery	amenity=doctors&healthcare:speciality=neurosurgery
+Oncologist	cancer|chemotherapy|oncology|tumor	amenity=doctors&healthcare:speciality=oncology
+Ophthalmologist	eye|eyes|glasses|ocular|ophthalmology	amenity=doctors&healthcare:speciality=ophthalmology
+Orthopedic Surgeon	Orthopedics|Orthopaedics|orthopedic surgery	amenity=doctors&healthcare:speciality=orthopaedics
+Otolaryngologist	Otorhinolaryngologist|ear|ent|head and neck surgery|nose|ohns|orl|orl–h&n|otorhinolaryngology|skull|throat	amenity=doctors&healthcare:speciality=otolaryngology
+Pediatrician	Paediatrician|adolescents|children|infants|paediatrics	amenity=doctors&healthcare:speciality=paediatrics
+Pathologist	anatomic pathology|anatomical pathology|autopsy|pathology	amenity=doctors&healthcare:speciality=pathology
+Plastic Surgeon	aesthetic surgery|cosmetic surgery|craniofacial surgery|plastic surgery|reconstructive surgery	amenity=doctors&healthcare:speciality=plastic_surgery
+Podiatrist	Chiropodist|Podiatric Surgeon|ankle|feet|foot|leg|legs|podiatry	amenity=doctors&healthcare:speciality=podiatry
+Colorectal Surgeon	Proctologist|assman|colorectal surgery|proctology	amenity=doctors&healthcare:speciality=proctology
+Psychiatrist	psychiatry|psychology|psychotherapy	amenity=doctors&healthcare:speciality=psychiatry
+Pulmonologist	Pneumologist|Respiratory Physician|Respirologist|asthma|chest medicine|lung|lungs|pneumology|pneumonia|pneumonologist|pneumonology|pulmonology|respiratory medicine|respiratory tract|respirology	amenity=doctors&healthcare:speciality=pulmonology
+Radiologist	Roentgenologist|computed tomography|ct|magnetic resonance imaging|medical ultrasonography|medical ultrasound|mri|radiology|sonography|ultrasonography	amenity=doctors&healthcare:speciality=radiology
+Rheumatologist	lupus|oteoporosis|rheuma|rheumatology	amenity=doctors&healthcare:speciality=rheumatology
+General Surgeon	surgery	amenity=doctors&healthcare:speciality=surgery
+Trauma Surgeon	surgery|trauma surgery	amenity=doctors&healthcare:speciality=trauma
+Urologist	adrenal glands|bladder|epididymis|kidney|penis|prostate|reproductive|scrotum|testicles|testis|ureters|urethra|urinary|urology	amenity=doctors&healthcare:speciality=urology
+Dog Toilet	dog excrement|dog excrete|dog poo area|dog relief area|dog urinate|dog urine	amenity=dog_toilet
+Dojo / Martial Arts Academy	dojang|martial arts	amenity=dojo
+Changing Room	changeroom|dressing room|fitting room|locker room	amenity=dressing_room
+Drinking Water	bubbler|drinking fountain|potable water source|water fountain|water refill|water tap	amenity=drinking_water
+Driver Training Grounds	Driving Safety Center|driving school	amenity=driver_training
+Events Venue	banquet hall|baptism|bar mitzvah|bat mitzvah|birthdays|celebrations|conferences|confirmation|conventions|event hall|meetings|parties|party|quinceañera|reunions|weddings	amenity=events_venue
+Exposition Center	Exhibition Center|convention center|expo|fair|trade exhibition|trade fair|trade show|tradeshow	amenity=exhibition_centre
+Fast Food	drive thru|drive-through|food truck|restaurant|takeaway|takeout	amenity=fast_food
+Bagel Fast Food	breakfast|lox	amenity=fast_food&cuisine=bagel
+Burger Fast Food	breakfast|dine|dining|dinner|drive-in|eat|french fries|grill|lunch|table	amenity=fast_food&cuisine=burger
+Cafeteria	canteen|dining hall|lunchroom|refectory	amenity=fast_food&fast_food=cafeteria
+Chicken Fast Food	breakfast|canteen|dine|dining|dinner|drive-in|eat|fried chicken|grill|lunch|table	amenity=fast_food&cuisine=chicken
+Chinese Fast Food	dim sum	amenity=fast_food&cuisine=chinese
+Donut Fast Food	breakfast|brunch|cafe|canteen|coffee|dine|diner|dining|donut|doughnut|eat|lunch|table	amenity=fast_food&cuisine=donut
+Fish & Chips Fast Food	breakfast|cafe|café|dine|dining|dinner|drive-in|eat|french fries|grill|lunch|table	amenity=fast_food&cuisine=fish_and_chips
+Hot Dog Fast Food	ballpark|frank|frankfurter|hotdog stand|sandwich|sausage|wiener	amenity=fast_food&cuisine=hot_dog
+Indian Fast Food	breakfast|chaat|dinner|dosa|eat|lassi|lunch|momos|paneer tikka|pani puri|pav bhaji|samosa|vada pav	amenity=fast_food&cuisine=indian
+Juice Fast Food	beverages|cafe|café|fruit drinks|juice bar|shakes|smoothies	amenity=fast_food&cuisine=juice
+Kebab Fast Food	bar|breakfast|cafe|café|canteen|dine|dining|dinner|doner kebab|drive-in|döner kebab|eat|grill|lunch|table	amenity=fast_food&cuisine=kebab
+Mexican Fast Food	breakfast|burritos|dine|dining|dinner|drive-in|eat|enchiladas|fajitas|grill|lunch|nachos|quesadillas|salsa|table|tacos|tamales|tortillas	amenity=fast_food&cuisine=mexican
+Pizza Fast Food	deep dish|dine|dining|dinner|drive-in|eat|lunch|slice|table|thin crust	amenity=fast_food&cuisine=pizza
+Sandwich Fast Food	breakfast|cafe|café|deli|deli sandwich|dine|dining|dinner|drive-in|eat|grill|lunch|meat|table	amenity=fast_food&cuisine=sandwich
+Sushi Fast Food	breakfast|canteen|dine|dining|dinner|drive thru|drive-in|drive-through|eat|food truck|lunch|restaurant|table|takeaway|takeout	amenity=fast_food&cuisine=sushi
+Chicken Wings Fast Food	chicken|dine|dining|dinner|eat|lunch|table	amenity=fast_food&cuisine=wings
+Fire Station	Fire House|Fire Hall|fire brigade|fire department|fire fighters|firehouse	amenity=fire_station
+Food Court	fast food|food|food hall|food plaza|restaurant	amenity=food_court
+Fountain	basin|bubbler|water	amenity=fountain
+Gas Station	biodiesel|cng|diesel|fuel|gasoline|lng|petrol|propane	amenity=fuel
+Funeral Service Hall	funeral ceremony|funeral hall	amenity=funeral_hall
+Gambling Hall	betting|bingo|blackjack|casino|craps|gamble|gambling|keno|lottery|pachinko|poker|roulette|slot machines|slots	amenity=gambling
+Free Box	Give Box|donations|free table|freebox|give shelf|givebox|library|share shelf	amenity=give_box
+Graveyard	burial ground|cemetary|cemetery|churchyard|columbarium|grave yard|mausoleum|tomb	amenity=grave_yard
+Grit Bin	salt|sand	amenity=grit_bin
+Hookah Lounge	Shisha Bar|flavored tobacco|nargile|shisha|waterpipe	amenity=hookah_lounge
+Hospital Grounds	clinic|doctor|emergency room|health|infirmary|institution|sanatorium|sanitarium|sick|surgery|ward	amenity=hospital
+Hunting Stand	game|gun|hide|lookout|raised blind|raised hide|rifle|shoot|stance|stand|watch|wild	amenity=hunting_stand
+Ice Cream Shop	froyo|frozen|gelato|sherbet|sorbet|sundae|yogurt	amenity=ice_cream
+Frozen Yogurt Shop	frogurt|froyo|frozen yoghurt|ice cream|yoghurt|yogurt	amenity=ice_cream&cuisine=frozen_yogurt
+Internet Cafe	cafe|coffee|cybercafe|lanhouse|net|taxiphone|teleboutique	amenity=internet_cafe
+Karaoke Box	karaoke club|karaoke room|karaoke television|ktv|sing along	amenity=karaoke_box
+Communal Kitchen	cooking|public kitchen|shared kitchen	amenity=kitchen
+Kneipp Facility	Kneipp Water Cure|foot bath|hydrotherapy|kneipp cure|kneipp hydrotherapy|kneippism	amenity=kneipp_water_cure
+Lavoir	clothing|laundry|washing	amenity=lavoir
+Letter Box	curbside delivery box|direct-to-door delivery box|home delivery box|letter hole|letter plate|letter slot|letterbox|letterhole|letterplate|letterslot|mail box|mail hole|mail slot|mailbox|mailhole|mailslot|post box|through-door delivery box	amenity=letter_box
+Library	book|public library|reading	amenity=library
+Book Return Drop Box	book drop-off|book return|library book return|library drop-off|library return	amenity=library_dropoff
+Loading Dock	door|loading bay|shipping|unloading|warehouse	amenity=loading_dock
+Lounger	bench|chair|seat	amenity=lounger
+Love Hotel	romantic hotel|short stay hotel	amenity=love_hotel
+Luggage Locker	baggage|bags|locker|lockers|luggage|storage|travel	amenity=luggage_locker
+Marketplace	bazaar	amenity=marketplace
+Monastery Grounds	abbey|basilica|bethel|cathedral|chancel|chantry|chapel|church|fold|house of god|house of prayer|house of worship|minster|mission|monastery|mosque|oratory|parish|sacellum|sanctuary|shrine|synagogue|tabernacle|temple	amenity=monastery
+Money Transfer Station	bill|cable|cash to cash|check|currency|exchange|finance|money order|person to person|wire transfer	amenity=money_transfer
+Morgue	crematorium|funeral home|memorial home|mortuary|undertaker	amenity=mortuary
+Motorcycle Parking	motorbike parking	amenity=motorcycle_parking
+Motorcycle Rental	chopper|cruiser|dirt bike|hog|minibike|moped|motor scooter|motorbike|sidecar|sportbike	amenity=motorcycle_rental
+Nightclub	club|dance club|dancing|disco|discotheque|night club	amenity=nightclub
+LGBTQ+ Nightclub	gay nightclub|lesbian nightclub|lgb nightclub|lgbt nightclub|lgbtq nightclub	amenity=nightclub&lgbtq=primary
+Parcel Locker	automated postal box|dropoff|locker|mail|package|package locker|packstation|parcel|pickup	amenity=parcel_locker
+Parking	automobile parking|car lot|car parking|rv parking|surface parking|truck parking|vehicle parking	amenity=parking
+Multilevel Parking Garage	car|indoor parking|multistorey car park|parkade|parking building|parking deck|parking garage|parking ramp|parking structure	amenity=parking&parking=multi-storey
+Park & Ride Lot	commuter parking lot|incentive parking lot|metro parking lot|p+r|park and pool lot|park and ride lot|public transit parking lot|public transport parking lot|train parking lot	amenity=parking&park_ride=yes
+Street-side Parking	automobile parking|car parking|road-side parking|roadside parking|street parking|streetside parking|vehicle parking	amenity=parking&parking=street_side
+Underground Parking	automobile parking|car lot|car parking|rv parking|subsurface parking|truck parking|vehicle parking	amenity=parking&parking=underground
+Parking Garage Entrance / Exit		amenity=parking_entrance
+Parking Space	parking spot|parking stall	amenity=parking_space
+Accessible Parking Space	disability|disabled parking stall|handicap parking spot|wheelchair	amenity=parking_space&parking_space=disabled
+Surface Parking Lot	at-grade parking|car park|ground level parking|open air parking|parking lot|surface lot|surface parking	amenity=parking&parking=surface
+Payment Center	bill pay|cash|check|currency|finance|money|tax pay	amenity=payment_centre
+Payment Terminal	atm|bill pay|card|cash|ekiosk|finance|interactive kiosk|money transfer|payment kiosk|phone pay|tax pay	amenity=payment_terminal
+Pharmacy Counter	apothecary|chemist|dispensary|drug store|drugstore|medicine|prescription	amenity=pharmacy
+Photo Booth	booth|camera|kiosk|passport photos|photo|photobooth|picture booth	amenity=photo_booth
+Place of Worship	abbey|basilica|bethel|cathedral|chancel|chantry|chapel|church|fold|house of god|house of prayer|house of worship|minster|mission|mosque|oratory|parish|religion|religious|sacellum|sanctuary|shrine|synagogue|tabernacle|temple	amenity=place_of_worship
+Buddhist Temple	dojo|monastery|pagoda|religion|religious|stupa|temple|vihara|zendo	amenity=place_of_worship&religion=buddhist
+Christian Church	abbey|anglican|baptist|basilica|bethel|cathedral|chancel|chantry|chapel|christian|episcopal|evangelical|fold|house of god|house of prayer|house of worship|latter day saints|lds|lutheran|methodist|minster|mission|mormon|nondenominational|oratory|orthodox|parish|pentecostal|presbyterian|protestant|reformed|religion|religious|roman catholic|sacellum|sanctuary|seventh day adventist|shrine|tabernacle|temple	amenity=place_of_worship&religion=christian
+Kingdom Hall of Jehovah's Witnesses	christian|church|house of god|house of prayer|house of worship|religion|religious	amenity=place_of_worship&religion=christian&denomination=jehovahs_witness
+La Luz del Mundo Temple	christian|church|house of god|house of prayer|house of worship|religion|religious|the light of the world church	amenity=place_of_worship&religion=christian&denomination=la_luz_del_mundo
+Quaker Friends Meeting House	christian|church|house of god|house of prayer|house of worship|religion|religious	amenity=place_of_worship&religion=christian&denomination=quaker
+Hindu Temple	alayam|devasthana|kovil|kshetram|mandir|religion|religious|shrine|temple	amenity=place_of_worship&religion=hindu
+Jewish Synagogue	jewish|religion|religious	amenity=place_of_worship&religion=jewish
+Muslim Mosque	islam|islamic center|masjid|muslim|religion|religious	amenity=place_of_worship&religion=muslim
+Shinto Shrine	kami|religion|religious|torii	amenity=place_of_worship&religion=shinto
+Sikh Temple	gurudwara|religion|religious|temple	amenity=place_of_worship&religion=sikh
+Taoist Temple	daoist|monastery|religion|religious|temple	amenity=place_of_worship&religion=taoist
+Planetarium	astronomy|museum|observatory	amenity=planetarium
+Police	badge|constable|constabulary|cop|detective|enforcement|fed|law|officer|patrol	amenity=police
+Permanent Polling Place	ballot box|ballot drop|democracy|elections|polling place|vote|voting booth|voting machine	amenity=polling_station
+Mail Drop Box	drop box|dropbox|letter drop|mail box|mail collection box|mail drop|mail dropoff|mailbox|package drop|pillar box|pillarbox|post box|postal box|postbox	amenity=post_box
+Post Sorting Office	mail processing and distribution center|post depot	amenity=post_depot
+Post Office	letter|mail|package|parcel|postal service|shipping	amenity=post_office
+Prison Grounds	cell|correctional facility|detention center|jail	amenity=prison
+Pub	alcohol|bar|beer|bier|booze|dive|drink|tavern	amenity=pub
+Irish Pub	irish bar	amenity=pub&theme=irish
+LGBTQ+ Pub	gay pub|lesbian pub|lgb pub|lgbt pub|lgbtq pub	amenity=pub&lgbtq=primary
+Brewpub	alcohol|beer|bier|booze|craft brewery|dive|drink|microbrewery|small batch brewery	amenity=pub&microbrewery=yes
+Public Bath	foot bath|hot springs|onsen	amenity=public_bath
+Public Bookcase	book exchange shelf|book sharing|book swap|bookcrossing|community bookshelf|library|little free library|share a book|sharing books|sidewalk library|street library	amenity=public_bookcase
+Ranger Station	backcountry office|permit center|permit centre|visitor center|visitor centre|warden center|warden centre|warden office	amenity=ranger_station
+E-Waste Container	computers|electronic waste|electronics recycling|ewaste bin|phones|tablets	amenity=recycling&recycling_type=container&recycling:electrical_items=yes
+Green Waste Container	biodegradable|biological|compost|decomposable|food scrap|garbage bin|garden waste|organic|rubbish	amenity=recycling&recycling_type=container&recycling:green_waste=yes
+Recycling Center	bottle|can|dump|garbage|glass|recycle|rubbish|scrap|trash	amenity=recycling&recycling_type=centre
+Recycling Bin	Recycling Container|bin|bottle|can|garbage|glass|recycle|rubbish|scrap|trash	amenity=recycling&recycling_type=container
+Refugee Camp	displaced people|evacuees|migrants|ngo|refugee site	amenity=refugee_site
+Research Institute Grounds	applied research|experimentation|r & d|r and d|r&d|research and development|research institution|research laboratory|research labs	amenity=research_institute
+Restaurant	bar|brasserie|breakfast|cafe|café|canteen|coffee|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant
+American Restaurant	bar|breakfast|cafe|café|canteen|coffee|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=american
+Asian Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=asian
+Barbecue Restaurant	Barbeque Restaurant|bar|bbq|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=barbecue
+Chinese Restaurant	bar|breakfast|cafe|café|canteen|dim sum|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=chinese
+French Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=french
+Georgian Restaurant	bar|breakfast|dine|dining|dinner|drive-in|eat|lunch|table	amenity=restaurant&cuisine=georgian
+German Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=german
+Greek Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|gyros|lunch|olives|pitas|table	amenity=restaurant&cuisine=greek
+Hot Pot Restaurant	beijing|budae jjigae|canton|chhnang pleurng|china|fondue|guangdong|hotpot|jeongol|jjigae|kimchi jjigae|lau|mu kratha|nabemono|peking|shabu shabu|sichaun|sin jum|sukiyaki|teochew|teoswa|yao hon	amenity=restaurant&cuisine=hotpot
+Indian Restaurant	bar|biryani|breakfast|butter chicken|chaat|curry|dal makhni|dine|dining|dinner|dosa|eat|garlic naan|grill|lassi|lunch|paneer tikka|roti|samosa|thali	amenity=restaurant&cuisine=indian
+Italian Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|pasta|pizza|table	amenity=restaurant&cuisine=italian
+Japanese Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=japanese
+Korean Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=korean
+Mexican Restaurant	bar|breakfast|burritos|dine|dining|dinner|drive-in|eat|enchiladas|fajitas|grill|lunch|nachos|quesadillas|salsa|table|tacos|tamales|tortillas	amenity=restaurant&cuisine=mexican
+Noodle Restaurant	bar|breakfast|cafe|café|canteen|cellophane noodles|dine|dining|dinner|drive-in|eat|grill|lunch|rice noodles|soba noodles|soup|table	amenity=restaurant&cuisine=noodle
+Pizza Restaurant	Pizzeria|bar|deep dish|dine|dining|dinner|drive-in|eat|lunch|slice|table|thin crust	amenity=restaurant&cuisine=pizza
+Ramen Restaurant	Ramen Shop|japanese|noodles|ramen-ten|ramen-ya|soup	amenity=restaurant&cuisine=ramen
+Seafood Restaurant	bar|breakfast|cafe|café|clams|crab|crustaceans|dine|dining|dinner|drive-in|eat|fish|grill|lobsters|lunch|molluscs|octopus|oysters|shellfish|shrimp|squid|table	amenity=restaurant&cuisine=seafood
+Spanish Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=spanish
+Steakhouse	bar|beef|breakfast|cafe|café|canteen|chop house|dine|dining|dinner|drive-in|eat|grill|lunch|steak house|table	amenity=restaurant&cuisine=steak_house
+Sushi Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=sushi
+Thai Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=thai
+Turkish Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=turkish
+Ukrainian Restaurant	bar|breakfast|dine|dining|dinner|drive-in|eat|lunch|table	amenity=restaurant&cuisine=ukrainian
+Vietnamese Restaurant	bar|breakfast|cafe|café|canteen|dine|dining|dinner|drive-in|eat|grill|lunch|table	amenity=restaurant&cuisine=vietnamese
+RV Toilet Disposal	camper|cdp|chemical toilet|ctdp|dump station|elsan|motor home|sanitary	amenity=sanitary_dump_station
+Shelter	covered shelter|gazebo|lean-to|picnic	amenity=shelter
+Field Shelter		amenity=shelter&shelter_type=field_shelter
+Gazebo		amenity=shelter&shelter_type=gazebo
+Lean-To	alpine hut|cabin|leanto|lodging|overnight accommodations|sleeping shelter|wilderness hut	amenity=shelter&shelter_type=lean_to
+Picnic Shelter	pavilion	amenity=shelter&shelter_type=picnic_shelter
+Transit Shelter	bus stop|metro stop|public transit shelter|public transport shelter|tram stop shelter|waiting	amenity=shelter&shelter_type=public_transport
+Shower	rain closet	amenity=shower
+Smoking Area	smokers' area	amenity=smoking_area
+Social Center	community center|community hall|event|fraternal|fraternity|hall|organization|professional|society|sorority|union|vetern	amenity=social_centre
+Social Facility	community|group home|halfway house|nonprofit|social services	amenity=social_facility
+Ambulatory Care		amenity=social_facility&social_facility=ambulatory_care
+Senior Assisted Living Facility	assisted living|care home|elderly|living|old|retired|retirement|retirement home|senior	amenity=social_facility&social_facility=assisted_living&social_facility:for=senior
+Social Services Day Care / Day Center		amenity=social_facility&social_facility=day_care
+Food Bank	food pantry|soup kitchen	amenity=social_facility&social_facility=food_bank
+Elderly Group Home	assisted living|care home|elderly|living|old|retired|retirement|retirement home|senior	amenity=social_facility&social_facility=group_home&social_facility:for=senior
+Homeless Shelter	displaced|houseless|unhoused	amenity=social_facility&social_facility=shelter&social_facility:for=homeless
+Nursing Home	assisted living|elderly|living|nursing|old|retired|retirement|retirement home|senior	amenity=social_facility&social_facility=nursing_home&social_facility:for=senior
+Strip club	18+|adult|cabaret|gentlemen|lap dance|porn|sex|strip|striptease	amenity=stripclub
+Studio	radio|recording|television|tv studio	amenity=studio
+Recording Studio	audio mixing|audio production|audio recording|audio studio	amenity=studio&studio=audio
+Radio Station	am radio|fm radio|radio broadcast|radio studio	amenity=studio&studio=radio
+Television Station	television broadcast|television studio|tv broadcast|tv station|tv studio	amenity=studio&studio=television
+Film Studio	movie production|movie studio|video production|video recording|video studio	amenity=studio&studio=video
+Swinger Club	Sex Club|18+|adult|lifestyle club|porn|sex|strip|swinger	amenity=swingerclub
+Taxi Stand	cab	amenity=taxi
+Auto Rickshaw Stand	Tricycle Terminal|bajaj|toda|tricycle station|tuk-tuk|tuksi	amenity=taxi&taxi_vehicle=auto_rickshaw
+Cycle Rickshaw Stand	Pedicab Terminal|becak|bikecab|padyak|pedicab|sikad|trishaw|trisikad|velotaxi	amenity=taxi&taxi_vehicle=cycle_rickshaw
+Motorcycle Taxi Stand	habal-habal|moto taxi|pillion	amenity=taxi&taxi_vehicle=motorcycle
+Telephone	pay phone|payphone|phone|phone booth|public phone|public telephone	amenity=telephone
+Theater	musical|performance|play|theatre	amenity=theatre
+Amphitheater	ampi|greek|open air|outdoor	amenity=theatre&theatre:type=amphi
+Ticket Validator	Ticket Puncher|Punching Machine|Ticket Marker|puncher|ticket|validator	amenity=ticket_validator
+Restroom	Toilets|Bathroom|Lavatory|head|latrine|outhouse|privy|public restroom|public toilet|w.c.|water closet|wc	amenity=toilets
+Flush Toilets	bathroom|head|lavatory|privy|restroom|w.c.|water closet|wc	amenity=toilets&toilets:disposal=flush
+Pit Latrine	head|lavatory|long drop|outhouse|pit toilet|privy	amenity=toilets&toilets:disposal=pitlatrine
+Portable Toilet	chemical toilet|porta john|porta potty|portapot|privy|restroom	amenity=toilets&portable=yes
+Town Hall	city|courthouse|government|municipal|village	amenity=townhall
+Barangay Hall	barrio hall	amenity=townhall&townhall:type=barangay
+City Hall	council|courthouse|government|mayor|municipality	amenity=townhall&townhall:type=city
+Toy Library	game|toy	amenity=toy_library
+Traffic Park	bicycle safety center|bicycle safety centre|children's traffic park|learn to ride center|learn to ride centre|traffic garden|traffic playground	amenity=traffic_park
+Cart Corral	carriage return|cart return|shopping cart|trolley bay	amenity=trolley_bay
+Vacuum Cleaning Station	car vacuum cleaner|car wash|carvac|suction	amenity=vacuum_cleaner
+Vehicle Inspection	car inspection	amenity=vehicle_inspection
+Vending Machine		amenity=vending_machine
+Bicycle Inner Tube Vending Machine	bicycle tubes|bike tube|inner tube	amenity=vending_machine&vending=bicycle_tube
+Bottle Return Machine	bottle return	amenity=vending_machine&vending=bottle_return
+Bread Vending Machine	baguette|bread	amenity=vending_machine&vending=bread
+Cigarette Vending Machine	cigarette	amenity=vending_machine&vending=cigarettes
+Coffee Vending Machine	coffee	amenity=vending_machine&vending=coffee
+Condom Vending Machine	condom	amenity=vending_machine&vending=condoms
+Drink Vending Machine	beverage|drink|juice|pop|soda	amenity=vending_machine&vending=drinks
+Egg Vending Machine	egg	amenity=vending_machine&vending=eggs
+Electronics Vending Machine	cable|charger|earbud|headphone|phone|tablet	amenity=vending_machine&vending=electronics
+Flat Coin Vending Machine	coin|crush|elongated|flatten|penny|souvenir	amenity=vending_machine&vending=elongated_coin
+Excrement Bag Dispenser	animal|dog|excrement bags|pet|poop|waste	amenity=vending_machine&vending=excrement_bags
+Feminine Hygiene Vending Machine	condom|menstrual hygiene products|pad|personal care|tampon|woman|women	amenity=vending_machine&vending=feminine_hygiene
+Flower Vending Machine	bouquet|flower	amenity=vending_machine&vending=flowers
+Food Vending Machine	food	amenity=vending_machine&vending=food
+Snack Vending Machine	candy|chip|cookie|cracker|gum|pretzel	amenity=vending_machine&vending=food&food=snacks
+Gas Vending Machine	biodiesel|cng|diesel|fuel|gasoline|lng|petrol|propane	amenity=vending_machine&vending=fuel
+Ice Cream Vending Machine	chocolate|frozen|ice cream|popsicle|vanilla	amenity=vending_machine&vending=ice_cream
+Ice Vending Machine	cubes|ice	amenity=vending_machine&vending=ice_cubes
+Newspaper Vending Machine	newspaper	amenity=vending_machine&vending=newspapers
+Parking Ticket Vending Machine	Parking Meter|parking|ticket	amenity=vending_machine&vending=parking_tickets
+Pizza Vending Machine	pizza	amenity=vending_machine&vending=pizza
+Transit Ticket Vending Machine	public transport ticket vending machine|public transport tickets	amenity=vending_machine&vending=public_transport_tickets
+Postage Vending Machine	mail|postage|stamp	amenity=vending_machine&vending=stamps
+Candy Vending Machine	gumball	amenity=vending_machine&vending=sweets
+Drinking Water Vending Machine	aqua|drinking water|potable water|water	amenity=vending_machine&vending=water
+Veterinary	animal hospital|pet clinic|pet doctor|veterinarian	amenity=veterinary
+Veterinary Pharmacy	Animal Pharmacy|animal medication|pet clinic|pet doctor|pet meds|pet pharmacy|pet prescriptions|vet pharmacy|veterinarian|veterinary compounding|veterinary supplies	amenity=veterinary_pharmacy
+Dog Excrement Bin	bin|dog|garbage|litter|poo|rubbish|trash	amenity=waste_basket&waste=dog_excrement
+Trash Can	Waste Basket|bin|garbage|litter|rubbish|trash	amenity=waste_basket
+Garbage Dumpster	garbage|litter|rubbish|trash|waste disposal	amenity=waste_disposal
+Waste Transfer Station	dump|garbage|recycling|rubbish|scrap|trash	amenity=waste_transfer_station
+RV Drinking Water	water faucet|water point|water source|water spigot|water tap	amenity=water_point
+Animal Watering Place	livestock water|trough	amenity=watering_place
+Truck Scale	weigh station|weighbridge	amenity=weighbridge
+Horse Walker	Horse Exerciser|horse training	animal=horse_walker
+Area	polygon	area=yes
+Footway Area	area:highway|edge of pavement|footway shape|pavement|sidewalk area|sidewalk shape	area:highway=footway
+Road Area	area:highway|edge of pavement|highway area|highway shape|pavement|road shape|street area	area:highway=*
+Traffic Island Area	refuge island|traffic island	area:highway=traffic_island
+Amusement Ride	carnival ride|theme park	attraction=amusement_ride
+Animal Enclosure	amphibian|animal park|aquarium|bear|bird|fish|insect|lion|mammal|monkey|penguin|reptile|safari|theme park|tiger|zoo	attraction=animal
+Ferris Wheel	amusement ride|theme park	attraction=big_wheel
+Bumper Cars	autoscooter|dodgem cars|theme park	attraction=bumper_car
+Bungee Jumping	bungy jumping|jumping platform|theme park	attraction=bungee_jumping
+Carousel	flying horses|galloper|horseabout|jumper|merry-go-round|roundabout|theme park	attraction=carousel
+Dark Ride	ghost train|theme park	attraction=dark_ride
+Drop Tower Ride	amusement ride|big drop|gondola|theme park|tower	attraction=drop_tower
+Kiddie Ride		attraction=kiddie_ride
+Log Flume	amusement ride|flume|theme park	attraction=log_flume
+Maze	amusement ride|labyrinth|theme park	attraction=maze
+Pirate Ship Ride	amusement ride|carnival ride|theme park	attraction=pirate_ship
+River Rapids Ride	aquatic park|rafting simulator|river rafting ride|theme park|water park	attraction=river_rafting
+Roller Coaster	amusement ride|theme park	attraction=roller_coaster
+Summer Toboggan	alpine slide|mountain coaster	attraction=summer_toboggan
+Swing Carousel	amusement ride|carousel|carousel tower|theme park|tower	attraction=swing_carousel
+Tourist Train	dotto train|park train|rackless train|road train|theme park|tschu-tschu train	attraction=train
+Water Slide	aquatic park|flumes|hydroslides|theme park|water chutes|water park	attraction=water_slide
+Barrier		barrier=*
+Block		barrier=block
+Bollard		barrier=bollard
+Bollard Row		barrier=bollard
+Border Control	checkpoint|customs|international boundary|passport check|port of entry|visa	barrier=border_control
+Bump Gate	drive-through gate	barrier=bump_gate
+Bus Trap	car trap	barrier=bus_trap
+Cable Barrier	guard cable|wire rope safety barrier	barrier=cable_barrier
+Cattle Grid	cattle guard|cattle stop|livestock grid|stock gate|stock grid|stock stop|texas gate|vehicle pass	barrier=cattle_grid
+Chain		barrier=chain
+City Wall		barrier=city_wall
+Cycle Barrier	bicycle barrier|bicycling barrier|bike barrier|bike chicane|bike gates|chicane|cycling barrier	barrier=cycle_barrier
+Trench	Ditch|ha-ha	barrier=ditch
+Fence		barrier=fence
+Railing	guard rail|handrail	barrier=fence&fence_type=railing
+Full-Height Turnstile	baffle gate|turnstyle	barrier=full-height_turnstile
+Gate		barrier=gate
+Guard Rail	armco barrier|crash barrier|guardrail|median barrier|roadside barrier|traffic barrier	barrier=guard_rail
+Wire Gate	hampshire gate|new zealand gate	barrier=hampshire_gate
+Hedge		barrier=hedge
+Height Restrictor	height barrier|height restriction barrier|max height|maxheight|maximum height measurer	barrier=height_restrictor
+Jersey Barrier	concrete barrier|concrete median|constant-slope barrier|f-shape barrier|k-rail|median|new jersey wall|ontario tall wall|plastic barrier	barrier=jersey_barrier
+Curb		barrier=kerb
+Flush Curb	even curb|level curb|tactile curb	barrier=kerb&kerb=flush
+Lowered Curb	curb cut|curb ramp|dropped kerb|kerb ramp|pram ramp	barrier=kerb&kerb=lowered
+Raised Curb	step	barrier=kerb&kerb=raised
+Rolled Curb	gutter	barrier=kerb&kerb=rolled
+Kissing Gate		barrier=kissing_gate
+Boom Gate	arm barrier|boom barrier|boom lift|hinged bar|lift gate|pivoted pole	barrier=lift_gate
+Fallen Tree Obstruction	downed tree|log	barrier=log
+Motorcycle Barrier	motorbike barrier	barrier=motorcycle_barrier
+Retaining Wall		barrier=retaining_wall
+Rope Fence		barrier=rope
+Sally Port	castle side gate|postern	barrier=sally_port
+Spike Strip	one-way traffic treadles|stingers|stop sticks|tire deflation device|tire shredders|traffic spikes	barrier=spikes
+Stile		barrier=stile
+Swing Gate		barrier=swing_gate
+Toll Booth		barrier=toll_booth
+Turnstile	baffle gate|turnstyle	barrier=turnstile
+Wall		barrier=wall
+Noise Barrier	acoustical barrier|noise wall|noisewall|sound barrier|sound berm|sound wall|soundberm|soundwall	barrier=wall&wall=noise_barrier
+Wicket Gate		barrier=wicket_gate
+Administrative Boundary		boundary=administrative
+Hazardous Area	danger|prohibited	boundary=hazard
+Bridge Support		bridge:support=*
+Bridge Pier		bridge:support=pier
+Building	structure	building=*
+Allotment House		building=allotment_house
+Apartment Building	Condominium|flats	building=apartments
+Bakehouse		building=bakehouse
+Barn		building=barn
+Boathouse	boat house|boat storage|rowing	building=boathouse
+Bungalow	detached|home	building=bungalow
+Cabin		building=cabin
+Carport	car|covered parking space|garage|porch	building=carport
+Cathedral Building		building=cathedral
+Chapel Building		building=chapel
+Church Building		building=church
+Civic Building		building=civic
+College Building	university	building=college
+Commercial Building		building=commercial
+Building Under Construction		building=construction
+Cowshed	byre|cow barn|cow house|cow shed|cowbarn|cowhouse|dairy barn|milking barn	building=cowshed
+Detached House	dwelling|family|home|residence|single	building=detached
+Dormitory		building=dormitory
+Farm House		building=farm
+Farm Building	agriculture|auxilary|auxiliary|chicken coop|farm auxiliary|pigsty|sty	building=farm_auxiliary
+Fire Station Building		building=fire_station
+Garage		building=garage
+Garages		building=garages
+Yurt	ger	building=ger
+Grandstand	bleachers|stand|stands|tribune	building=grandstand
+Greenhouse	glass house|glasshouse	building=greenhouse
+Hangar Building		building=hangar
+Hospital Building		building=hospital
+Hotel Building		building=hotel
+House	dwelling|family|home|residence	building=house
+Townhouse	Row House|brownstone|dwelling|family|home|residence|row home|terrace|townhome	building=house&house=terraced
+Houseboat	dwelling|family|home|residence	building=houseboat
+Hut		building=hut
+Industrial Building		building=industrial
+Preschool / Kindergarten Building	kindergarden|kindergarten|pre-school	building=kindergarten
+Mosque Building		building=mosque
+Office Building	business center|office block	building=office
+Pavilion Building	sports	building=pavilion
+Public Building		building=public
+Residential Building		building=residential
+Retail Building	shop building|store building	building=retail
+Indoor Horseback Riding Arena	Horse Riding Hall|Horseback Riding Hall|Indoor Horse Arena|Indoor Horse Riding Arena|Indoor Horse Riding Ring|Indoor Horseback Riding Ring|Indoor Riding Arena|Indoor Riding Ring|equestrian arena|equestrian indoor arena|horse riding|indoor arena|indoor riding|indoor ring|longeing hall	building=riding_hall
+Roof		building=roof
+Building Ruins		building=ruins
+School Building	academy|elementary school|high school|middle school	building=school
+Semi-Detached House	double|duplex|dwelling|family|home|residence|twin	building=semidetached_house
+Service Building	equipment|infrastructure|transformer|utility	building=service
+Shed	hobbies|storage|workshop	building=shed
+Stable	horse barn|horse shed|horse shelter|horse stable	building=stable
+Stadium Building		building=stadium
+Mobile Home	house trailer|manufactured home|prefabricated home|residential caravan|static caravan|static mobile home|trailer home	building=static_caravan
+Pigsty	hog parlor|hog pen|pig ark|pig barn|pig parlor|pig pen|pig shed|pig shelter|pig-cote|piggery|pigpen|pigshed|sty	building=sty
+Synagogue Building		building=synagogue
+Temple Building		building=temple
+Permanent Tent		building=tent
+Row of Townhouses	brownstone|dwelling|family|home|residence|row home|row house|terrace|townhome	building=terrace
+Train Station Building	halt|railway station|terminal	building=train_station
+Transportation Building		building=transportation
+University Building	college	building=university
+Warehouse		building=warehouse
+Building Part	roof|simple 3d buildings	building:part=*
+Grave	mausoleum|tomb	cemetery=grave
+Cemetery Section	burial ground|cemetary|cemetery|churchyard|columbarium|grave yard|graveyard|mausoleum|tomb	cemetery=sector
+Climbing Crag	Climbing Cliff	climbing=crag
+Climbing Route	Boulder Problem|Climb|Mountaineering Route|climbing|mountain climbing|rock climbing|rock climbing route|sport climbing	climbing=route
+Climbing Route Start	climbing area|climbing crag|climbing point|rock climbing route|route bottom|route start|sport climbing	climbing=route_bottom
+Club	social	club=*
+Scout Group	guide|pathfinder|scouting	club=scout
+Sports Club	athletics club|sporting club|sports association|sports society	club=sport
+Craft	artisan|craftsman|craftsperson|trade|tradesman|tradesperson|workshop	craft=*
+Agricultural Engines Mechanic	combines|farm equipment|harvesters|tractors	craft=agricultural_engines
+Basket Maker		craft=basket_maker
+Beekeeper		craft=beekeeper
+Blacksmith		craft=blacksmith
+Boat Builder		craft=boatbuilder
+Bookbinder	book repair	craft=bookbinder
+Craft Brewery	alcohol|beer|beverage|bier|booze|cider	craft=brewery
+Carpenter	woodworker	craft=carpenter
+Carpet Layer		craft=carpet_layer
+Caterer		craft=caterer
+Chimney Sweeper		craft=chimney_sweeper
+Cleaning Service		craft=cleaning
+Clockmaker		craft=clockmaker
+Candy Maker	candy|sweet	craft=confectionery
+Distillery	alcohol|beverage|booze|bourbon|brandy|gin|hooch|liquor|mezcal|moonshine|rum|scotch|spirits|still|tequila|vodka|whiskey|whisky	craft=distillery
+Dressmaker	seamstress	craft=dressmaker
+Electrician	power|wire	craft=electrician
+Electronics Repair Shop		craft=electronics_repair
+Floorer		craft=floorer
+Gardener	grounds keeper|landscaper	craft=gardener
+Glaziery	glass|stained-glass|window	craft=glaziery
+Handicraft Workspace		craft=handicraft
+HVAC Workplace	air conditioning|heating|ventilation	craft=hvac
+Insulator		craft=insulation
+Joiner	furniture	craft=joiner
+Key Cutter	key duplication	craft=key_cutter
+Metalworker		craft=metal_construction
+Painter		craft=painter
+Parquet Layer		craft=parquet_layer
+Photographer		craft=photographer
+Photographic Laboratory	film	craft=photographic_laboratory
+Plasterer		craft=plasterer
+Plumber	pipe|plumbing	craft=plumber
+Pottery Maker	ceramic|kiln|pot|vase	craft=pottery
+Rigger		craft=rigger
+Roofer		craft=roofer
+Saddler		craft=saddler
+Sailmaker		craft=sailmaker
+Sawmill	lumber	craft=sawmill
+Scaffolder		craft=scaffolder
+Sculptor	sculpter	craft=sculptor
+Shoemaker	cobbler	craft=shoemaker
+Signmaker		craft=signmaker
+Stonemason	masonry	craft=stonemason
+Tiler		craft=tiler
+Tinsmith		craft=tinsmith
+Upholsterer		craft=upholsterer
+Watchmaker		craft=watchmaker
+Window Construction	glass	craft=window_construction
+Winery		craft=winery
+Advanced Stop Line	advanced stop box|asl|bicycle box|bike box|bikebox|cycle box|cycle stop marking	cycleway=asl
+Disc Golf Basket	disc golf target|disc pole hole	disc_golf=basket
+Disc Golf Hole		disc_golf=hole
+Disc Golf Tee	tee box|teeing ground	disc_golf=tee
+Education Facility	classes|school|teaching|training	education=*
+College Grounds	undergraduate school|university	education=college
+Dance School	Dance Studio|ballet|ballet studio|dance teaching|jive|swing|tango|waltz	education=dancing_school
+Driving School		education=driving_school
+Preschool / Kindergarten Grounds	kindergarden|kindergarten|pre-school	education=kindergarten
+Language School	esl	education=language_school
+Music School	school of music	education=music_school
+Test Prep / Tutoring School	academic|act|homework|math|reading|sat|test prep|tutoring|writing	education=prep_school
+School Grounds	academy|elementary school|high school|middle school	education=school
+University Grounds	college|graduate school|master's degree program|phd program	education=university
+Ambulance Station	ems|emt|rescue	emergency=ambulance_station
+Emergency Assembly Point	eap|meeting point|muster point|staging area	emergency=assembly_point
+Defibrillator	aed	emergency=defibrillator
+Disaster Response Station	civil defense|civil protection|disaster management|emergency management|ses	emergency=disaster_response
+Fire Alarm Call Box		emergency=fire_alarm_box
+Fire Extinguisher		emergency=fire_extinguisher
+Fire Hose		emergency=fire_hose
+Fire Hydrant	fire plug|fire water well|hydrant	emergency=fire_hydrant
+Pillar Fire Hydrant	fire plug|pillar hydrant	emergency=fire_hydrant&fire_hydrant:type=pillar
+Underground Fire Hydrant	fire plug|fire water well|underground hydrant	emergency=fire_hydrant&fire_hydrant:type=underground
+Fire Department Connection	building hydrant inlet|charged riser|dry riser inlet|dry standpipe|fdc|fire service inlet|fire sprinkler inlet|riser inlet|standpipe|wet riser inlet|wet standpipe	emergency=fire_service_inlet
+First Aid Kit	bandage|first aid|med kit|medkit	emergency=first_aid_kit
+Emergency Landing Site	helicopter|helipad|heliport	emergency=landing_site
+Life Ring	kisbie ring|kisby ring|life buoy|lifering|perry buoy	emergency=life_ring
+Lifeboat Station	boat rescue|life saving|lifeboat|rescue|search and rescue	emergency=water_rescue
+Lifeguard	cpr|rescue	emergency=lifeguard
+Mountain Rescue	ems|emt|rescue	emergency=mountain_rescue
+Emergency Phone	call point|help|sos	emergency=phone
+Siren	air raid|loud|noise|storm|tornado|warning	emergency=siren
+Emergency Water Reservoir	basin|extinguishing|firefighting|reservoir	emergency=water_tank&natural=water&water=reservoir
+Emergency Water Reservoir (Underground)	cistern|extinguishing|firefighting|reservoir	emergency=water_tank&man_made=reservoir_covered
+Emergency Water Tank	cistern|extinguishing|firefighting|water tank	emergency=water_tank&man_made=storage_tank
+Entrance / Exit	door|entrance|exit	entrance=*
+Emergency Exit	door|fire exit	entrance=emergency
+Emergency Room Entrance	accident & emergency department|casualty department|ed|emergency department|emergency room|emergency ward|er|ew	emergency=emergency_ward_entrance
+Main Entrance	door	entrance=main
+Shop Entrance	door	entrance=shop
+Staircase Entrance	door|stairs|stairway|stairwell	entrance=staircase
+Ford		ford=yes
+Sand Trap	Bunker|hazard	golf=bunker
+Golf Cartpath	cartpath	golf=cartpath
+Golf Clubhouse	club house|golf house|pro shop	golf=clubhouse
+Driving Range		golf=driving_range
+Fairway		golf=fairway
+Putting Green	green	golf=green
+Golf Hole		golf=hole
+Lateral Water Hazard		golf=lateral_water_hazard
+Golf Walking Path	golf path	golf=path
+Rough		golf=rough
+Tee Box	Tee|Teeing Ground	golf=tee
+Water Hazard		golf=water_hazard
+Healthcare Facility	clinic|disease|doctor|health|institution|sick|surgery|wellness	healthcare=*
+Alternative Medicine	anthroposophical|applied kinesiology|aromatherapy|herbalism|hydrotherapy|hypnosis|reflexology|traditional|unani	healthcare=alternative
+Acupuncture Practitioner	Acupuncturist	healthcare=alternative&healthcare:speciality=acupuncture
+Ayurveda Practitioner	traditional indian medicine	healthcare=alternative&healthcare:speciality=ayurveda
+Chiropractor	back|pain|spine	healthcare=alternative&healthcare:speciality=chiropractic
+Homeopath	Homeopathy Practitioner	healthcare=alternative&healthcare:speciality=homeopathy
+Naturopath	Naturopathy Practitioner	healthcare=alternative&healthcare:speciality=naturopathy
+Osteopath	Osteopathy Practitioner	healthcare=alternative&healthcare:speciality=osteopathy
+Traditional Chinese Medicine Practitioner	die da|dit da|reiki|shiatsu|tcm|tui na	healthcare=alternative&healthcare:speciality=traditional_chinese_medicine
+Audiologist	ear|hearing|sound	healthcare=audiologist
+Birthing Center	baby|childbirth|delivery|labor|labour|midwive|pregnancy|pregnant	healthcare=birthing_centre
+Blood Donation Center	apheresis|blood bank|blood donation|blood transfusion|plasmapheresis|plateletpheresis|stem cell donation	healthcare=blood_donation
+Counseling Center	sex therapist	healthcare=counselling
+Orthodontist	braces|dentistry|dentofacial orthopedics|headgear|jaw alignment|teeth|tooth	healthcare=dentist&healthcare:speciality=orthodontics
+Hospice	illness|terminal	healthcare=hospice
+Medical Laboratory	blood check|diagnostic|medical lab	healthcare=laboratory
+Midwife	baby|childbirth|delivery|labor|labour|maternity|pregnancy|pregnant|women's healthcare	healthcare=midwife
+Occupational Therapist	therapist|therapy	healthcare=occupational_therapist
+Optometrist	eye|glasses|lasik|lenses|vision	healthcare=optometrist
+Physical Therapist	Physiotherapist|physical|therapist|therapy	healthcare=physiotherapist
+Podiatrist	feet|foot|nails	healthcare=podiatrist
+Psychotherapist	Clinical Psychologist|anxiety|counselor|depression|mental health|mind|psychology|psychotherapy|suicide|therapist|therapy	healthcare=psychotherapist
+Rehabilitation Facility	rehab|therapist|therapy	healthcare=rehabilitation
+Sample Collection Facility	blood sample collection|diagnostic|laboratory|medical|urine sample collection	healthcare=sample_collection
+Speech Therapist	speech|therapist|therapy|voice	healthcare=speech_therapist
+Bridle Path	bridleway|equestrian|horse|trail	highway=bridleway
+Bus Guideway	bus track|busway	highway=bus_guideway
+Busway	Transitway|Bus Rapid Transit|brt	highway=busway
+Road Under Construction	closed road|closure|construction|road closed|road work|roadwork	highway=construction
+Indoor Corridor	gallery|hall|hallway|indoor|passage|passageway	highway=corridor
+Crossing	crosswalk|foot path crossing|pedestrian crossing	highway=crossing
+Crossing With Pedestrian Signals	bicycle crossing (lights)|crosswalk (lights)|pedestrian crossing (lights)|pedestrian traffic lights|pedestrian traffic signals	highway=crossing&crossing=traffic_signals
+Marked Crossing	crosswalk|marked crosswalk|marked foot path crossing|marked pedestrian crosswalk|zebra crossing	highway=crossing&crossing=uncontrolled
+Unmarked Crossing	unmarked crosswalk|unmarked foot path crossing|unmarked pedestrian crossing	highway=crossing&crossing=unmarked
+Cycle Path	bicycle path|bike path|cycling path	highway=cycleway
+Cycle & Foot Path	bicycle and foot path|bike and pedestrian path|green way|greenway|mixed-use trail|multi-use path|multi-use trail|rail trail|segregated trail|shared path|shared use path	highway=cycleway&foot=designated
+Cycle & Foot Crossing	bicycle and foot crosswalk|bike and pedestrian crossing|cycleway|cycling|cyclist	highway=cycleway&cycleway=crossing&foot=designated
+Cycle Crossing With Traffic Signals	bicycle crossing|bike crossing|cycle path crossing|cycleway crossing	highway=cycleway&cycleway=crossing&crossing=traffic_signals
+Marked Cycle Crossing	bicycle crossing|bike crossing|cycle crosswalk|cycle path crossing|cycleway crossing	highway=cycleway&cycleway=crossing&crossing=uncontrolled
+Unmarked Cycle Crossing	bicycle crossing|bike crossing|cycle path crossing|cycleway crossing	highway=cycleway&cycleway=crossing&crossing=unmarked
+Moped Link		highway=cycleway&bicycle=no&moped=designated
+Cycle Refuge Island	Crosswalk Island|Traffic Island|Pedestrian Island|crossing island	highway=cycleway&cycleway=traffic_island
+Cycle & Foot Refuge Island	Crosswalk Island|Traffic Island|Pedestrian Island|crossing island	highway=cycleway&cycleway=traffic_island&foot=designated&bicycle=designated
+Cyclist Waiting Aid	foot rail|footrail|footrest|grip|hand rail|handle|handrail|handrest|holding rail	highway=cyclist_waiting_aid
+Elevator	lift	highway=elevator
+Inclined Elevator	Inclined Lift|cable railway	highway=elevator
+Emergency Access Point	Emergency Location Marker|Rescue Point|elm|emergency|emergency marker|rescue	highway=emergency_access_point
+Emergency Stopping Place	highway emergency bay	highway=emergency_bay
+Runaway Truck Ramp	emergency escape ramp|escape lane|runaway truck lane|truck arrester bed	highway=escape
+Foot Path	hike|hiking|promenade|trackway|trail|walk	highway=footway
+Access Aisle	accessible van loading zone|disabled parking access zone|handicap parking access zone|parking lot aisle|striped zone|tow zone|tow-away zone|towaway zone|wheelchair aisle	highway=footway&footway=access_aisle
+Moving Walkway	autwalk|conveyor|moving sidewalk|skywalk|travelator|travellator|travolator	highway=footway&conveying=*
+Pedestrian Crossing	crosswalk|foot path crossing	highway=footway&footway=crossing
+Crossing With Pedestrian Signals	crosswalk (lights)|pedestrian crossing (lights)|pedestrian traffic lights|pedestrian traffic signals	highway=footway&footway=crossing&crossing=traffic_signals
+Marked Crossing	crosswalk|marked crosswalk|marked foot path crossing|marked pedestrian crosswalk|zebra crossing	highway=footway&footway=crossing&crossing=uncontrolled
+Unmarked Crossing	unmarked crosswalk|unmarked foot path crossing|unmarked pedestrian crossing	highway=footway&footway=crossing&crossing=unmarked
+Sidewalk	pavement|sidepath	footway=sidewalk
+Refuge Island	Crosswalk Island|Traffic Island|Pedestrian Island|crossing island	highway=footway&footway=traffic_island
+Yield Sign	give way|sign|yield	highway=give_way
+Signed Hitchhiking Place	hitchhiking|thumbing	highway=hitchhiking
+Ladder		highway=ladder
+Living Street		highway=living_street
+Highway Milestone	mile marker|mile post|mile stone|mileage marker|milemarker|milepost	highway=milestone
+Mini-Roundabout	traffic circle	highway=mini_roundabout
+Motorway	autobahn|expressway|freeway|highway|interstate|parkway|road|street|thruway|turnpike	highway=motorway
+Motorway Exit	exit	highway=motorway_junction
+Motorway Link	exit|off ramp|on ramp|ramp|road|street	highway=motorway_link
+Motorway Link	exit|off ramp|on ramp|ramp|road|street	highway=motorway_link
+Passing Place	turnout|pullout	highway=passing_place
+Path	hike|hiking|trackway|trail|walk	highway=path
+Cycle & Foot Path	bicycle and foot path|bike and pedestrian path|green way|greenway|mixed-use trail|multi-use path|multi-use trail|rail trail|segregated trail|shared path|shared use path	highway=path&foot=designated&bicycle=designated
+Boardwalk	pier|plank walkway|wooden raised foot path	highway=path&bridge=boardwalk
+Cycle & Foot Crossing	bicycle and foot crosswalk|bike and pedestrian crossing|cycleway|cycling|cyclist	highway=path&path=crossing&foot=designated&bicycle=designated
+Informal Path	bootleg trail|cow path|desire line|desire path|desireline|desirepath|elephant path|game trail|goat track|herd path|pig trail|shortcut|social trail|use trail	highway=path&informal=yes
+Cycle & Foot Refuge Island	Crosswalk Island|Traffic Island|Pedestrian Island|crossing island	highway=path&path=traffic_island&foot=designated&bicycle=designated
+Pedestrian Area	center|centre|plaza|quad|square|walkway	highway=pedestrian
+Pedestrian Street	center|centre|plaza|quad|square|walkway	highway=pedestrian
+Primary Road	road|street	highway=primary
+Primary Link	off ramp|on ramp|ramp|road|street	highway=primary_link
+Primary Link	off ramp|on ramp|ramp|road|street	highway=primary_link
+Motorsport Racetrack	formula one|kart|motocross|nascar|raceway|track	highway=raceway&sport=motor
+Karting Racetrack	carting|go carts|go karts|go-karts|gokarts|kart racing|karting track|motorsports|shifter karts|superkarts	highway=raceway&sport=karting
+Motocross Racetrack	motocross circuit|motorcycle track|motorsports|off-road racing|offroad moto racing	highway=raceway&sport=motocross
+Residential Road	road|street	highway=residential
+Rest Area	rest stop	highway=rest_area
+Unknown Road	road|street	highway=road
+Unknown Road Bridge		highway=road&bridge=*
+Secondary Road	road|street	highway=secondary
+Secondary Link	off ramp|on ramp|ramp|road|street	highway=secondary_link
+Service Road	road|street	highway=service
+Alley		highway=service&service=alley
+Drive-Through		highway=service&service=drive-through
+Driveway		highway=service&service=driveway
+Emergency Access		highway=service&service=emergency_access
+Parking Aisle		highway=service&service=parking_aisle
+Service Area	roadhouse|service station|services|travel plaza|truck stop	highway=services
+Speed Camera	maxspeed camera|photo radar|speed limit camera|speed trap|traffic enforcement camera	highway=speed_camera
+Radar Speed Sign	driver feedback sign|dynamic speed display|speed awareness message|speed display board|speed radar sign|traffic calming sign|your speed sign	highway=speed_display
+Steps	staircase|stairs|stairway	highway=steps
+Escalator	moving staircase|moving stairway|people mover	highway=steps&conveying=*
+Stop Sign	halt|sign|stop	highway=stop
+Street Lamp	gaslight|lamp|light|street light|street lighting|streetlight	highway=street_lamp
+Tertiary Road	road|street	highway=tertiary
+Tertiary Link	off ramp|on ramp|ramp|road|street	highway=tertiary_link
+Open Road Toll	cashless toll|electronic toll|free-flow toll|license plate camera toll|toll gantry|transponder toll	highway=toll_gantry
+Track / Land-Access Road	Land-Access Road|Track Road|4wd|4x4|agricultural road|atv|carriage road|dirt road|double track|farm road|fire road|forest road|forestry road|four wheel drive|haul road|haulage road|high-clearance|jeep|logging road|mining road|off-road|offroad|overgrown|primitive|quad|ranch road|rut|two track|two-track|unmaintained|vehicular trail|woods road	highway=track
+Traffic Mirror	blind spot|convex|corner|curved|roadside|round|safety|sphere|visibility	highway=traffic_mirror
+Traffic Signals	light|stoplight|traffic light	highway=traffic_signals
+Trailhead	hiking|mile zero|mountain biking|mountaineering|staging area|trail endpoint|trail start|trekking	highway=trailhead
+Trunk Road	expressway|highway|road|street	highway=trunk
+Trunk Link	off ramp|on ramp|ramp|road|street	highway=trunk_link
+Trunk Link	off ramp|on ramp|ramp|road|street	highway=trunk_link
+Turning Circle	cul-de-sac	highway=turning_circle
+Turning Loop (Island)	cul-de-sac	highway=turning_loop
+Minor / Unclassified Road	road|street	highway=unclassified
+Historic Site		historic=*
+Historic Aircraft	gate guardian	historic=aircraft
+Archaeological Site	archaeology|crop mark|cropmark|dig|excavation|remains	historic=archaeological_site
+Boundary Stone		historic=boundary_stone
+Historic Building		historic=building&building=*
+Cannon		historic=cannon
+Castle		historic=castle
+Historic Fortress	citadel|military	historic=castle&castle_type=fortress
+Palace	king|queen|royal|royal residence	historic=castle&castle_type=palace
+Château	gentry|historic country house|nobility|representative|stately home	historic=castle&castle_type=stately
+City Gate	town gate	historic=city_gate
+Historic Fort	military	historic=fort
+Manor House	estate|gentry|mansion|nobility	historic=manor
+Memorial	dedicatory|epitaph|memory|monument|remember|remembrance|stolperstein	historic=memorial
+Blue Plaque		memorial=blue_plaque
+Commemorative Plaque	dedicatory|epitaph|historical marker|memory|remember|remembrance	historic=memorial&memorial=plaque
+Memorial Plaque Stolperstein		historic=memorial&memorial=stolperstein
+Millstone	grinding stone|grinding wheel|grindstone|mill wheel|quern|quernstone	historic=millstone
+Monument		historic=monument
+Historic Pillory	attraction	historic=pillory
+Ruins		historic=ruins
+Tomb		historic=tomb
+Wayside Cross	christ|christian|cross|jesus	historic=wayside_cross
+Wayside Shrine	buddhist|catholic|christian|religion|religious|shinto	historic=wayside_shrine
+Shipwreck	boat|hull|maritime|mast|remains|ship	historic=wreck
+Indoor Area	indoor space	indoor=area
+Indoor Corridor	concourse|foyer|hallway|passageway	indoor=corridor
+Indoor Door	doorframe|doorway|portal|room access|threshold	indoor=door
+Indoor Elevator Shaft	elevator|lift	indoor=room&elevator=yes
+Room	antechamber|anteroom|atrium|cell|chamber|concourse|foyer|indoor room|lobby|vestibule	indoor=room
+Indoor Stairwell	stair|staircase|stairs|stairway|stairwell|steps	indoor=room&stairs=yes
+Indoor Wall	indoor barrier|room divider|room partition	indoor=wall
+Wi-Fi Hotspot	hotspot|wi-fi|wifi	internet_access=wlan
+Junction		junction=yes
+Garden Allotments	allotment|community garden|garden	landuse=allotments
+Aquaculture	algaculture|algae|aquafarming|crustacean|mariculture|marine farm|mussel farm|oyster farm|shrimp farm	landuse=aquaculture
+Fish Farm / Hatchery	bass|carp|fish farm|fish hatchery|salmon|sturgeon|tilapia|trout	landuse=aquaculture&produce=fish
+Brownfield	development|industrial|lot	landuse=brownfield
+Cemetery	burial ground|cemetary|churchyard|columbarium|grave yard|graveyard|mausoleum|tomb	landuse=cemetery
+Commercial Area	depot|offices	landuse=commercial
+Construction Area	building|bulldozer|construction site|construction zone|crane|demolition|development|infrastructure	landuse=construction
+Educational Area	campus|educational campus|educational facilities|school campus|school center|school grounds	landuse=education
+Farmland	crop|grow|plant	landuse=farmland
+Farmyard	barnyard|cattleyard|feeding|feedlot|feedyard|livestock	landuse=farmyard
+Flowerbed	floral garden|flower garden	landuse=flowerbed
+Managed Forest	boreal|cut|forest|forestry|forrest|lumber|silviculture|taiga|tree|trees|woodlands|woods	landuse=forest
+Garage Land Use	garage landuse|parking	landuse=garages
+Grass	field|green|lawn|managed grass|mown grass|turf	landuse=grass
+Greenfield	development|lot	landuse=greenfield
+Greenhouse Horticulture	flower|greenhouse|grow|horticulture|vivero	landuse=greenhouse_horticulture
+Harbor	boat	landuse=harbour
+Industrial Area	depot|factory|manufacturing	landuse=industrial
+Depot	bus|parking|storage|truck|vehicle|yard	industrial=depot
+Scrap Yard	car|junk|metal|salvage|scrap|u-pull-it|vehicle|wreck|yard	industrial=scrap_yard
+Slaughterhouse	abattoir|beef|butchery|calf|chicken|cow|killing house|meat|pig|pork|poultry|shambles|stockyard	industrial=slaughterhouse
+Landfill	dump	landuse=landfill
+Meadow	grazing|hay field|pasture	landuse=meadow
+Meadow With Fruit Trees	fruit|maedow	landuse=meadow&meadow=meadow_orchard
+Orchard Planted in a Meadow	fruit|maedow	landuse=orchard&orchard=meadow_orchard
+Military Area	air force|army|base|coast guard|depot|marines|navy|security	landuse=military
+Military Airfield	aerodrome|aeroway|air force|airplane|airport|army|base|bomb|fight|force|guard|helicopter|helipad|jet|marine|navy|plane|troop|war	military=airfield
+Barracks	air force|army|base|fight|force|guard|marine|navy|troop|war	military=barracks
+Military Base	air force|army|base|border guard|coast guard|fight|force|guard|troop|war	military=base
+Naval Base	base|fight|force|guard|marine|navy|ship|sub|troop|war	military=base&military_service=navy
+Military Danger Area	air force|army|base|blast|bomb|explosion|explosive|force|guard|marine|mine|navy|troop|war	military=danger_area
+Military Obstacle Course	army|base|force|guard|marine|navy|troop|war	military=obstacle_course
+Military Range	air force|army|base|fight|fire|force|guard|gun|marine|navy|rifle|shooting|sniper|train|troop|war	military=range
+Military Training Area	air force|army|base|fight|fire|force|guard|gun|marine|navy|rifle|shooting|sniper|train|troop|war	military=training_area
+Olive Grove	olive culture|olive oil|olive orchard|olive production|olive yard	landuse=orchard&trees=olive_trees
+Orchard	fruit	landuse=orchard
+Plant Nursery	flower|garden|grow|vivero	landuse=plant_nursery
+Quarry	aggregate quarry|open pit mine|sand mine|sand pit|sand quarry|sandpit	landuse=quarry
+Railway Corridor	depot|rail|railway|track|train|train depot	landuse=railway
+Recreation Ground	playing fields	landuse=recreation_ground
+Religious Area	christian|churchyard|hindu|jewish|mosque|muslim|place of worship|shinto|shrine|sikh|synagogue|taoist|temple	landuse=religious
+Residential Area	housing	landuse=residential
+Apartment Complex	flat|residence|tenement	residential=apartments
+Mobile Home Park	caravan park|manufactured home community|trailer park	residential=trailer_park
+Retail Area		landuse=retail
+Salt Evaporation Pond	Salt Pond|Saltern|evapoation|saline|salt|salt pan|salt works	landuse=salt_pond
+Vineyard	grape|wine	landuse=vineyard
+Winter Sports Area	piste area|ski area|ski hill|ski mountain|ski resort|snow board area|snowboard area	landuse=winter_sports
+Adult Gaming Center	gambling|slot machine	leisure=adult_gaming_centre
+Amusement Arcade	driving simulators|pay-to-play games|pinball machines|video games	leisure=amusement_arcade
+Bandstand		leisure=bandstand
+Bathing Place	Bathing Spot|Dip Spot|Dipping Spot|Swim Spot|Swimming Spot|Wild Swimming Spot|bathing|dipping|ladder|pier|swimming|swimming hole|water	leisure=bathing_place
+Beach Resort		leisure=beach_resort
+Bird Hide	machan|ornithology	leisure=bird_hide
+Bleachers	bench|crowd|seat|seating|sports|stand|stands	leisure=bleachers
+Bowling Alley	bowling center	leisure=bowling_alley
+Common	open space	leisure=common
+Dance Hall	ballet|ballet studio|ballroom|dance studio|jive|swing|tango|waltz	leisure=dance
+Disc Golf Course	disk golf|flying disc golf|frisbee golf|frolf|ultimate	leisure=disc_golf_course
+Dog Park	dog exercise area|dog play area|dog playground|off-leash|offleash|puppy park	leisure=dog_park
+Escape Room	escape game|escape the room|puzzle room|quest room	leisure=escape_game
+Fire Pit	bonfire|campfire|fire circle|fire hole|fire place|fire ring|firepit|fireplace|firering	leisure=firepit
+Fishing Spot	angler	leisure=fishing
+Gym / Fitness Center	gym|health|leisure|pilates|studio	leisure=fitness_centre
+Yoga Studio	asanas|meditation|modern yoga|studio	leisure=fitness_centre&sport=yoga
+Outdoor Fitness Station	Calisthenics Park|Fitness Station|Outdoor Gym|Street Workout|Trim Trail|exercise|fitness|gym|street fitness	leisure=fitness_station
+Exercise Balance Beam	balance|exercise|fitness|gym|trim trail	leisure=fitness_station&fitness_station=balance_beam
+Exercise Box	box|exercise|fitness|gym|jump|trim trail	leisure=fitness_station&fitness_station=box
+Exercise Horizontal Bar	bar|chin up|chinup|exercise|fitness|gym|pull up|pullup|trim trail	leisure=fitness_station&fitness_station=horizontal_bar
+Exercise Monkey Bars	bar|chin up|chinup|exercise|fitness|gym|ladder|monkey bars|pull up|pullup|trim trail	leisure=fitness_station&fitness_station=horizontal_ladder
+Hyperextension Station	back|exercise|extension|fitness|gym|roman chair|trim trail	leisure=fitness_station&fitness_station=hyperextension
+Parallel Bars	bar|dip|exercise|fitness|gym|trim trail	leisure=fitness_station&fitness_station=parallel_bars
+Push-Up Station	bar|exercise|fitness|gym|push up|pushup|trim trail	leisure=fitness_station&fitness_station=push-up
+Exercise Rings	exercise|fitness|gym|muscle up|pull up|pullup|trim trail	leisure=fitness_station&fitness_station=rings
+Exercise Instruction Sign	exercise|fitness|gym|trim trail	leisure=fitness_station&fitness_station=sign
+Sit-Up Station	crunch|exercise|fitness|gym|sit up|situp|trim trail	leisure=fitness_station&fitness_station=sit-up
+Exercise Stairs	exercise|fitness|gym|steps|trim trail	leisure=fitness_station&fitness_station=stairs
+Garden	flowers|fruits|herbs|plants|vegetables	leisure=garden
+Botanical Garden	botanic garden|plant collection|rare plants	leisure=garden&garden:type=botanical
+Community Garden	co-op garden|collective garden|communal garden	leisure=garden&garden:type=community
+Kitchen Garden	cook's garden|culinary garden|edible garden|potager garden|vegetable garden	leisure=garden&garden:style=kitchen
+Residential Garden	back garden|backyard|domestic garden|front garden|front yard	leisure=garden&garden:type=residential
+Golf Course	links	leisure=golf_course
+Hackerspace	hacklab|hackspace|makerspace	leisure=hackerspace
+Horseback Riding Center	equestrian center|equestrian facility|horse farm|horse park|horse ranch|horse riding|horse riding center|horse riding facility|riding facility|riding stables|stables	leisure=horse_riding
+Hot Tub	jacuzzi|spa	leisure=hot_tub
+Ice Rink	curling|hockey|skating	leisure=ice_rink
+Indoor Play Center	ball pit|children's play center|indoor playground	leisure=indoor_play
+Marina	boats|docks|harbor|harbour|moorings|yachts	leisure=marina
+Yacht Berths	boats|docks|harbor|harbour|marina|moorings|yachts	seamark:harbour:category=marina_no_facilities
+Miniature Golf	crazy golf|mini golf|putt-putt	leisure=miniature_golf
+Nature Reserve	protected|wildlife	leisure=nature_reserve
+Outdoor Seating Area	al fresco|bar|beer garden|cafe|dining|patio|pub|restaurant	leisure=outdoor_seating
+Park	esplanade|estate|forest|garden|grass|green|grounds|lawn|lot|meadow|parkland|place|playground|plaza|pleasure garden|recreation area|square|tract|village green|woodland	leisure=park
+Picnic Table	bench	leisure=picnic_table
+Chess Table	bench|checkerboard|checkers|chequerboard|chess board|game table	leisure=picnic_table&sport=chess
+Sport Pitch	field|sport field	leisure=pitch
+American Football Field	football|gridiron	leisure=pitch&sport=american_football
+American Handball Court	handball|wallball	leisure=pitch&sport=american_handball
+Archery Range	bow and arrow|crossbow	leisure=pitch&sport=archery
+Discus Ring / Sector	Discus Ring|Discus Sector	leisure=pitch&sport=athletics&athletics=discus_throw
+Hammer Throw Ring / Sector	Hammer Throw Ring|Hammer Throw Sector	leisure=pitch&sport=athletics&athletics=hammer_throw
+High Jump Area		leisure=pitch&sport=athletics&athletics=high_jump
+Javelin Sector		leisure=pitch&sport=athletics&athletics=javelin_throw
+Long Jump Pit		leisure=pitch&sport=athletics&athletics=long_jump
+Pole Vault Pit		leisure=pitch&sport=athletics&athletics=pole_vault
+Shot Put Ring / Pit	Shot Put Ring|Shot Put Pit	leisure=pitch&sport=athletics&athletics=shot_put
+Triple Jump Pit		leisure=pitch&sport=athletics&athletics=triple_jump
+Australian Football Field	afl|aussie|football	leisure=pitch&sport=australian_football
+Badminton Court	badminton net	leisure=pitch&sport=badminton
+Baseball Field	diamond|softball	leisure=pitch&sport=baseball
+Basketball Court	basketball hoops	leisure=pitch&sport=basketball
+Beach Volleyball Court	volleyball	leisure=pitch&sport=beachvolleyball
+Biathlon Range	biathlon firing range|biathlon shooting gallery|biathlon shooting range	leisure=pitch&sport=biathlon
+Boules / Bocce Court	bocce|lyonnaise|pétanque	leisure=pitch&sport=boules
+Bowling Green		leisure=pitch&sport=bowls
+Giant Chess Board	checkerboard|checkers|chequerboard|chessboard|garden chess|large chess|oversize chess	leisure=pitch&sport=chess
+Cricket Field	cricket pitch	leisure=pitch&sport=cricket
+Horseback Riding / Rodeo Arena	Horseback Riding Ring|arena|dressage|dressage arena|dressage ring|equestrian arena|horse|horse exercising|horse riding|horse riding ring|horse training|horseback|horseback riding|horseback riding arena|jumping arena|jumping ring|longeing|pen|polo|riding|riding ring|ring|rodeo|round pen	leisure=pitch&sport=equestrian
+Field Hockey Pitch	landhockey	leisure=pitch&sport=field_hockey
+Four Square Court	4 square	leisure=pitch&sport=four_square
+Funnel Ball Court		leisure=pitch&sport=funnel_ball
+Futsal Court	five-a-side soccer|minifootball	leisure=pitch&sport=futsal
+Gaga Pit	gaga ball	leisure=pitch&sport=gaga
+Team Handball Court	handball	leisure=pitch&sport=handball
+Horseshoes Pit	horse shoes	leisure=pitch&sport=horseshoes
+Netball Court	basketball	leisure=pitch&sport=netball
+Padel Court	paddle|tennis	leisure=pitch&sport=padel
+Paintball Field		leisure=pitch&sport=paintball
+Pickleball Court	paddleball|tennis	leisure=pitch&sport=pickleball
+Rugby League Field		leisure=pitch&sport=rugby_league
+Rugby Union Field		leisure=pitch&sport=rugby_union
+Shooting Range	firing range|gun practice|gun range|shooting gallery|shooting practice|target practice	leisure=pitch&sport=shooting
+Shuffleboard Court	deck shuffleboard|floor shuffleboard	leisure=pitch&sport=shuffleboard
+Skate Park	bmx|scooter|skateboarding|skatepark|vert	leisure=pitch&sport=skateboard
+Soccer Field	football	leisure=pitch&sport=soccer
+Softball Field	baseball|diamond|softball	leisure=pitch&sport=softball
+Foosball Table	kicker|table football|table soccer|tecball	leisure=pitch&sport=table_soccer
+Ping Pong Table	ping pong|table tennis	leisure=pitch&sport=table_tennis
+Tennis Court	tennis net	leisure=pitch&sport=tennis
+Tetherball Court	swingball|tether tennis	leisure=pitch&sport=tetherball
+Volleyball Court	volleyball net	leisure=pitch&sport=volleyball
+Playground	jungle gym|play area	leisure=playground
+Indoor Playground	ball pit|indoor play area|inside playground|play pen|play pit	leisure=playground&indoor=yes
+Resort	recreation center|sanatorium|ski and snowboard resort|vacation resort|winter sports resort	leisure=resort
+Sauna		leisure=sauna
+Schoolyard	blacktop|recess yard|school playground	leisure=schoolyard
+Slipway	boat landing|boat launch|boat ramp	leisure=slipway
+Slipway (Drivable)	boat landing|boat launch|boat ramp	leisure=slipway&highway=service
+Sports Center / Complex	athletic center|athletic centre|recreation center|recreation centre|sports centre|sports complex	leisure=sports_centre
+Climbing Gym	abseiling|artificial climbing wall|belaying|bouldering|indoor rock wall|rappeling|rock climbing facility|rock gym|ropes	leisure=sports_centre&sport=climbing
+Adventure Park	obstacle course|rope climbing|ropes course|zip line	leisure=sports_centre&sport=climbing_adventure
+Horse Race Course	Horse Racecourse|Hippodrome|equestrian race course|gallop|horse race|horse race betting|horse racing|horseracing|race course|racecourse	leisure=sports_centre&sport=horse_racing
+Go Kart Facility	go cart|kart racing|karting	leisure=sports_centre&sport=karting
+Shooting Range Facility	firing range|gun practice|gun range|shooting club|shooting gallery|shooting practice|target practice	leisure=sports_centre&sport=shooting
+Swimming Pool Facility	dive|water	leisure=sports_centre&sport=swimming
+Gymnasium	athletic courts|gym|sports hall|sports venue	leisure=sports_hall
+Stadium		leisure=stadium
+Summer Camp	children|holidays|leisure|vacations|youth	leisure=summer_camp
+Natural Swimming Area	aquatics|dive|water	leisure=swimming_area
+Swimming Pool	aquatics|dive|water	leisure=swimming_pool
+Racetrack (Non-Motorsport)	cycle|dog|greyhound|horse|raceway|track	leisure=track
+Javelin Runway	javelin track	leisure=track&sport=athletics&athletics=javelin_throw
+Long Jump Runway	long jump track	leisure=track&sport=athletics&athletics=long_jump
+Pole Vault Runway	pole vault track	leisure=track&sport=athletics&athletics=pole_vault
+Sprint Runway	sprint track|sprinting	leisure=track&sport=athletics&athletics=sprint
+Steeplechase Runway	steeplechase track	leisure=track&sport=athletics&athletics=steeplechase
+Triple Jump Runway	triple jump track	leisure=track&sport=athletics&athletics=triple_jump
+Cycling Track	bicycle track|bicycling track|cycle racetrack|velodrome	leisure=track&sport=cycling
+Horse Racetrack	Horse Racing Track|equestrian race track|horse race betting|horse race course|horse racecourse|horse raceway|horse racing|horseracing|horsetrack|race course|racecourse|raceway	leisure=track&sport=horse_racing
+Running Track	athletics track|decathlon|foot race|long distance running|marathon|middle distance running|racetrack|running|sprint|track|walking	leisure=track&sport=running
+Trampoline Park	bounce|jump|spring	leisure=trampoline_park
+Water Park	dive|pool|swim	leisure=water_park
+Adit	cave|horizontal mine entrance|tunnel|underground	man_made=adit
+Antenna	broadcast|cell|cell phone|communication|mobile phone|radio|television|transmission|tv	man_made=antenna
+Beacon		man_made=beacon
+Beehive	apiary|beekeeper|farm|honey|pollination	man_made=beehive
+Breakwater		man_made=breakwater
+Bridge Area	Bridge|bridge outline|viaduct	man_made=bridge
+Bunker Silo	silage|storage	man_made=bunker_silo
+Cairn	càrn|rock pile|stone pile|stone stack	man_made=cairn
+Carpet Hanger	beater|rack|stand	man_made=carpet_hanger
+Ceremonial Gate	arch|gate|paifang|torii	man_made=ceremonial_gate
+Paifang	chinese gate|paifong|pailau|pailou|shanmen	ceremonial_gate=paifang
+Torii	japanese gate|shinto shrine	ceremonial_gate=torii
+EV Charging Point	charge point|charging stall|charging station|electric vehicle|ev	man_made=charge_point
+Chimney		man_made=chimney
+Wastewater Clarifier		man_made=clarifier
+Clearcut Forest	cut|forest|lumber|tree|wood	man_made=clearcut
+Compass Rose	compass|east|north|rose of the winds|south|west|wind rose	man_made=compass_rose
+Crane		man_made=crane
+Gantry Crane	bridge crane|overhead crane	man_made=crane&crane:type=gantry_crane
+Portal Crane	level-luffing crane	man_made=crane&crane:type=portal_crane
+Cross		man_made=cross
+Cut line		man_made=cutline
+Dovecote	birds|doocot|dovecot|doves|pigeonholes|pigeons	man_made=dovecote
+Levee	dike|dyke|floodbank|stopbank	man_made=dyke
+Embankment		man_made=embankment
+Flagpole		man_made=flagpole
+Gas Flare	burn|fire|flare stack|gas|oil	man_made=flare
+Footwear Decontamination Station	boot cleaning|contamination station|decontamination station|footwear cleaning|shoe cleaning	man_made=footwear_decontamination
+Gas Pump	biodiesel|cng|diesel|fuel|gasoline|lng|petrol|propane	man_made=fuel_pump
+Gantry	highway gantry|mast arm|road sign holder|road sign structure|sign assembly|sign holder|sign structure	man_made=gantry
+Gasometer	gas holder	man_made=gasometer
+Geoglyph	earthwork|hill figure|land art	man_made=geoglyph
+Geoglyph	earthwork|hill figure|land art	man_made=geoglyph&type=multilinestring
+Goods Conveyor	belt conveyor|chain conveyor|conveyor belt|roller conveyor	man_made=goods_conveyor
+Groin	Wing Dam|Wing Dyke|Spur Dyke	man_made=groyne
+Insect Hotel	bee hotel|bug hotel|insect house	man_made=insect_hotel
+Lighthouse		man_made=lighthouse
+Manhole	cover|hole|sewage|sewer|telecom	man_made=manhole
+Storm Drain	cover|drain|hole|rain|sewage|sewer|storm	manhole=drain
+Gas Utility Manhole	cover|gas|heat|hole|utility	manhole=gas
+Power Utility Manhole	cover|electric|hole|power|utility	manhole=power
+Sewer Utility Manhole	cover|drain|hole|sewage|sewer|utility	manhole=sewer
+Telecom Utility Manhole	bt|cable|cover|hole|phone|telecom|telephone|utility	manhole=telecom
+Water Utility Manhole	cover|drinking|hole|utility|water	manhole=water
+Mast	antenna|broadcast tower|cell phone tower|cell tower|communication mast|communication tower|guyed tower|mobile phone tower|radio mast|radio tower|television tower|transmission mast|transmission tower|tv tower	man_made=mast
+Communication Mast	antenna|broadcast tower|cell phone tower|cell tower|communication tower|guyed tower|mobile phone tower|radio mast|radio tower|television tower|transmission mast|transmission tower|tv tower	man_made=mast&tower:type=communication
+Mobile Phone Mast	antenna|cell mast|cell phone mast|cell phone tower|cell tower|communication mast|communication tower|guyed tower|mobile phone tower|transmission mast|transmission tower	man_made=mast&tower:type=communication&communication:mobile_phone=yes
+Radio Broadcast Mast	antenna|broadcast tower|communication mast|communication tower|guyed tower|radio mast|radio tower|transmission mast|transmission tower	man_made=mast&tower:type=communication&communication:radio=yes
+Television Broadcast Mast	antenna|broadcast tower|communication mast|communication tower|guyed tower|television mast|television tower|transmission mast|transmission tower|tv mast|tv tower	man_made=mast&tower:type=communication&communication:television=yes
+Lighting Mast	flood light|headlight|lighting|stadium lighting|stadium lights	man_made=mast&tower:type=lighting
+Milk Churn Stand	creamery stand|milk can stand|milk stand	man_made=milk_churn_stand
+Mineshaft	cave|mine shaft|tunnel|underground|vertical mine entrance	man_made=mineshaft
+Monitoring Station	air|bicycle counter|bike counter|earthquake|gps|measurement station|seismology|traffic counter|water level|weather|weather station	man_made=monitoring_station
+Obelisk		man_made=obelisk
+Observatory	astronomical|meteorological	man_made=observatory
+Oil Well	bore|drilling rig|oil derrick|oil drill|oil horse|oil pump|petroleum well|pumpjack	man_made=petroleum_well
+Pier	berth|dock|jetty|landing|promenade|wharf	man_made=pier
+Floating Pier	berth|dock|jetty|landing|promenade|wharf	man_made=pier&floating=yes
+Pipeline	natural gas|oil|sewage|sewer|water	man_made=pipeline
+Underground Pipeline	natural gas|oil|sewage|sewer|water	man_made=pipeline&location=underground
+Planter		man_made=planter
+Pumping Station		man_made=pumping_station
+Quay	dock|wharf	man_made=quay
+Covered Reservoir	underground reservoir|water tank	man_made=reservoir_covered
+Satellite Dish	fixed satellite dish|motorized satellite dish|parabolic dish|satellite communication|tracking satellite dish	man_made=satellite_dish
+Silo	bulk	man_made=silo
+Crop Silo	corn|grain|grain elevator|wheat	man_made=silo&content=crop
+Ski Jumping Tower	Ski Jumping Hill Structure|Ski Jumping Hill In-Run Tower|in-run|inrun|jump|ski jump|ski jump in-run tower|ski jump structure|ski jumping hill tower	man_made=ski_jump
+Storage Tank	fuel|gas|oil|petrol|water	man_made=storage_tank
+Water Tank	cistern|water tower	man_made=storage_tank&content=water
+Street Cabinet	cable tv|electrical cabinet|electricity cabinet|gas delivery point|monitoring box|street lighting cabinet|technical box|telecommunications|traffic signal controls	man_made=street_cabinet
+Postal Relay Box	letter storage|post delivery|postal services	man_made=street_cabinet&street_cabinet=postal_service
+Traffic Control System Cabinet	traffic control automation|traffic light	man_made=street_cabinet&street_cabinet=traffic_control
+Traffic Monitoring Cabinet	traffic monitoring|vehicle counting	man_made=street_cabinet&street_cabinet=traffic_monitoring
+Transport Management Cabinet	public transport automation	man_made=street_cabinet&street_cabinet=transport_management
+Private Waste Collection Cabinet		man_made=street_cabinet&street_cabinet=waste
+Surveillance	alpr|anpr|camera|car plate recognition|cctv|guard|license plate recognition|monitoring|number plate recognition|security|video|webcam	man_made=surveillance
+Surveillance Camera	alpr|anpr|camera|car plate recognition|cctv|guard|license plate recognition|monitoring|number plate recognition|security|video|webcam	man_made=surveillance&surveillance:type=camera
+Survey Point	geodetic mark|geodetic point|survey marker|triangulation pillar|trig point|trig station|trigonometrical station	man_made=survey_point
+Tailings Pond	Tailing Pond|Settling Pond|Settling Pit|mining|separation|slurry	man_made=tailings_pond
+Telescope		man_made=telescope
+Optical Telescope	reflecting telescope|refracting telescope	man_made=telescope&telescope:type=optical
+Radio Telescope	ground station|radio antenna|radio dish	man_made=telescope&telescope:type=radio
+Tower		man_made=tower
+Bell Tower	belfry|bell gable|campanile|church tower|klockstapel	man_made=tower&tower:type=bell_tower
+Communication Tower	antenna|broadcast tower|cell phone tower|cell tower|communication mast|guyed tower|mobile phone tower|radio mast|radio tower|television tower|transmission mast|transmission tower|tv tower	man_made=tower&tower:type=communication
+Cooling Tower	power plant	man_made=tower&tower:type=cooling
+Fortified Tower	castle tower|defensive tower|guard tower	man_made=tower&tower:type=defensive
+Diving Platform	diving tower	man_made=tower&tower:type=diving
+Minaret	islam|mosque|muezzin|muslim	man_made=tower&tower:type=minaret
+Observation Tower	fire tower|lookout tower	man_made=tower&tower:type=observation
+Pagoda	buddhist tower|chinese pagodas|tiered tower	man_made=tower&tower:type=pagoda
+Tunnel Area	bore|dig|shaft|underground passage|underpass	man_made=tunnel
+Utility Pole		man_made=utility_pole
+Digital Screen	display|led wall|screen|television|tv|video wall	man_made=video_wall
+Wastewater Plant	reclamation plant|sewage|wastewater treatment plant|wastewater treatment works|water treatment plant|wwtp	man_made=wastewater_plant
+Water Tap	drinking water|water faucet|water point|water source|water spigot	man_made=water_tap
+Water Tower		man_made=water_tower
+Water Well	aquifer|drinking water|water point|water pump|water source	man_made=water_well
+Water Works	water treatment plant	man_made=water_works
+Watermill	mill|water|water wheel|waterwheel|wheel	man_made=watermill
+Windmill	mill|wheel|wind	man_made=windmill
+Windpump	aerorotor|water pump|wind pump|windmill	man_made=windpump
+Factory	assembly|brewery|build|car|manufacture|plant|plastic|processing|refinery	man_made=works
+Industrial Brewery	alcohol|beer|bier|booze|cider	man_made=works&product=beer
+Marker	identifier|marking|plate|pole|post|sign	marker=*
+Utility Marker	gas line marker|identifier|marking|oil marker|pipeline marker|plate|pole|post|sign	marker=*&utility=*
+Power Marker	electric line|identifier|marking|plate|pole|post|power cable|power line|sign	marker=*&utility=power
+Military Bunker	air force|army|base|fight|force|guard|marine|navy|troop|war	military=bunker
+Military Checkpoint	air force|army|base|force|guard|marine|navy|troop|war	military=checkpoint
+Military Office	air force|army|base|enlist|fight|force|guard|marine|navy|recruit|troop|war	military=office
+Military Trench	dugout|firestep|fox hole|infantry trench|war trench	military=trench
+Natural Arch	natural bridge|rock arch	natural=arch
+Arête	mountains|ridge	natural=arete
+Bare Rock	rock	natural=bare_rock
+Bay	bight|cove|estuary|fjord|gulf|inlet|sea|sound	natural=bay
+Beach	shore	natural=beach
+Cape	bay|coastline|erosion|headland|peninsula|promontory	natural=cape
+Cave Entrance	cavern|cavity|grotto|hollow|shelter	natural=cave_entrance
+Cliff	crag|escarpment|rock face|scarp	natural=cliff
+Coastline	shore	natural=coastline
+Fell	moor|moorland	natural=fell
+Geyser	erupting spring|geiser|gieser|guyser|hot water|hydrogeology|hydrothermal explosion|steam	natural=geyser
+Glacier	ice|snow	natural=glacier
+Grassland	field|prairie|savanna	natural=grassland
+Heath	moor|moorland|shrubland	natural=heath
+Hot Spring	geothermal spring|thermal pool	natural=hot_spring
+Mud	wetland	natural=mud
+Peak	acme|aiguille|alp|climax|crest|crown|hill|mount|mountain|pinnacle|summit|tip|top	natural=peak
+Peninsula	bay|cape|coastline|erosion|headland|island|islet|promontory	natural=peninsula
+Reef	barrier|coral|ocean|sand|shoal	natural=reef
+Ridge	crest	natural=ridge
+Attached Rock / Boulder	boulder|rock|stone	natural=rock
+Saddle	Mountain Pass|col|gap|notch|pass|top	natural=saddle
+Sand	desert	natural=sand
+Scree	loose rocks	natural=scree
+Scrub	bush|shrubs	natural=scrub
+Shingle	beach|gravel|pebbles|riverbed|rounded rock fragments	natural=shingle
+Shrub	bush|scrub	natural=shrub
+Sinkhole	cenote|collapse sink|doline|shakehole|sink|snake hole|swallet|swallow hole	natural=sinkhole
+Spring	aquifer|hydro|seep|water source	natural=spring
+Unattached Stone / Boulder	boulder|glacial erratic|rock|stone	natural=stone
+Strait	channel|pass|passage	natural=strait
+Tree	bole|trunk	natural=tree
+Broadleaved Tree (deciduous)	broadleaf|broadleaved|deciduous|hardwood|tree	natural=tree&leaf_type=broadleaved&leaf_cycle=deciduous
+Broadleaved Tree (evergreen)	broadleaf|broadleaved|evergreen|hardwood|tree	natural=tree&leaf_type=broadleaved&leaf_cycle=evergreen
+Needleleaved Tree (deciduous)	conifer|deciduous|needleleaved|softwood|tree	natural=tree&leaf_type=needleleaved&leaf_cycle=deciduous
+Needleleaved Tree (evergreen)	conifer|evergreen|needleleaved|softwood|tree	natural=tree&leaf_type=needleleaved&leaf_cycle=evergreen
+Tree Row	tree line	natural=tree_row
+Tree Stump	cut tree|removed tree	natural=tree_stump
+Valley	canyon|dale|dell|dene|depression|glen|gorge|gulley|gully|gultch|hollow|ravine|rift|vale	natural=valley
+Volcano	crater|mountain	natural=volcano
+Water		natural=water
+Basin	detention|drain|overflow|rain|retention	natural=water&water=basin
+Canal Area		natural=water&water=canal
+Lake	lakelet|loch|mere	natural=water&water=lake
+Moat		natural=water&water=moat
+Oxbow Lake	anabranch|billabong|cut off|meander|oxbow|resaca	natural=water&water=oxbow
+Pond	lakelet|mere|millpond|pool|tarn	natural=water&water=pond
+Reservoir	dam	natural=water&water=reservoir
+River Area	beck|branch|brook|course|creek|estuary|rill|riverbank|rivulet|run|runnel|stream|tributary|watercourse	natural=water&water=river
+Stream Area	beck|branch|brook|burn|course|creek|current|drift|flood|flow|freshet|race|rill|rindle|rivulet|run|runnel|rush|spate|spritz|surge|tide|torrent|tributary|watercourse	natural=water&water=stream
+Wastewater Basin	clarifier basin|excrement|settling basin|sewage|shit|wastewater	natural=water&water=wastewater
+Wetland	bog|fen|marsh|mire|moor|muskeg|peatland|quagmire|reedbed|saltmarsh|swamp|tidalflat|wet meadow	natural=wetland
+Bog		natural=wetland&wetland=bog
+Fen	groundwater	natural=wetland&wetland=fen
+Mangrove		natural=wetland&wetland=mangrove
+Marsh		natural=wetland&wetland=marsh
+Reed bed	bulrushes|cattail|reeds	natural=wetland&wetland=reedbed
+Coastal Salt Marsh	saltmarsh|tidal	natural=wetland&wetland=saltmarsh
+String Bog	Strong Mire|aapa moore|strangemoore	natural=wetland&wetland=string_bog
+Swamp	waterlogged	natural=wetland&wetland=swamp
+Tidal Flat	Mudflat|tidal	natural=wetland&wetland=tidalflat
+Wet Meadow		natural=wetland&wetland=wet_meadow
+Natural Wood	boreal|forest|forrest|taiga|tree|trees|woodlands|woods	natural=wood
+Recreational Network Node	node network|rcn|rwn	network:type=node_network
+No Exit	dead end|not connected|road end|unconnected	noexit=yes
+Office	administration	office=*
+Accountant Office	accountancy|accounting firm|bookkeeper	office=accountant
+Adoption Agency	children	office=adoption_agency
+Advertising Agency	ad|ad agency|advert agency|advertising|marketing	office=advertising_agency
+Architect Office	architecture|landscape design	office=architect
+Nonprofit Organization Office	association|non-profit|nonprofit|organization|society	office=association
+Bail Bond Agent	bail bond dealer|bail bond man|bail bondsman|bail bondsperson	office=bail_bond_agent
+Charity Office	charitable organization	office=charity
+Corporate Office	corporation|office park	office=company
+Consultancy Office	consulting firm office	office=consulting
+Coworking Space	coworking|office	office=coworking
+Diplomatic Office	consulate|diplomatic mission|embassy|foreign mission|high commission|legation|liaison|permanent mission	office=diplomatic
+Consulate	consular post|passports|visas	office=diplomatic&diplomatic=consulate
+Embassy	consulate|diplomatic mission|foreign mission|high commission|permanent mission	office=diplomatic&diplomatic=embassy
+Liaison Office	diplomatic mission	office=diplomatic&diplomatic=liaison
+Educational Institution	school	office=educational_institution
+Employment Agency	job	office=employment_agency
+Energy Supplier Office	electricity|energy company|energy utility|gas utility	office=energy_supplier
+Engineering Office	civil engineer|electrical engineer|engineer|engineering firm|mechanical engineer|structural engineer|technical engineer	office=engineer
+Real Estate Office	estate agent|real estate|real estate agent	office=estate_agent
+Financial Office	bank	office=financial
+Financial Advisor	401k|inheritance|retirement|savings|stocks|wealth management	office=financial_advisor
+Forestry Office	forest|ranger	office=forestry
+Foundation Office	nonprofit	office=foundation
+Government Office	official|public office	office=government
+Public Prosecutor's Office	attorney general|district attorney|prosecution	office=government&government=prosecutor
+Register Office	birth|certificate|clerk|death|marriage	office=government&government=register_office
+Tax and Revenue Office	fiscal authorities|revenue office|tax office	office=government&government=tax
+Graphic Design Office	art|design|illustrate|technology|visual	office=graphic_design
+Tour Guide Office	dive guide|mountain guide|tour guide	office=guide
+Insurance Office	actuary|insurer|risk management	office=insurance
+Information Technology Office	computer|information|it office|software|technology	office=it
+Law Office	advocate|attorney|barrister|counsellor|counselor|defender|lawyer|legal|prosecutor|solicitor	office=lawyer
+Moving Company Office	movers|relocation	office=moving_company
+Newspaper Office	newsroom	office=newspaper
+NGO Office	ngo|non government|non-government|organisation|organization	office=ngo
+Notary Office	clerk|deeds|estate|signature|wills	office=notary
+Political Party Office	activist|candidate|election	office=political_party
+Private Investigator Office	pi|private detective|private eye	office=private_investigator
+Property Management / Leasing Office	property rental	office=property_management
+Quasi-NGO Office	ngo|non government|non-government|organisation|organization|quasi autonomous|quasi-autonomous	office=quango
+Religious Office	rector|vicar	office=religion
+Research Office	r and d|r&d|research and development|research lab|rnd	office=research
+Security Office	mall cop|protective agent|safety office|security agent|security guard|security inspector|security officer|watchman|watchmen	office=security
+Surveyor Office	surveying	office=surveyor
+Tax Advisor Office	tax|tax consultant	office=tax_advisor
+Telecom Office	communication|internet service provider|isp|network|telephone|voice	office=telecommunication
+Therapist Office	therapy	office=therapist
+Translation Office	translation|translation agency|translator	office=translator
+Labor Union Office	trade union|union office	office=union
+Water Utility Office	utility|water board	office=water_utility
+Pipeline Substation		pipeline=substation
+Pipeline Valve	natural gas|oil|sewage|sewer|water	pipeline=valve
+Downhill Ski Run	alpine skiing|piste|ski hill|skiing|snowboarding	piste:type=downhill
+Snowsports Half-Pipe	alpine|downhill|half pipe|halfpipe|piste|ski|snowboard	piste:type=downhill&man_made=piste:halfpipe
+Snowshoeing / Winter Hiking Trail	hike|nordic walking|piste|show shoeing|snowshoe|snowshoeing	piste:type=hike
+Ice Skating Trail	ice rink|ice track|iceskating|piste|skates	piste:type=ice_skate
+Cross-Country Ski Trail	crosscountry|nordic skiing|piste|skate skiing|skiing|xc	piste:type=nordic
+Ski Jumping Piste	jump|ski jump|ski jumping hill	piste:type=ski_jump
+Ski Touring Trail	crosscountry|piste|ski|ski touring|skitour	piste:type=skitour
+Sled Run	bobsled|luge|piste|skeleton|sledge|sleigh|toboggan	piste:type=sled
+Sleigh Trail	dogsledding|horse|husky|piste|ski-joring|skijoring|sled|sledge	piste:type=sleigh
+Ski Jumping Take-Off	Ski Jumping Hill Take-Off|Ski Jumping Hill Table|jump|ski jump|ski jump table|ski jump take-off|ski jumping hill in-run table|take-off|takeoff	piste:takeoff=yes
+City		place=city
+City Block		place=city_block
+Hamlet		place=hamlet
+Island	archipelago|atoll|bar|cay|isle|islet|key|reef	place=island
+Islet	archipelago|atoll|bar|cay|isle|key|reef	place=islet
+Isolated Dwelling		place=isolated_dwelling
+Locality		place=locality
+Neighborhood	neighbourhood	place=neighbourhood
+Plot	land|lot|parcel|tract	place=plot
+Sub-Borough / Quarter	boro|borough|quarter	place=quarter
+Square		place=square
+Borough / Suburb	boro|borough|quarter	place=suburb
+Town		place=town
+Village		place=village
+Playground Equipment		playground=*
+Play Activity Panel		playground=activitypanel
+Hanging Spinner	Aerial Rotator|Aerial Spinner|Hanging Roundabout	playground=aerialrotator
+Play Balance Beam		playground=balancebeam
+Basket Spinner	Basket Rotator	playground=basketrotator
+Basket Swing		playground=basketswing
+Play Bridge		playground=bridge
+Play Climbing Frame	jungle gym|monkey bars	playground=climbingframe
+Play Climbing Wall		playground=climbingwall
+Bouncy Cushion		playground=cushion
+Funnel Ball Funnel		playground=funnel_ball
+Hopscotch		playground=hopscotch
+Play Horizontal Bar	chin-up bar|high bar|pull-up bar	playground=horizontal_bar
+Painted Playground Map		playground=map
+Play House	Wendy House|children's house|playground house|playhouse	playground=playhouse
+Play Water Pump		playground=pump
+Play Roundabout	carousel|merry-go-round	playground=roundabout
+Play Sandbox	Play Sandpit|sandbox|sandpit	playground=sandpit
+Seesaw		playground=seesaw
+Play Sledding Hill		playground=sledding
+Slide		playground=slide
+Play Splash Pad	pad|spray|water	playground=splash_pad
+Spring Rider	Spring Rocker|rocking horse|spring horse|spring toy|springy	playground=springy
+Play Structure	jungle gym	playground=structure
+Swing		playground=swing
+Teen Shelter		playground=teenshelter
+Tetherball Pole		playground=tetherball
+Trampoline		playground=trampoline
+Play Tunnel		playground=tunnel_tube
+Play Water Device (unspecified)		playground=water
+Play Zip Line	zip wire|zipline|zipwire	playground=zipwire
+Police Checkpoint	checkpoint|patrol|roadblock|spot check|stop	police=checkpoint
+Temporary Polling Place	ballot box|ballot drop|democracy|elections|polling place|vote|voting booth|voting machine	polling_station=*
+Underground Power Cable		power=cable&location=underground
+Catenary Pole	catenary mast|catenary pylon|overhead line|overhead wire	power=catenary_mast
+Power Generator	hydro|solar|turbine|wind	power=generator
+Solar Panel	photovoltaic module|pv module|sunlight	power=generator&generator:method=photovoltaic
+Solar Panel Canopy	photovoltaic canopy|solar awning|solar canopy|solar carport	power=generator&generator:method=photovoltaic&building=roof
+Rooftop Solar Panel	home solar|pv module|rooftop photovoltaic module	power=generator&generator:method=photovoltaic&location=roof
+Solar Thermal Collector	heating|solar hot water panel|solar water heater	power=generator&generator:method=thermal&generator:source=solar&generator:type=solar_thermal_collector
+Rooftop Solar Thermal Collector	heating|solar hot water panel|solar water heater	power=generator&generator:method=thermal&generator:source=solar&generator:type=solar_thermal_collector&location=roof
+Water Turbine	dam|francis turbine|generator|hydroelectricity|kaplan turbine|pelton turbine	power=generator&generator:source=hydro
+Nuclear Reactor	fission|generator|nuclear|nuke|reactor	power=generator&generator:source=nuclear&generator:method=fission
+Wind Turbine	generator|turbine|wind|windmill	power=generator&generator:source=wind
+Power Line	electric power transmission line|high tension line|high voltage line	power=line
+Minor Power Line		power=minor_line
+Power Station Grounds	coal|gas|generator|hydro|nuclear|power|station	power=plant
+Coal-Fired Power Plant	carbon|coalfired|combustion|fossil fuel|power station	power=plant&plant:source=coal
+Gas-Fired Power Plant	carbon|combustion|fossil fuel|gasfired|natural gas|power station	power=plant&plant:source=gas
+Hydroelectric Power Station	dam|power plant|run-of-the-river|tidal|water turbine	power=plant&plant:source=hydro
+Nuclear Power Plant	atomic|fission|nuclear reactor|power station	power=plant&plant:source=nuclear
+Oil-Fired Power Plant	carbon|combustion|fossil fuel|oilfired|power station	power=plant&plant:source=oil
+Solar Power Plant		power=plant&plant:source=solar
+Solar Farm	photovoltaic power station|solar panels|solar park|utility-scale solar	power=plant&plant:source=solar&plant:method=photovoltaic
+Waste Incineration Power Plant	combustion|garbage incineration plant|garbage incinerator|gasification|incinerator|refuse incineration plant|waste	power=plant&plant:source=waste
+Wind Farm	offshore wind|wind park|wind power plant|wind power station|wind turbines|windmills	power=plant&plant:source=wind
+Power Pole		power=pole
+Anchor Portal	anchor gantry|gantry tower|h-frame tower	power=portal
+Substation		power=substation
+Power Switch		power=switch
+Switchgear		power=switchgear
+High-Voltage Tower	electric|power|power tower|pylon|transmission tower	power=tower
+Transformer		power=transformer
+Aerialway Platform	aerialway|cable car|platform|public transit|public transportation|transit|transportation	public_transport=platform&aerialway=yes
+Bus Platform	bus|platform|public transit|public transportation|transit|transportation	public_transport=platform&bus=yes
+Bus Stop	bus|platform|public transit|public transportation|transit|transportation	public_transport=platform&bus=yes
+Tram & Bus Stop	bus|light rail|platform|public transit|public transportation|rail|streetcar|track|tram|transit|transportation|trolley	public_transport=platform&bus=yes&tram=yes
+Ferry Platform	boat|dock|ferry|pier|platform|public transit|public transportation|transit|transportation	public_transport=platform&ferry=yes
+Light Rail Platform	electric|light rail|platform|public transit|public transportation|rail|track|tram|transit|transportation|trolley	public_transport=platform&light_rail=yes
+Monorail Platform	monorail|platform|public transit|public transportation|rail|transit|transportation	public_transport=platform&monorail=yes
+Subway Platform	metro|platform|public transit|public transportation|rail|subway|track|transit|transportation|underground	public_transport=platform&subway=yes
+Train Platform	platform|public transit|public transportation|rail|railway platform|track|train|transit|transportation	public_transport=platform&train=yes
+Tram Platform	electric|light rail|platform|public transit|public transportation|rail|streetcar|track|tram|transit|transportation|trolley	public_transport=platform&tram=yes
+Tram Stop / Platform	electric|light rail|platform|public transit|public transportation|rail|streetcar|track|tram|transit|transportation|trolley	public_transport=platform&tram=yes
+Trolleybus Platform	bus|electric|platform|public transit|public transportation|streetcar|trackless|tram|transit|transportation|trolley	public_transport=platform&trolleybus=yes
+Trolleybus Stop	bus|electric|platform|public transit|public transportation|streetcar|trackless|tram|transit|transportation|trolley	public_transport=platform&trolleybus=yes
+Aerialway Station	aerialway|cable car|public transit|public transportation|station|terminal|transit|transportation	public_transport=station&aerialway=station
+Bus Station / Terminal	bus|bus terminal|public transit|public transportation|station|terminal|transit|transportation	public_transport=station&bus=yes
+Ferry Terminal	boat|dock|ferry|pier|public transit|public transportation|station|terminal|transit|transportation	public_transport=station&ferry=yes
+Light Rail Station	electric|light rail|public transit|public transportation|rail|station|terminal|track|tram|transit|transportation|trolley	public_transport=station&light_rail=yes
+Monorail Station	monorail|public transit|public transportation|rail|station|terminal|transit|transportation	public_transport=station&monorail=yes
+Subway Station	metro|public transit|public transportation|rail|station|subway|terminal|track|transit|transportation|underground	public_transport=station&subway=yes
+Train Station	public transit|public transportation|rail|railway station|station|terminal|track|train|transit|transportation	public_transport=station&train=yes
+Train Station (Halt / Request)	halt|public transit|public transportation|rail|station|track|train|transit|transportation|whistle stop	public_transport=station&train=yes&railway=halt
+Tram Station	electric|light rail|public transit|public transportation|rail|station|streetcar|terminal|track|tram|transit|transportation|trolley	public_transport=station&tram=yes
+Trolleybus Station / Terminal	bus|electric|public transit|public transportation|station|streetcar|terminal|trackless|tram|transit|transportation|trolley	public_transport=station&trolleybus=yes
+Transit Stop Area		type=public_transport&public_transport=stop_area
+Aerialway Stopping Location	aerialway|cable car|public transit|public transportation|transit|transportation	public_transport=stop_position&aerialway=yes
+Bus Stopping Location	bus|public transit|public transportation|transit|transportation	public_transport=stop_position&bus=yes
+Ferry Stopping Location	boat|dock|ferry|pier|public transit|public transportation|transit|transportation	public_transport=stop_position&ferry=yes
+Light Rail Stopping Location	electric|light rail|public transit|public transportation|rail|track|tram|transit|transportation|trolley	public_transport=stop_position&light_rail=yes
+Monorail Stopping Location	monorail|public transit|public transportation|rail|transit|transportation	public_transport=stop_position&monorail=yes
+Subway Stopping Location	metro|public transit|public transportation|rail|subway|track|transit|transportation|underground	public_transport=stop_position&subway=yes
+Train Stopping Location	public transit|public transportation|rail|track|train|transit|transportation	public_transport=stop_position&train=yes
+Tram Stopping Location	electric|light rail|public transit|public transportation|rail|streetcar|track|tram|transit|transportation|trolley	public_transport=stop_position&tram=yes
+Trolleybus Stopping Location	bus|electric|public transit|public transportation|streetcar|trackless|tram|transit|transportation|trolley	public_transport=stop_position&trolleybus=yes
+Visible Railway Track Remnants	abandoned railroad|former train tracks|train right-of-way	railway=abandoned
+Buffer Stop	buffer|halt|stop	railway=buffer_stop
+Railway Under Construction		railway=construction
+Railway-Path Crossing	crossing|grade crossing|level crossing|path railway crossing|path through railroad|pedestrian crossing|railroad crossing|railway path crossing|train crossing	railway=crossing
+Railway Derailer	derailer	railway=derail
+Disused Railway		railway=disused
+Funicular Track	Cliff Railway Track|Inclined Railway Track|cable car|cable railway|funicular railway|venicular	railway=funicular
+Railway-Road Crossing	crossing|grade crossing|level crossing|railroad crossing|railway road crossing|road railway crossing|road through railroad|train crossing	railway=level_crossing
+Light Rail Track	light rail|streetcar|trolley	railway=light_rail
+Railway Milestone	marker|milestone	railway=milestone
+Miniature Train Track	minimum gauge railway|narrow gauge railway|rideable miniature railway	railway=miniature
+Monorail Track		railway=monorail
+Hanging Monorail Track	Suspension Railway Track	railway=monorail&monorail=hanging
+Narrow Gauge Track	narrow gauge railroad|narrow gauge railway	railway=narrow_gauge
+Heritage Railway Track	Preserved Railway Track|historic train|preserved rail|steam train|tourist train	railway=*&railway:preserved=yes
+Train Track	Railway Track|Railroad Track|permanent way|rail|rail line|track	railway=rail
+High-Speed Train Track	bullet train|fast rail|high speed rail|highspeed rail|hsr	railway=rail&highspeed=yes
+Railway-Railway Crossing	diamond crossing|flat crossing|level junction|railway railway crossing	railway=railway_crossing
+Railway Signal	lights|signal	railway=signal
+Signal Box	interlock tower|interlocking tower|lever frame|radio block center|radio block centre|signal cab|signalling box|signalling cab	railway=signal_box
+Subway Track	metro|transit|underground railway	railway=subway
+Subway Entrance	metro|transit	railway=subway_entrance
+Railway Switch	points|switch	railway=switch
+Train Wash	clean|wash	railway=wash
+Tram Track	Streetcar Track|Trolley Track|Tramway|electric street railway|light rail	railway=tram
+Tram-Path Crossing	crossing|grade crossing|level crossing|path tram crossing|pedestrian crossing|streetcar crossing|tram path crossing|tramway crossing|trolley crossing	railway=tram_crossing
+Tram-Road Crossing	crossing|grade crossing|level crossing|pedestrian crossing|road tram crossing|streetcar crossing|tram road crossing|tramway crossing|trolley crossing	railway=tram_level_crossing
+Railway Turntable	turn table	railway=turntable
+Rail Yard	freight car stop|freight train station|rail freight station|railroad yard|railway yard	railway=yard
+Roller Coaster Station	amusement ride|theme park	roller_coaster=station
+Roller Coaster Support		roller_coaster=support
+Roller Coaster Track	amusement ride|theme park	roller_coaster=track
+Ferry Route	boat|merchant vessel|ship|water bus|water shuttle|water taxi	route=ferry
+Danger Beacon	beacon isolated danger|iala|isolated danger beacon	seamark:type=beacon_isolated_danger
+Channel Beacon	beacon lateral|cevni|channel marker|iala|lateral beacon|lateral mark	seamark:type=beacon_lateral
+Channel Buoy	buoy lateral|cevni|channel marker|iala|lateral buoy|lateral mark	seamark:type=buoy_lateral
+Green Buoy	buoy lateral|cevni|channel marker|iala|lateral buoy|lateral mark	seamark:type=buoy_lateral&seamark:buoy_lateral:colour=green
+Red Buoy	buoy lateral|cevni|channel marker|iala|lateral buoy|lateral mark	seamark:type=buoy_lateral&seamark:buoy_lateral:colour=red
+Mooring	bollard|buoy|dolphin|pile|post	seamark:type=mooring
+Offshore Platform	bore|drilling rig|oil rig|petroleum well|platform	seamark:type=platform
+Shop	retailer|store	shop=*
+Farm Supply Shop	agricultural inputs|agricultural machines|agricultural tools|fertilizer|pesticides|seeds	shop=agrarian
+Liquor Store	alcohol|beer|booze|wine	shop=alcohol
+Anime / Manga Shop	cosplay|dakimakura|figurine|hobby|japan|manga	shop=anime
+Antique Shop	Antique Store|Antiques Shop|Antiques Store|old|vintage	shop=antiques
+Appliance Store	air conditioner|appliance|dishwasher|dryer|freezer|fridge|grill|kitchen|oven|refrigerator|stove|washer|washing machine|white goods	shop=appliance
+Art Store	art|exhibition|gallery	shop=art
+Baby Goods Store	infant|newborn|toddler	shop=baby_goods
+Bag / Luggage Store	handbag|purse	shop=bag
+Bakery	bakeshop|bread|cakes|rolls	shop=bakery
+Bathroom Furnishing Store	bathroom fixtures	shop=bathroom_furnishing
+Barbecue Shop	barbecue|barbeque|bbq|grill	shop=bbq
+Beauty Shop	salon|spa|tanning	shop=beauty
+Nail Salon	manicure|nails|pedicure	shop=beauty&beauty=nails
+Tanning Salon	solarium|sunbed	shop=beauty&beauty=tanning
+Bedding / Mattress Store	bed|duvet|mattress|pillow	shop=bed
+Beverage Store	drinks	shop=beverages
+Bicycle Shop	Bike Shop|bicycle store|bike|bike parts|bike store|hobby|repair|tricycle|unicycle	shop=bicycle
+Boat Store	fishing boat|hobby|jetski|motorboat|rowboat|sailboat|vessel|watercraft	shop=boat
+Bookmaker	Bookie|Turf Accountant|betting|gamble|gambling	shop=bookmaker
+Bookstore	Bookshop|Bookseller|Book Store|Book Shop|Book Seller|hobby	shop=books
+Brewing Supply Store	brew shop|hobby|homebrew supply store	shop=brewing_supplies
+Butcher	Butcher Shop|Pork Store|Butchery|beef|chicken|lamb|meat|pork	shop=butcher
+Camera Equipment Store	camera|film|lens|photo	shop=camera
+Candle Shop	wax	shop=candles
+Cannabis Shop	420|cannabis dispensary|marijuana|pot|reefer|weed	shop=cannabis
+Car Dealership	Car Dealer|automobile|automotive|vehicle	shop=car
+Used Car Dealership	automobile|automotive	shop=car&second_hand=only
+Car Parts Store	automobile|automotive	shop=car_parts
+Car Repair Shop	Automobile Repair Shop|Car Mechanic|Auto Mechanic|automechanic|automotive|garage|inspection|mechanic|oil change|panel beater|panelbeater|service	shop=car_repair
+RV Dealership	auto|camper|recreational vehicle	shop=caravan
+Carpet Store	rug	shop=carpet
+Catalog Shop		shop=catalogue
+Charity Store	nonprofit|op shop|thrift	shop=charity
+Cheese Store		shop=cheese
+Drugstore	apothecary|beauty|chemist|dispensary|drug store|gift|hair|medicine|pharmacy|prescription|tooth	shop=chemist
+Chocolate Store	cocoa|confectionery	shop=chocolate
+Clothing Store	apparel|blouses|boutique|bras|clothes|dresses|fashion|outfits|pants|shirts|shorts|skirts|slacks|socks|suits|underwear	shop=clothes
+Secondhand Clothing Store	blouses|clothes|consignment|dresses|pants|preowned|second hand|shirts|shorts|skirts|slacks|suits|used|vintage	shop=clothes&second_hand=only
+Suits Store	businessman|necktie|tie	shop=clothes&clothes=suits
+Underwear Store	boutique|boxers|bras|brassieres|briefs|dessous|fashion|lingerie|panties|slips|socks|stockings|underclothes|undergarments|underpants|undies	shop=clothes&clothes=underwear
+Wedding Clothes Store	boutique|bridal|bride|bridegroom|bridesmaid|groom|groomsman|marriage outfits|tuxedo|wedding dress|wedding gown	shop=clothes&clothes=wedding
+Workwear Store	craftsman|safety footwear	shop=clothes&clothes=workwear
+Coffee Store	cafe|espresso|latte	shop=coffee
+Collectibles Shop	antiques|coins|collection|collectors|comics|dolls|figurines|hobby|numismatics|philately|stamps|thrift	shop=collector
+Computer Store	desktop|hardware|laptop|operating system|software	shop=computer
+Candy Store	Candy Shop|Confectionery Store|fudge|lollipop|sugar|sweet	shop=confectionery
+Convenience Store	Convenience Shop|Corner Store|Corner Shop|Superette|Bodega|mini-market|mini-mart	shop=convenience
+Copy Store	Copy Shop|print|scan	shop=copyshop
+Cosmetics Store	make-up|makeup	shop=cosmetics
+Rural Supplies Store	Country Store	shop=country_store
+Arts & Crafts Store	art|canvas|crafting|crafts|draw|frame|handicraft|hobby|paint|paper|pencil|wood	shop=craft
+Curtain Store	drape|drapery|window	shop=curtain
+Dairy Store	cheese|egg|milk	shop=dairy
+Delicatessen	Specialty Food Store|Gourmet Food Store|Fine Food Store|Gourmet Food Shop|charcuterie|cold cuts|deli	shop=deli
+Department Store		shop=department_store
+DIY Store	craft|diy|do it yourself|hardware|hobby|home improvement|tools	shop=doityourself
+Door Shop		shop=doors
+Dry Cleaner	dry cleaning	shop=dry_cleaning
+E-Cigarette Shop	ecigarette|electronic|vape|vaping|vapor	shop=e-cigarette
+Electrical Equipment Store	cable|electric|fan|led|lighting|power|wire	shop=electrical
+Electronics Store	appliance|audio|blueray|camera|computer|consumer electronics|dvd|gadgets|home theater|phone|radio|smartphone|speaker|tv|video	shop=electronics
+Erotic Store	18+|porn|sex	shop=erotic
+LGBTQ+ Erotic Store	18+|porn|sex	shop=erotic&lgbtq=primary
+Esoteric Store	acupuncture|alternative|aromatherapy|crystal|essential oil|meditation|new age|pendant|psychic|woo	shop=esoteric
+Fabric Store	sew|textile|textiles	shop=fabric
+Produce Stand	Farm Shop|Farm Stand|baked goods|fresh food|fruits|greengrocer|orchard|organics|vegetables	shop=farm
+Fashion Accessories Store	bag|cologne|fragrance|hat|jewelry|perfume|purse|scarf|sunglasses|umbrella|wallet|watch	shop=fashion_accessories
+Fireplace Store	fireplace|masonry heater|stove	shop=fireplace
+Fishing Shop	bait|fishing line|flies|fly|hobby|lure|reel|rod|tackle	shop=fishing
+Flooring Supply Shop	tile	shop=flooring
+Florist	bouquet|flower|flowers	shop=florist
+Framing Shop	art|frame|painting|photograph	shop=frame
+Frozen Food Store		shop=frozen_food
+Fuel Shop	briquettes|coal|firewood|heating oil|kerosene|pellets	shop=fuel
+Funeral Home	Funeral Parlor|memorial home|mortuary|undertaker	shop=funeral_directors
+Furniture Store	chair|couch|interior|sofa|table	shop=furniture
+Tabletop Game Store	board game|card game|dice game|game shop|hobby|larp|live action role-playing game|miniature wargame|role-playing|strategy game|wargame	shop=games
+Garden Center	landscape|mulch|nursery|plant nursery|retail plant nursery|shrub|tree	shop=garden_centre
+Bottled Gas Shop	cng|lpg|natural gas|propane|refill|tank	shop=gas
+General Store	General Merchant Store|General Merchandise Store|General Dealer|small-town store|village shop	shop=general
+Gift Shop	Souvenir Shop|present|tourist trap	shop=gift
+Gold buyer	Gold trader	shop=gold_buyer
+Greengrocer	Produce Store|Produce Shop|fruit|produce|vegetable	shop=greengrocer
+Lawn & Garden Equipment Store	chainsaw|cultivator|garden machinery|garden power tools|groundskeeping|mower|string trimmer|snow blower	shop=groundskeeping
+Hairdresser	Hair Salon|Hair Stylist|haircut	shop=hairdresser
+Barber	Barber's|Barber Shop|Barbershop|beard|groom|grooming|hair cut|hairdresser|moustache|razor|shave|shaving	shop=hairdresser&hairdresser=barber
+Hairdresser Supply Store	barber|conditioner|razor|shampoo|shaver	shop=hairdresser_supply
+Hardware Store	Hardware Shop|craft|diy|do it yourself|hardware|home improvement|tools	shop=hardware
+Health Food Store	Health Food Shop|groceries|nutritional|organic|raw food|unprocessed|vegan|vegetarian|vitamins|wholefood	shop=health_food
+Hearing Aids Store		shop=hearing_aids
+Herbalist	ayurveda|ayurvedic|medicinal plants|paraherbal|phytomedicine|plant medicine|traditional medicine	shop=herbalist
+Hifi Store	audio|hi-fi|high fidelity|speakers|stereo|video	shop=hifi
+Honey Store		shop=honey
+Household Linen Shop	bedspreads|blankets|curtains|domestic cloths|handkerchieves|napkins|pillow cases|robes|sheets|towels	shop=household_linen
+Houseware Store	Household Goods Store|cookware|home|home goods|kitchenware	shop=houseware
+Hunting Shop	arrows|bows|bullets|crossbows|hobby|rifles|traps	shop=hunting
+Interior Decoration Store		shop=interior_decoration
+Jewelry Store	Jewelry Shop|bracelet|diamond|earrings|gem|gold|jeweler|jeweller|jewellery|necklace|pins|ring|silver	shop=jewelry
+Kiosk	beverages|cigarettes|mall kiosk|newsagent|newspaper|newsstand|snacks|sweets	shop=kiosk
+Kitchen Design Store	cabinets|countertops|sinks	shop=kitchen
+Laundry		shop=laundry
+Self-Service Laundry	Coin Laundry|Laundromat|Coin Wash|Launderette|Washateria	shop=laundry&self_service=yes
+Leather Store		shop=leather
+Lighting Store	fluorescent lighting|lamps|leds|light fixtures|lightbulbs	shop=lighting
+Locksmith	key|lockpick	shop=locksmith
+Lottery Shop	gamble|gambling|lotto tickets|scratch-offs	shop=lottery
+Mall	Shopping Mall|Shopping Center|shopping	shop=mall
+Massage Shop		shop=massage
+Medical Supply Store		shop=medical_supply
+Military Surplus Store	armor|army surplus|army-navy store|navy surplus|tactical gear|war surplus shop|weapons	shop=military_surplus
+Mobile Phone Store	cell phone|smartphone	shop=mobile_phone
+Mobile Phone Accessory Store	cell phone|phone case|smartphone	shop=mobile_phone_accessories
+Model Shop	hobby|model building|model figures|model kits|model railroading|model store|rail transport modelling|scale models	shop=model
+Money Lender	payday loan	shop=money_lender
+Motorcycle Dealership	bike|motorbike	shop=motorcycle
+Motorcycle Repair Shop	Motorcycle Repair Workshop|auto|bike|garage|motorbike|motorcycle|repair|service	shop=motorcycle_repair
+Music Store	casette|casette store|cd store|cds|compact discs|hobby|record store|tape cassettes|vinyl records	shop=music
+Musical Instrument Store	accordion|brass instruments|cello|clarinet|drum|flute|guitar|hobby|keyboard|piano|saxophone|trumpet|violin	shop=musical_instrument
+Newsstand	Newspaper / Magazine Shop	shop=newsagent
+Nutrition Supplements Store	health|protein|supplement|vitamin	shop=nutrition_supplements
+Nuts Shop	almonds|brazil nuts|cashews|chestnuts|coconuts|dried fruits|hazelnuts|macadamia|nuts|peanuts|pecans|pistachios|seeds|walnuts	shop=nuts
+Optician	eye|glasses|spectacles	shop=optician
+Outdoors Store	camping|climbing|hiking|hobby|outdoor equipment|outdoor supplies|outfitter	shop=outdoor
+Online Retailer Outpost	online|pick up|pickup	shop=outpost
+Paint Store		shop=paint
+Party Supply Store	balloons|costumes|decorations|invitations	shop=party
+Pasta Store	Pasta Shop|fresh pasta|ravioli|spaghetti	shop=pasta
+Pastry Shop	cake shop|cakery|chimney cake shop|cookies|patisserie	shop=pastry
+Pawnshop	Pawnbroker|Pawn Shop|collateral|loan|secondhand	shop=pawnbroker
+Perfume Store	cologne|fragrance|perfume	shop=perfumery
+Pet Store	Pet Shop|animal|cat|dog|fish|kitten|puppy|reptile	shop=pet
+Pet Groomer	cat|cat grooming|dog|dog grooming	shop=pet_grooming
+Photography Store	camera|film|lens|photo	shop=photo
+Piercing Studio		shop=piercing
+Pottery Store	ceramic|pot|vase	shop=pottery
+Printer Ink Store	copier ink|fax ink|ink cartridges|toner	shop=printer_ink
+Psychic	astrology|crystal ball|divination|fortune teller|seer|spirit	shop=psychic
+Fireworks Store	fireworks	shop=pyrotechnics
+Radio / Electronic Component Store	antenna|transistor	shop=radiotechnics
+Religious Store		shop=religion
+Rental Shop		shop=rental
+Repair Shop	broken|fixit shop|maintenance|mend|patch|refurbish|rehabilitate|tinker	shop=repair
+Rice Store		shop=rice
+Scuba Diving Shop	diving|scuba|snorkel	shop=scuba_diving
+Seafood Shop	Fishmonger|fish	shop=seafood
+Thrift Store	Thrift Shop|Consignment Store|Resale Shop|Secondhand Shop|preowned|resale|second-hand|used|vintage	shop=second_hand
+Sewing Supply Shop	haberdashery	shop=sewing
+Shoe Repair Shop	cobbler	shop=shoe_repair
+Shoe Store	boots|cleats|clogs|footwear|heels|loafers|oxfords|sandals|slippers|sneakers	shop=shoes
+Spice Shop	chili|cinnamon|curry|ginger|herbs|pepper|saffron|salt|spice store|spices|turmeric|wasabi	shop=spices
+Sporting Goods Store	athletics|equestrian|fitness|hobby	shop=sports
+Stationery Store	Office Supply Store|card|paper|stationary	shop=stationery
+Storage Rental	device storage|garages|self storage|self-service storage|storage lockers|storage units	shop=storage_rental
+Supermarket	food market|grocery|grocery store|market|shop|store	shop=supermarket
+Organic Supermarket	natural foods	shop=supermarket&organic=only
+Pool Supply Store	hot tub equipment store|hot tub maintenance store|hot tub supply store|pool shop|pool store|swimming pool equipment store|swimming pool installation store|swimming pool maintenance store|swimming pool supply shop	shop=swimming_pool
+Tailor	clothes|suit	shop=tailor
+Tattoo Parlor	ink|piercing	shop=tattoo
+Tea Store		shop=tea
+Telecom Retail Store	communication|internet service provider|isp|network|telephone|voice	shop=telecommunication
+Ticket Seller	Ticket Vendor|Ticket Booth|box office	shop=ticket
+Tile Shop		shop=tiles
+Tobacco Shop	cigarettes|cigars	shop=tobacco
+Tool Rental		shop=tool_hire
+Toy Store	games|hobby|teddy	shop=toys
+Trade Shop		shop=trade
+Travel Agency	cruises|flights|holiday|hotels|tickets|tour operator|tours|travel packages|vacation	shop=travel_agency
+Trophy Shop	awards|engravings|medals|plaques|trophy store	shop=trophy
+Tire Store		shop=tyres
+Vacant Shop	empty	shop=vacant
+Vacuum Cleaner Store		shop=vacuum_cleaner
+Discount Store	Dollar Store|Variety Store|five and dime|five and ten	shop=variety_store
+Video Store	dvd|hobby|vhs|video casette|video cassette	shop=video
+Video Game Store	hobby	shop=video_games
+Watches Shop		shop=watches
+Drinking Water Shop	bottled water|mineral water|purified water|water refilling|water station	shop=water
+Watersport / Swim Shop		shop=water_sports
+Weapon Shop	ammo|gun|knife|knives	shop=weapons
+Wholesale Store	cash and carry|warehouse club	shop=wholesale
+Wig Shop	hair extensions|hair extentions	shop=wigs
+Window Blind Store		shop=window_blind
+Wine Shop		shop=wine
+Data Center	computer systems storage|information technology|server farm|telecommunications|the cloud	telecom=data_center
+Telecom Exchange	telecommunications|telephone exchange|telephone switch	telecom=exchange
+Mountain Lodge	Alpine Hut|Mountain Hut|Mountain Shelter|Mountain Refuge|Mountain Hostel|cabin|climbing hut|lodge|lodging|overnight accommodations|refuge|refuge hut|wilderness hut	tourism=alpine_hut
+Guest Apartment / Condo	airbnb|b & b|b and b|b&b|bed and breakfast|bnb|holiday rental|lodging|overnight accommodations|vacation rental	tourism=apartment
+Aquarium	aquatic|fish|marine life|sea|sea life|water	tourism=aquarium
+Artwork	mural|sculpture|statue	tourism=artwork
+Bust	figure	tourism=artwork&artwork_type=bust
+Graffiti	graffiti artwork|guerilla artwork|guerrilla artwork|street artwork	tourism=artwork&artwork_type=graffiti
+Art Installation	interactive art|intervention art|modern art	tourism=artwork&artwork_type=installation
+Mural	fresco|wall painting	tourism=artwork&artwork_type=mural
+Sculpture	carving|figure|statue	tourism=artwork&artwork_type=sculpture
+Statue	carving|figure|sculpture	tourism=artwork&artwork_type=statue
+Tourist Attraction		tourism=attraction
+Camp Pitch	rv|tent	tourism=camp_pitch
+Campground	camp ground|camp pitch|camp site|campers|campsite|caravans|mobile homes|recreational vehicles|rv|tenting	tourism=camp_site
+Backcountry Camping Area	alpine camping|backpacking site|backwoods camping|camp ground|camp pitch|camp site|campground|campsite|informal camping|primitive camping	tourism=camp_site&backcountry=yes
+Group Camping Area	camp ground|camp pitch|camp site|campground|campsite|scout camping|youth camping	tourism=camp_site&group_only=yes
+RV Park	camper|motor home	tourism=caravan_site
+Holiday Cottage	chalet|holiday cabin|holiday home|lodge|lodging|overnight accommodations|vacation cabin|vacation home	tourism=chalet
+Art Gallery	art|exhibition|painting|photograph|sculpture	tourism=gallery
+Guest House	airbnb|b & b|b and b|b&b|bed and breakfast|bnb|lodging|overnight accommodations	tourism=guest_house
+Hostel	backpacker|bunk beds|dormitories|dorms|lodging|overnight accommodations|youth hostel	tourism=hostel
+Hotel	concierge|inn|lodge|lodging|overnight accommodations|suite	tourism=hotel
+Information		tourism=information
+Information Board		tourism=information&information=board
+Welcome Sign	new location	tourism=information&information=board&board_type=welcome_sign
+Guidepost	signpost	tourism=information&information=guidepost
+Map		tourism=information&information=map
+Tourist Information Office	information office|tour guide|tourism office|tourist information center|tourist office|visitors center|visitors information center|welcome center	tourism=information&information=office
+Trail Marker	cairn|painted blaze|route flag|route marker|stone pile|trail blaze|trail post|way marker	tourism=information&information=route_marker
+Information Terminal		tourism=information&information=terminal
+Visitor Center	visitors center|visitors information center|welcome center	tourism=information&information=visitor_centre
+Motel	lodging|motor hotel|overnight accommodations	tourism=motel
+Museum	archaeological|archeological|art|art museum|cultural|excavation|exhibition|foundation|gallery|hall|history|institution|nature|painting|photograph|science|sculpture|technology	tourism=museum
+History Museum	artifacts|dioramas|exhibitions|exhibits|foundation|hall|institution	tourism=museum&museum=history
+Picnic Site	camp	tourism=picnic_site
+Theme Park	amusement park|fun park	tourism=theme_park
+Trail Riding Station		tourism=trail_riding_station
+Viewpoint	lookout|overlook|scenery|scenic|vantage point|vista	tourism=viewpoint
+Wilderness Hut	Backcountry Hut|Backcountry Shelter|Bothy|alpine hut|bivouac|bivouac box|biwakschachtel|cabin|lodge|lodging|overnight accommodations|refuge|sleeping shelter	tourism=wilderness_hut
+Zoo	animal	tourism=zoo
+Petting Zoo	children's farm|children's zoo|farm animals|petting farm	tourism=zoo&zoo=petting_zoo
+Safari Park	drive-in zoo|drive-through zoo	tourism=zoo&zoo=safari_park
+Wildlife Park	indigenous animals	tourism=zoo&zoo=wildlife_park
+Traffic Calming	bump|hump|slow|speed	traffic_calming=*
+Speed Bump	hump|slow|speed|traffic calming	traffic_calming=bump
+Traffic Chicane	driveway link|slow|speed|traffic calming	traffic_calming=chicane
+Traffic Choker	slow|speed|traffic calming	traffic_calming=choker
+Speed Cushion	bump|hump|slow|speed|traffic calming	traffic_calming=cushion
+Dip	slow|speed|traffic calming	traffic_calming=dip
+Speed Hump	bump|slow|speed|traffic calming	traffic_calming=hump
+Traffic Calming Island	circle|roundabout|slow|traffic calming	traffic_calming=island
+Mini Speed Bumps	bumps|circular bumps|circular speed bumps|slow|small bumps|small speed bumps|speed|traffic calming	traffic_calming=mini_bumps
+Rumble Strip	audible lines|growlers|sleeper lines|traffic calming	traffic_calming=rumble_strip
+Speed Table	flat top|hump|slow|speed|traffic calming	traffic_calming=table
+Traffic Sign	highway|road	traffic_sign=*
+City Limit Sign	border|boundary|edge|hamlet|highway|road|town|village	traffic_sign=city_limit
+Speed Limit Sign	highway|max speed|maximum speed|road	traffic_sign=maxspeed
+Speed Limit Sign	highway|max speed|maximum speed|road	traffic_sign=maxspeed
+Variable Message Sign	dynamic message sign|vms	traffic_sign=variable_message
+Boundary		type=boundary
+Administrative Boundary		type=boundary&boundary=administrative
+Protected Area	conservation|heritage|national park|nature|protection|wilderness|wildlife	type=boundary&boundary=protected_area
+Lane Connectivity		type=connectivity
+Destination Sign	exit sign	type=destination_sign
+Enforcement		type=enforcement
+Speed Limit Enforcement	maxspeed|radar|speed camera	type=enforcement&enforcement=maxspeed
+Multipolygon		type=multipolygon
+Transit Stop Area Group		type=public_transport&public_transport=stop_area_group
+Restriction		type=restriction
+No Left Turn		type=restriction&restriction=no_left_turn
+No Right Turn		type=restriction&restriction=no_right_turn
+No Straight Ahead		type=restriction&restriction=no_straight_on
+No U-Turn		type=restriction&restriction=no_u_turn
+Left Turn Only		type=restriction&restriction=only_left_turn
+Right Turn Only		type=restriction&restriction=only_right_turn
+Straight Ahead Only		type=restriction&restriction=only_straight_on
+U-Turn Only		type=restriction&restriction=only_u_turn
+Route		type=route
+Aerial Route	aerialway	type=route&route=aerialway
+Bicycle Route		type=route&route=bicycle
+Bus Route		type=route&route=bus
+Climbing Route	Boulder Problem|Climb|Mountaineering Route|climbing|mountain climbing|rock climbing|rock climbing route|sport climbing	type=route&route=climbing
+Detour Route		type=route&route=detour
+Ferry Route	boat|merchant vessel|ship|water bus|water shuttle|water taxi	type=route&route=ferry
+Walking Route		type=route&route=foot
+Hiking Route		type=route&route=hiking
+Horseback Riding Route	horse riding route|horse trail|riding route|trail riding	type=route&route=horse
+Light Rail Route		type=route&route=light_rail
+Monorail Route		type=route&route=monorail
+Mountain Biking Route	all mountain|cross-country cycling|downhill cycling|enduro|freeride|mountain bicycling|mountain bike route|mountain cycling|mtb|trail riding	type=route&route=mtb
+Pipeline Route		type=route&route=pipeline
+Piste / Ski Route		type=route&route=piste
+Railway Route		type=route&route=railway
+Road Route		type=route&route=road
+Subway Route		type=route&route=subway
+Train Route		type=route&route=train
+Tram Route		type=route&route=tram
+Trolleybus Route		type=route&route=trolleybus
+Route Master		type=route_master
+Site		type=site
+Climbing Area	Climbing Region	climbing=area&type=site
+Climbing Crag	Climbing Cliff	type=site&climbing=crag
+Waterway		type=waterway
+Waterway Access Point	boat|canoe|kayak|launch|paddleboard|portage|put-in|rowboat|take-out	waterway=access_point
+Boatyard		waterway=boatyard
+Canal	headrace|irrigation|spillway|tailrace|waterpower	waterway=canal
+Canal Lock		waterway=canal&lock=yes
+Dam		waterway=dam
+Ditch		waterway=ditch
+Wet Dock / Dry Dock	boat|floating dock|floating dry dock|marine|ship|vessel	waterway=dock
+Drain		waterway=drain
+Fish Pass	eel ladder|eel pass|fish ladder|fish migration|fish passage|fish siphon|fish steps|fish way|fishladder|fishpass|fishsteps|fishway	waterway=fish_pass
+Marine Fuel Station	boat|diesel|gas|petrol	waterway=fuel
+Lock Gate	canal	waterway=lock_gate
+Waterway Milestone	marker|milestone	waterway=milestone
+River	beck|branch|brook|course|creek|estuary|rill|rivulet|run|runnel|stream|tributary|watercourse	waterway=river
+Marine Toilet Disposal	boat|cdp|chemical toilet|ctdp|dump station|elsan|pump out|pumpout|sanitary|watercraft	waterway=sanitary_dump_station
+Stream	beck|branch|brook|burn|course|creek|current|drift|flood|flow|freshet|race|rill|rindle|rivulet|run|runnel|rush|spate|spritz|surge|tide|torrent|tributary|watercourse	waterway=stream
+Intermittent Stream	arroyo|beck|branch|brook|burn|course|creek|drift|flood|flow|gully|run|runnel|rush|spate|spritz|tributary|wadi|wash|watercourse	waterway=stream&intermittent=yes
+Tidal Channel	coastal|intertidal|mangroves|marine|pill|salt marsh|tidal creek|tidal flat|tidal inlet|waterway	waterway=tidal_channel
+Marine Drinking Water	water faucet|water point|water source|water spigot|water tap	waterway=water_point
+Waterfall	fall	waterway=waterfall
+Weir	low-head dam|low-rise dam|wier	waterway=weir
