@@ -52,6 +52,25 @@
         app:layout_constraintStart_toStartOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
+    <!-- SEARCH BAR: the one obvious way in. Always visible. -->
+    <TextView
+        android:id="@+id/tvSearchBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/bg_map_button"
+        android:gravity="start|center_vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp"
+        android:text="🔍  What are you looking for?"
+        android:textColor="#DDDDDD"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvAccuracy" />
+
     <!-- COMPASS RING -->
     <View
         android:id="@+id/viewRing"
@@ -98,6 +117,21 @@
         android:text="---"
         android:textColor="#FFFFFF"
         android:textSize="64sp"
+        app:layout_constraintBottom_toTopOf="@+id/tvCount"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- RESULT COUNT (e.g. "#2 of 14 found") -->
+    <TextView
+        android:id="@+id/tvCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:alpha="0.7"
+        android:text=""
+        android:textColor="#CCCCCC"
+        android:textSize="13sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/ivAmenityImage"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -138,7 +172,7 @@
         android:layout_marginBottom="40dp"
         android:background="@drawable/bg_map_button"
         android:gravity="center"
-        android:paddingHorizontal="32dp"
+        android:paddingHorizontal="28dp"
         android:paddingVertical="12dp"
         android:text="OPEN MAP"
         android:textColor="#FFFFFF"
@@ -146,8 +180,29 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/tvHint"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvSkipButton"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- SKIP BUTTON (point to next-nearest target) -->
+    <TextView
+        android:id="@+id/tvSkipButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_map_button"
+        android:gravity="center"
+        android:paddingHorizontal="28dp"
+        android:paddingVertical="12dp"
+        android:text="SKIP →"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/tvMapButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvMapButton"
+        app:layout_constraintTop_toTopOf="@+id/tvMapButton" />
 
     <!-- HINT TEXT -->
     <TextView
