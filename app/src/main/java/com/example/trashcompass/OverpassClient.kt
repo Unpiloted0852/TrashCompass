@@ -3,6 +3,7 @@ package com.example.trashcompass
 import android.location.Location
 import android.util.Log
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -36,28 +37,28 @@ import kotlin.coroutines.resumeWithException
  *    hospital grounds, etc.) which the old app silently missed.
  *  - Shorter connect timeout (8s) and an overall call timeout, so a
  *    dead mirror fails fast and we move on.
- *  - The main instance is asked first; the mirrors are backups, shuffled
- *    per fetch to spread load, and every server gets one retry, because
- *    the public instances regularly answer "too busy" for a moment.
+ *  - The main instance is asked first and never raced against itself;
+ *    independent mirrors are hedged backups. See [fetch].
  */
 object OverpassClient {
 
-    // The main instance's load balancer first, then its two servers directly
-    // (the balancer answers "504" whenever the server it picked is busy),
-    // then independent mirrors.
+    // The main instance: its load balancer, then its two servers directly (the
+    // balancer answers "504" whenever the server it picked is busy). All three
+    // count against the same per-address allowance.
     private val mainServers = listOf(
         "https://overpass-api.de/api/interpreter",
         "https://lz4.overpass-api.de/api/interpreter",
         "https://z.overpass-api.de/api/interpreter"
     )
 
+    // Independent mirrors run by other operators.
     private val mirrors = listOf(
         "https://overpass.private.coffee/api/interpreter",
         "https://overpass.kumi.systems/api/interpreter",
         "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
     )
 
-    private const val USER_AGENT = "TrashCompass/3.6 (https://github.com/Unpiloted0852/TrashCompass)"
+    private const val USER_AGENT = "TrashCompass/3.8 (https://github.com/Unpiloted0852/TrashCompass)"
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(8, TimeUnit.SECONDS)
@@ -188,60 +189,97 @@ object OverpassClient {
     }
 
     /**
-     * Fetches amenities using "hedged" requests to bound tail latency:
-     * the main server is queried immediately, and if it hasn't answered
-     * within [HEDGE_DELAY_MS], the next mirror is started in parallel, and
-     * so on. A server that fails is tried once more after a short pause
-     * (the public instances often return "429 Too Many Requests" or
-     * "504 Gateway Timeout" when briefly overloaded). The first successful
-     * response wins and all other in-flight requests are cancelled.
+     * Fetches amenities, being careful with the public servers' limits.
      *
-     * Compared to trying mirrors one at a time, this means one slow or
-     * dead mirror costs you ~2.5 s instead of its full timeout, while a
-     * healthy first mirror results in exactly one request (so we are
-     * not hammering the public servers).
+     * The main instance allows each address only a few queries at a time and
+     * answers "429 Too Many Requests" beyond that; its load balancer and its
+     * two servers share that allowance. So those three are asked one after
+     * another, never raced: the next is tried only when one is down or busy
+     * ("504"), and after a 429 the client waits as long as the server asks
+     * (Retry-After) and tries once more instead of sending more requests.
      *
-     * Suspending and main-safe: network I/O happens on OkHttp's own
-     * threads via enqueue(), and cancellation propagates to the
-     * underlying calls.
+     * The independent mirrors are different operators with their own limits,
+     * so they are started in parallel as a hedge if the main instance has
+     * not answered after [MIRROR_HEDGE_DELAY_MS]. The first success wins and
+     * everything else is cancelled.
      *
-     * @throws IOException if every mirror fails.
+     * Suspending and main-safe: network I/O happens on OkHttp's own threads
+     * via enqueue(), and cancellation propagates to the underlying calls.
+     *
+     * @throws ServerBusyException if a server was reachable but too busy.
+     * @throws IOException if nothing could be reached at all.
      */
     suspend fun fetch(query: String): List<Amenity> = coroutineScope {
-        val order = mainServers + mirrors.shuffled()
-        val results = Channel<Result<List<Amenity>>>(capacity = order.size)
-        val jobs = order.mapIndexed { index, server ->
-            launch {
-                delay(index * HEDGE_DELAY_MS)
-                var attempt = runCatching { fetchFrom(server, query) }
-                // Retry "busy" answers only; a server that timed out is not worth a second wait.
-                if (attempt.exceptionOrNull()?.message?.startsWith("HTTP ") == true) {
-                    delay(RETRY_DELAY_MS)
-                    attempt = runCatching { fetchFrom(server, query) }
-                }
-                attempt.exceptionOrNull()?.let {
-                    if (it !is CancellationException) Log.w("TrashCompass", "Overpass: $server failed: $it")
-                }
-                results.send(attempt)
+        val hedges = mirrors.shuffled()
+        val results = Channel<Result<List<Amenity>>>(capacity = 1 + hedges.size)
+        val jobs = ArrayList<Job>()
+        jobs += launch { results.send(runCatching { fetchFromMainInstance(query) }) }
+        hedges.forEachIndexed { index, server ->
+            jobs += launch {
+                delay(MIRROR_HEDGE_DELAY_MS * (index + 1))
+                results.send(runCatching { fetchFrom(server, query) }.onFailure { logFailure(server, it) })
             }
         }
         var received = 0
         var answer: List<Amenity>? = null
+        var busy = false
         var lastError: Throwable? = null
-        while (received < order.size && answer == null) {
+        while (received < jobs.size && answer == null) {
             val r = results.receive()
             received++
             r.fold(
                 onSuccess = { answer = it },
-                onFailure = { lastError = it }
+                onFailure = {
+                    lastError = it
+                    if (it is HttpStatusException && it.isBusy) busy = true
+                }
             )
         }
         for (job in jobs) job.cancel()
-        answer ?: throw IOException("All Overpass mirrors failed", lastError)
+        answer ?: if (busy) throw ServerBusyException("Overpass servers are busy", lastError)
+        else throw IOException("All Overpass servers failed", lastError)
     }
 
-    private const val HEDGE_DELAY_MS = 2500L
-    private const val RETRY_DELAY_MS = 2000L
+    /** The main instance's balancer, then its servers, strictly one at a time. */
+    private suspend fun fetchFromMainInstance(query: String): List<Amenity> {
+        var last: Throwable = IOException("No main server configured")
+        for (server in mainServers) {
+            try {
+                return fetchFrom(server, query)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: HttpStatusException) {
+                logFailure(server, e)
+                last = e
+                if (e.code == 429) {
+                    // Over our allowance, which the other servers share: wait, then ask once more.
+                    delay((e.retryAfterSeconds ?: DEFAULT_RETRY_AFTER_S).coerceIn(2L, MAX_RETRY_AFTER_S) * 1000L)
+                    return fetchFrom(server, query)
+                }
+                // 504 and the like: this server is busy, the next one may not be.
+            } catch (e: Exception) {
+                logFailure(server, e)
+                last = e
+            }
+        }
+        throw last
+    }
+
+    private fun logFailure(server: String, error: Throwable) {
+        if (error !is CancellationException) Log.w("TrashCompass", "Overpass: $server failed: $error")
+    }
+
+    /** The servers answered, but were rate limiting us or overloaded. Worth retrying shortly. */
+    class ServerBusyException(message: String, cause: Throwable?) : IOException(message, cause)
+
+    private class HttpStatusException(val code: Int, val retryAfterSeconds: Long?, server: String) :
+        IOException("HTTP $code from $server") {
+        val isBusy: Boolean get() = code == 429 || code == 503 || code == 504
+    }
+
+    private const val MIRROR_HEDGE_DELAY_MS = 4000L
+    private const val DEFAULT_RETRY_AFTER_S = 8L
+    private const val MAX_RETRY_AFTER_S = 15L
 
     /** One request to one mirror, cancellable via coroutine cancellation. */
     private suspend fun fetchFrom(server: String, query: String): List<Amenity> =
@@ -261,7 +299,9 @@ object OverpassClient {
                 override fun onResponse(call: Call, response: Response) {
                     try {
                         response.use {
-                            if (!it.isSuccessful) throw IOException("HTTP ${it.code} from $server")
+                            if (!it.isSuccessful) {
+                                throw HttpStatusException(it.code, it.header("Retry-After")?.trim()?.toLongOrNull(), server)
+                            }
                             val body = it.body?.string() ?: throw IOException("Empty body from $server")
                             val parsed = parseElements(body)
                             if (cont.isActive) cont.resume(parsed)

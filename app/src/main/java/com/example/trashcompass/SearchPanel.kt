@@ -304,8 +304,11 @@ class SearchPanel(
                 NearbyExplorer.explore(here)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: OverpassClient.ServerBusyException) {
+                show(listOf(header, Row.Item("The map servers are busy right now.", "Tap to try again") { showNearby() }))
+                return@launch
             } catch (e: Exception) {
-                show(listOf(header, Row.Item("Couldn't reach the map servers.", "Tap to try again") { showNearby() }))
+                show(listOf(header, Row.Item("Can't reach the map servers.", "Tap to try again") { showNearby() }))
                 return@launch
             }
             if (groups.isEmpty()) {

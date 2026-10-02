@@ -93,7 +93,7 @@ object TaginfoClient {
     private const val MIN_TAG_USES = 50L
 
     private const val BASE_URL = "https://taginfo.openstreetmap.org/api/4"
-    private const val USER_AGENT = "TrashCompass/3.6 (https://github.com/Unpiloted0852/TrashCompass)"
+    private const val USER_AGENT = "TrashCompass/3.8 (https://github.com/Unpiloted0852/TrashCompass)"
     const val PAGE_SIZE = 100
 
     private val http = OkHttpClient.Builder()

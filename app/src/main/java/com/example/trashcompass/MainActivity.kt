@@ -19,6 +19,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.os.VibrationEffect
+import android.util.Log
 import android.os.Vibrator
 import android.text.InputType
 import android.view.Surface
@@ -122,7 +123,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // Fetch logic
     private var lastFetchLocation: Location? = null
-    private val refetchDistanceThreshold = 150f
+    // Never refetch for less movement than this, whatever else is true.
+    private val minRefetchMove = 150f
     private val errorRetryDistance = 100f
     private var initialSearchDone = false
     private var isSearching = false
@@ -133,6 +135,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var driveAnimJob: Job? = null
     private var searchAnimJob: Job? = null
     private var fetchJob: Job? = null
+    private var busyRetryJob: Job? = null
+    private var busyRetriesLeft = MAX_BUSY_RETRIES
+
+    // Recent answers, so retrying, widening again or switching back to a
+    // target a minute later costs the public servers nothing.
+    private class CachedFetch(val center: Location, val timeMs: Long, val results: List<Amenity>) {
+        /** Same test as [needsRefetch]: the nearest known target must still be inside the fetched circle. */
+        fun stillExactAt(here: Location, radius: Int): Boolean {
+            val moved = center.distanceTo(here)
+            if (moved > radius * 0.5f) return false
+            if (results.isEmpty()) return true
+            return results.minOf { here.distanceTo(it.location) } <= radius - moved
+        }
+    }
+    private val fetchCache = object : LinkedHashMap<String, CachedFetch>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CachedFetch>?) =
+            size > MAX_CACHED_FETCHES
+    }
     private var imageLoadingJob: Job? = null
 
     private var lastFixTime = 0L
@@ -143,6 +163,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         private const val MAX_RADIUS_METERS = 50_000
         private const val MAX_NAME_SEARCH_RADIUS_METERS = 20_000 // name search is a regex scan
         private const val MAX_RECENT = 6
+        private const val FIRST_RADIUS_METERS = 500 // first look; small answers are fast and light
+        private const val MAX_CACHED_FETCHES = 12
+        private const val CACHE_MAX_AGE_MS = 10 * 60 * 1000L
+        private const val MAX_BUSY_RETRIES = 2
+        private const val BUSY_RETRY_SECONDS = 10
     }
 
     // Haptics
@@ -181,7 +206,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         useMetric = prefs.getBoolean("use_metric", true)
         hapticsEnabled = prefs.getBoolean("haptics", true)
         keepHistory = prefs.getBoolean("keep_history", true)
-        activeRadiusMeters = searchRadiusMeters
+        activeRadiusMeters = firstRadius()
         val savedTarget = if (keepHistory) prefs.getString("last_target", null) else null
         if (!savedTarget.isNullOrBlank()) {
             currentAmenityName = savedTarget
@@ -354,6 +379,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (!hasLocationPermission()) {
                 checkPermissions()
             } else if (isErrorState || (foundAmenities.isEmpty() && initialSearchDone && !isSearching)) {
+                busyRetriesLeft = MAX_BUSY_RETRIES
                 currentLocation?.let {
                     fetchAmenities(it.latitude, it.longitude, currentAmenityName, silent = false)
                 }
@@ -566,7 +592,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 .apply()
             rememberRecent(targetName, displayNameFor(targetName))
         }
-        activeRadiusMeters = searchRadiusMeters
+        activeRadiusMeters = firstRadius()
+        busyRetryJob?.cancel()
+        busyRetriesLeft = MAX_BUSY_RETRIES
         tvTitle.text = "Nearest ${displayNameFor(currentAmenityName)}"
         foundAmenities = emptyList()
         skippedKeys.clear()
@@ -828,8 +856,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             lastFetchLocation = loc
             fetchAmenities(loc.latitude, loc.longitude, currentAmenityName, silent = false)
         } else if (lastFetchLocation != null && !isSearching) {
-            val dist = loc.distanceTo(lastFetchLocation!!)
-            if (dist > refetchDistanceThreshold || (isErrorState && dist > errorRetryDistance)) {
+            if (needsRefetch(loc, loc.distanceTo(lastFetchLocation!!))) {
                 lastFetchLocation = loc
                 fetchAmenities(loc.latitude, loc.longitude, currentAmenityName, silent = true)
             }
@@ -837,6 +864,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         if (foundAmenities.isNotEmpty()) recalculateNearest()
         if (!isSearching) updateUI()
+    }
+
+    /**
+     * Whether the results we hold can no longer be trusted after moving
+     * [moved] metres from where they were fetched. They are complete only
+     * inside the fetched circle, so there is nothing to gain from asking
+     * again until either we are close to its edge, or the nearest target we
+     * know of is farther away than the edge (a nearer one could then lie
+     * just outside). Until then the old answer is exact and costs nothing.
+     */
+    private fun needsRefetch(here: Location, moved: Float): Boolean {
+        if (isErrorState) return moved > errorRetryDistance
+        if (moved < minRefetchMove) return false
+        val radius = activeRadiusMeters.toFloat()
+        if (moved > radius * 0.8f) return true
+        if (foundAmenities.isEmpty()) return moved > radius * 0.5f
+        val nearest = foundAmenities.minOf { here.distanceTo(it.location) }
+        return nearest > radius - moved
     }
 
     /** Recompute magnetic declination when we've moved far enough. */
@@ -904,11 +949,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             return
         }
 
-        val hasImageTag = tags.optString("image").startsWith("http") ||
-                tags.optString("mapillary").isNotEmpty() ||
-                tags.optString("wikimedia_commons").isNotEmpty() ||
-                tags.optString("wikidata").isNotEmpty()
-        if (hasImageTag) {
+        if (ImageResolver.hasPhotoTags(tags)) {
             imageLoadingJob = lifecycleScope.launch {
                 val bitmap: Bitmap? = withContext(Dispatchers.IO) {
                     ImageResolver.loadImageForTags(tags)
@@ -1233,10 +1274,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
      * they make the server scan every name in the area.
      */
     private fun widerRadius(radius: Int, target: String): Int? {
+        if (radius < searchRadiusMeters) return searchRadiusMeters
         val isNameSearch = !TagRepository.mapping.containsKey(target) && !target.contains("=")
         val limit = if (isNameSearch) MAX_NAME_SEARCH_RADIUS_METERS else MAX_RADIUS_METERS
         return if (radius >= limit) null else (radius * 5).coerceAtMost(limit)
     }
+
+    /**
+     * Every search starts close by: in a town the nearest bin or bench is
+     * almost always within a few hundred metres, and asking for 500 m
+     * instead of 2 km returns a sixteenth of the data. Only if that is
+     * empty does the search step out to the Settings radius and beyond.
+     */
+    private fun firstRadius(): Int = minOf(searchRadiusMeters, FIRST_RADIUS_METERS)
 
     private fun formatRadius(meters: Int): String =
         if (meters >= 1000) String.format(Locale.getDefault(), "%.0f km", meters / 1000.0)
@@ -1244,37 +1294,63 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun fetchAmenities(
         lat: Double, lon: Double, target: String, silent: Boolean,
-        radius: Int = if (silent) activeRadiusMeters else searchRadiusMeters
+        radius: Int = if (silent) activeRadiusMeters else firstRadius()
     ) {
         fetchJob?.cancel()
         if (!silent) {
+            busyRetryJob?.cancel()
             startSearchingAnimation()
             isErrorState = false
         }
+        val here = Location("fetch").apply { latitude = lat; longitude = lon }
         fetchJob = lifecycleScope.launch {
-            val query = OverpassClient.buildQuery(target, lat, lon, radius)
-            val result: List<Amenity>? = try {
-                OverpassClient.fetch(query)
-            } catch (e: CancellationException) {
-                throw e // don't treat our own cancellation as a network error
-            } catch (e: Exception) {
-                null
+            // An answer fetched moments ago close to here is still exact for
+            // the middle of its circle: reuse it instead of asking again.
+            val cacheKey = "$target|$radius"
+            val cached = fetchCache[cacheKey]?.takeIf {
+                SystemClock.elapsedRealtime() - it.timeMs < CACHE_MAX_AGE_MS && it.stillExactAt(here, radius)
+            }
+            var center = here
+            var busy = false
+            val result: List<Amenity>? = if (cached != null) {
+                Log.d("TrashCompass", "reusing cached answer for $cacheKey")
+                center = cached.center
+                cached.results
+            } else {
+                Log.d("TrashCompass", "asking the map servers for $cacheKey" + if (silent) " (refresh)" else "")
+                try {
+                    OverpassClient.fetch(OverpassClient.buildQuery(target, lat, lon, radius)).also {
+                        fetchCache[cacheKey] = CachedFetch(here, SystemClock.elapsedRealtime(), it)
+                    }
+                } catch (e: CancellationException) {
+                    throw e // don't treat our own cancellation as a network error
+                } catch (e: OverpassClient.ServerBusyException) {
+                    busy = true
+                    null
+                } catch (e: Exception) {
+                    null
+                }
             }
             if (target != currentAmenityName) return@launch // stale response
             if (result != null) {
-                if (result.isEmpty() && !silent) {
+                if (result.isEmpty()) {
                     // Nothing this close: look farther before giving up.
                     val wider = widerRadius(radius, target)
                     if (wider != null) {
-                        tvCount.text = "None within ${formatRadius(radius)} -- looking up to ${formatRadius(wider)}"
-                        tvCount.visibility = View.VISIBLE
-                        fetchAmenities(lat, lon, target, silent = false, radius = wider)
+                        if (!silent) {
+                            tvCount.text = "None within ${formatRadius(radius)} -- looking up to ${formatRadius(wider)}"
+                            tvCount.visibility = View.VISIBLE
+                        }
+                        fetchAmenities(lat, lon, target, silent, radius = wider)
                         return@launch
                     }
                 }
                 if (!silent) stopSearchingAnimation()
                 isErrorState = false
-                if (!silent || result.isNotEmpty()) activeRadiusMeters = radius
+                busyRetryJob?.cancel()
+                busyRetriesLeft = MAX_BUSY_RETRIES
+                activeRadiusMeters = radius
+                lastFetchLocation = center
                 foundAmenities = result
                 if (foundAmenities.isEmpty()) {
                     destinationAmenity = null
@@ -1288,8 +1364,34 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             } else if (!silent) {
                 stopSearchingAnimation()
                 isErrorState = true
-                lastFriendlyError = "Connection Failed.\nTap to retry."
+                if (busy && busyRetriesLeft > 0) {
+                    busyRetriesLeft--
+                    retryWhenServersRecover(lat, lon, target, radius)
+                } else {
+                    lastFriendlyError =
+                        if (busy) "Map servers are busy.\nTap to try again."
+                        else "Can't reach the map servers.\nTap to retry."
+                    updateUI()
+                }
+            }
+        }
+    }
+
+    /**
+     * The public map servers were reachable but overloaded or rate limiting
+     * us. That usually clears within seconds, so count down and ask again
+     * rather than leaving the person at a dead end.
+     */
+    private fun retryWhenServersRecover(lat: Double, lon: Double, target: String, radius: Int) {
+        busyRetryJob?.cancel()
+        busyRetryJob = lifecycleScope.launch {
+            for (seconds in BUSY_RETRY_SECONDS downTo 1) {
+                lastFriendlyError = "Map servers are busy.\nTrying again in $seconds s..."
                 updateUI()
+                delay(1000)
+            }
+            if (target == currentAmenityName) {
+                fetchAmenities(lat, lon, target, silent = false, radius = radius)
             }
         }
     }

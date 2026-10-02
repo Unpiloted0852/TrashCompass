@@ -263,3 +263,52 @@ people shouldn't need. Changes:
   off, the app stores neither recent searches nor the last target, opens
   on Trash Can, and whatever was stored is deleted. History never left
   the phone in either case.
+
+## v3.8 — Far fewer requests, more photos, no token in the source
+
+### Being a good citizen of the public map servers
+
+Heavy use could get the phone's address rate limited or blocked by the
+main Overpass instance, which showed up as "Connection Failed". The app
+was asking far more than it needed to:
+
+- **Results are reused instead of refetched.** v3.7 downloaded everything
+  again after every 150 m of movement. An answer is exact for as long as
+  the nearest known target is inside the fetched circle, so the app now
+  asks again only when that stops being true or you near the circle's
+  edge. A simulated 1 km walk makes 2 small requests instead of about 6
+  large ones.
+- **Searches start at 500 m.** In a town the nearest bin or bench is
+  almost always that close, and 500 m returns a sixteenth of the data of
+  2 km. Only if it is empty does the search step out to the Settings
+  radius, then ×5 up to 50 km. Movement can now widen the search too,
+  instead of losing a target that slipped out of range.
+- **Recent answers are cached** for ten minutes, so retrying, or
+  switching to another target and back, costs nothing.
+- **The main instance is never raced against itself.** v3.6/v3.7 hedged
+  across its load balancer and its two servers, which share one
+  per-address allowance; they are now tried strictly one after another.
+  After "429 Too Many Requests" the app waits as long as the server asks
+  (Retry-After) and tries once more. Independent mirrors are still
+  hedged, after 4 s.
+- **Honest messages.** "Map servers are busy. Trying again in 10 s..."
+  with two automatic retries, versus "Can't reach the map servers." when
+  nothing answers at all.
+
+None of this can guarantee a public, shared, free service never refuses
+a request; it makes the app ask a small fraction of what it used to.
+
+### Photos
+
+- Sources are now tried until one works, keyless ones first: `image`
+  (direct links, and links to or names of Wikimedia Commons files),
+  `panoramax` (new), `wikimedia_commons` (files, and now categories --
+  the commoner form in OSM -- using the category's first file),
+  `wikidata`, `wikipedia` (new: the article's lead image), and only then
+  `mapillary`.
+- **The Mapillary token is no longer in the source.** It is read at build
+  time from an untracked `secrets.properties` (`mapillaryToken=...`);
+  without one, Mapillary is skipped and everything else still works. The
+  token that was hard-coded up to v3.7 is in this repository's history
+  and in every earlier APK, so it should be deleted in the Mapillary
+  dashboard and replaced.

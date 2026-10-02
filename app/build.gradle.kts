@@ -12,6 +12,13 @@ val keystoreProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+// Optional API tokens, read from secrets.properties in the project root (not in version
+// control). Without a Mapillary token, photos simply come from the keyless sources only.
+val secretProps = Properties().apply {
+    val f = rootProject.file("secrets.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
 android {
     namespace = "com.example.trashcompass"
     compileSdk {
@@ -22,8 +29,12 @@ android {
         applicationId = "com.example.trashcompass"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10
-        versionName = "3.7"
+        versionCode = 11
+        versionName = "3.8"
+        buildConfigField(
+            "String", "MAPILLARY_TOKEN",
+            "\"" + secretProps.getProperty("mapillaryToken", "").replace("\\", "").replace("\"", "") + "\""
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -55,6 +66,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        buildConfig = true
     }
 }
 
