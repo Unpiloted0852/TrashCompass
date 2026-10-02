@@ -29,8 +29,8 @@ android {
         applicationId = "com.example.trashcompass"
         minSdk = 24
         targetSdk = 36
-        versionCode = 11
-        versionName = "3.8"
+        versionCode = 12
+        versionName = "3.9"
         buildConfigField(
             "String", "MAPILLARY_TOKEN",
             "\"" + secretProps.getProperty("mapillaryToken", "").replace("\\", "").replace("\"", "") + "\""

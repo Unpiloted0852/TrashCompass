@@ -312,3 +312,12 @@ a request; it makes the app ask a small fraction of what it used to.
   token that was hard-coded up to v3.7 is in this repository's history
   and in every earlier APK, so it should be deleted in the Mapillary
   dashboard and replaced.
+
+## v3.9 — Mapillary photos back on
+
+- v3.8 shipped without a Mapillary token, so `mapillary`-tagged objects
+  showed no photo unless another source had one. This build includes the
+  existing token again, supplied at build time from the untracked
+  `secrets.properties` rather than from the source. Mapillary is still
+  the last source tried, so the token is only used when no keyless
+  source has a picture.
