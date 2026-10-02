@@ -48,8 +48,9 @@ class SearchPanel(
     interface Host {
         /** Start hunting for [target]; [label] is its plain name if we know one. */
         fun pick(target: String, label: String?)
-        /** Most recent first: target to label. */
+        /** Most recent first: target to label. Empty when history is switched off. */
         fun recentSearches(): List<Pair<String, String>>
+        fun clearRecentSearches()
         fun quickPicks(): List<String>
         fun currentLocation(): Location?
         fun formatDistance(meters: Float): String
@@ -191,6 +192,10 @@ class SearchPanel(
         if (recent.isNotEmpty()) {
             out.add(Row.Header("Recent"))
             for ((target, label) in recent) out.add(Row.Item(label, "") { pick(target, label) })
+            out.add(Row.Item("✕  Clear recent searches", "") {
+                host.clearRecentSearches()
+                showHome()
+            })
         }
         out.add(Row.Header("Popular"))
         for (name in host.quickPicks()) out.add(Row.Item(name, "") { pick(name, null) })

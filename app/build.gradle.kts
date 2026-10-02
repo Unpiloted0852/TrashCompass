@@ -22,8 +22,8 @@ android {
         applicationId = "com.example.trashcompass"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "3.6"
+        versionCode = 10
+        versionName = "3.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

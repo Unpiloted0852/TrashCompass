@@ -247,3 +247,19 @@ people shouldn't need. Changes:
 - To ship an update: bump `versionCode` and `versionName`, build a
   release APK signed with the same key, and publish a GitHub release
   tagged `v<versionName>` with the APK attached.
+
+## v3.7 — Readable everywhere, and your history is yours
+
+- **Contrast.** Every text/background pair on the app's own screens now
+  meets WCAG AA (4.5:1). The blue of the search bar and buttons went from
+  #2196F3 (white text at 3.1:1) to #1976D2 (4.6:1); the footer hint and
+  Legal link are brighter; the compass status line is no longer dimmed.
+  The app's own screens are dark in both system themes; dialogs follow
+  the system theme and were checked in light and dark mode (the radius
+  warning now uses the theme's error colour instead of hard-coded red).
+- **Clear recent searches.** A row under the Recent list on the search
+  screen removes them.
+- **"Remember my searches" switch in Settings** (on by default). When
+  off, the app stores neither recent searches nor the last target, opens
+  on Trash Can, and whatever was stored is deleted. History never left
+  the phone in either case.

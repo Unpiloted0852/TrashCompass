@@ -2,6 +2,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <corners android:radius="50dp" />
-    <!-- High visibility Blue -->
-    <solid android:color="#2196F3" />
+    <!-- Blue dark enough for white text to pass WCAG AA (4.6:1; #2196F3 was 3.1:1) -->
+    <solid android:color="#1976D2" />
 </shape>

@@ -44,6 +44,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.material.color.MaterialColors
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -89,6 +90,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var searchRadiusMeters = 2000
     private var useMetric = true
     private var hapticsEnabled = true
+    private var keepHistory = true // recent searches + the target restored at launch
 
     // Sensors & location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -178,8 +180,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         searchRadiusMeters = prefs.getInt("search_radius", 2000)
         useMetric = prefs.getBoolean("use_metric", true)
         hapticsEnabled = prefs.getBoolean("haptics", true)
+        keepHistory = prefs.getBoolean("keep_history", true)
         activeRadiusMeters = searchRadiusMeters
-        val savedTarget = prefs.getString("last_target", null)
+        val savedTarget = if (keepHistory) prefs.getString("last_target", null) else null
         if (!savedTarget.isNullOrBlank()) {
             currentAmenityName = savedTarget
             currentLabel = prefs.getString("last_label", null)
@@ -282,7 +285,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             findViewById(R.id.tvSearchClose),
             object : SearchPanel.Host {
                 override fun pick(target: String, label: String?) = setNewSearchTarget(target, label)
-                override fun recentSearches() = loadRecent()
+                override fun recentSearches() = if (keepHistory) loadRecent() else emptyList()
+                override fun clearRecentSearches() = clearHistory()
                 override fun quickPicks() = quickPicks
                 override fun currentLocation() = currentLocation
                 override fun formatDistance(meters: Float) = this@MainActivity.formatDistance(meters)
@@ -555,11 +559,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // Re-running the same target (retry, changed radius) keeps its label.
         currentLabel = label ?: if (targetName == currentAmenityName) currentLabel else null
         currentAmenityName = targetName
-        prefs.edit()
-            .putString("last_target", targetName)
-            .putString("last_label", currentLabel)
-            .apply()
-        rememberRecent(targetName, displayNameFor(targetName))
+        if (keepHistory) {
+            prefs.edit()
+                .putString("last_target", targetName)
+                .putString("last_label", currentLabel)
+                .apply()
+            rememberRecent(targetName, displayNameFor(targetName))
+        }
         activeRadiusMeters = searchRadiusMeters
         tvTitle.text = "Nearest ${displayNameFor(currentAmenityName)}"
         foundAmenities = emptyList()
@@ -609,6 +615,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         prefs.edit().putString("recent", arr.toString()).apply()
     }
 
+    /** Forgets every search the app has stored: the recent list and the target restored at launch. */
+    private fun clearHistory() {
+        prefs.edit().remove("recent").remove("last_target").remove("last_label").apply()
+    }
+
     // ------------------------------------------------------------------
     // Dialogs
     // ------------------------------------------------------------------
@@ -639,7 +650,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val lblWarning = TextView(this)
         lblWarning.text = "⚠️ Large radius may be slower."
-        lblWarning.setTextColor(Color.RED)
+        // The theme's error colour stays readable on both the light and the dark dialog.
+        lblWarning.setTextColor(
+            MaterialColors.getColor(this, com.google.android.material.R.attr.colorError, Color.RED)
+        )
         lblWarning.textSize = 12f
         lblWarning.setPadding(0, 10, 0, 10)
         lblWarning.visibility = if (searchRadiusMeters > 3000) View.VISIBLE else View.GONE
@@ -666,14 +680,30 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         hapticsSwitch.setPadding(0, padding / 2, 0, 0)
         layout.addView(hapticsSwitch)
 
+        val historySwitch = Switch(this)
+        historySwitch.text = "Remember my searches"
+        historySwitch.isChecked = keepHistory
+        historySwitch.setPadding(0, padding / 2, 0, 0)
+        layout.addView(historySwitch)
+
+        val lblHistory = TextView(this)
+        lblHistory.text = "Recent searches and the last thing you looked for are kept on this " +
+                "phone only. Turning this off also deletes what is stored."
+        lblHistory.textSize = 12f
+        lblHistory.alpha = 0.75f
+        layout.addView(lblHistory)
+
         builder.setView(layout)
         builder.setPositiveButton("Save") { _, _ ->
             searchRadiusMeters = 500 + seekBar.progress * 100
             hapticsEnabled = hapticsSwitch.isChecked
+            keepHistory = historySwitch.isChecked
             prefs.edit()
                 .putInt("search_radius", searchRadiusMeters)
                 .putBoolean("haptics", hapticsEnabled)
+                .putBoolean("keep_history", keepHistory)
                 .apply()
+            if (!keepHistory) clearHistory()
             if (currentLocation != null) setNewSearchTarget(currentAmenityName)
         }
         builder.setNegativeButton("Cancel", null)
